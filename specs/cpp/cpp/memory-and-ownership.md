@@ -42,6 +42,10 @@ bool read_config(std::string_view path) {
 
 A resource without an existing wrapper gets one immediately: a `std::unique_ptr<T, Deleter>` or a small scoped guard. Wrapping once beats remembering everywhere.
 
+Give the result of an acquisition to its manager immediately (`R.12`): registering the guard even one line after the open leaves a window where the next allocation throws and leaks the handle. Wrapping at the acquisition site closes the window entirely.
+
+Prefer scoped objects (`R.5`): locals, members, and globals cost no separate cleanup and let destructors manage members; reach for the Default owner rung only when lifetime must exceed the scope. For an oversized local, the guideline's own escape hatch stands — a `const std::unique_ptr<BigObject>` keeps the heap allocation scoped anyway.
+
 Caught by: ASan's LeakSanitizer (leaks), static analyzer leak checkers for handle types.
 
 ---
@@ -55,12 +59,17 @@ Caught by: ASan's LeakSanitizer (leaks), static analyzer leak checkers for handl
 | Shared owner | `std::shared_ptr<T>` | Lifetime genuinely shared, owner unknowable statically | Requires a written justification; cycles go through `weak_ptr` |
 | Forbidden | Owning raw `new`/`delete`, mixing `malloc`/`free` | Never | Blocked in review |
 
+The rungs are exhaustive by construction (`R.20`): ownership is spelled in types, and assigning `new`'s result to a raw pointer strands the object outside the ladder. Raw pointers sit on Borrowed view by definition (`R.3`) — a `T*` denotes exactly one borrowed object (`R.2`); arrays decay and lose their length, so sequences travel as `std::span`/`string_view`. Owning raw pointers occupy Forbidden outright, which is why this project needs no `owner<T*>` annotation: nothing legal remains for it to mark. References borrow too (`R.4`): a `T&` is a present, non-owning view with no null state, and binding one to `*new` is an owning raw pointer in disguise that dies in review like any Forbidden-rung allocation.
+
+Two further residents: `malloc`/`free` share the Forbidden rung (`R.10`) — they construct and destroy nothing (a `malloc`-ed record's `std::string` member is just a string-sized bag of bits) and mixing the verb pairs is undefined behavior; `nothrow` new stays as the fallback where exceptions truly cannot fly. And a non-`const` global is an undeclared shared owner and data-race candidate (`R.6`): constants are `constexpr`, mutable state gets explicit ownership plus [Concurrency](./concurrency.md)'s locking story, and init-order traps follow [Quality Guidelines](./quality-guidelines.md)' accessor-function pattern.
+
 Rules:
 
-1. Create with `std::make_unique` / `std::make_shared`, never `unique_ptr<T>(new T(...))` — exception safety, and one allocation instead of two for shared.
+1. Create with `std::make_unique` / `std::make_shared`, never `unique_ptr<T>(new T(...))` (`R.22`, `R.23`) — one spelling instead of repeating the type name, exception safety, and one allocation instead of two for shared. The root cause is `R.13`: two allocations in one statement can interleave under unspecified evaluation order and leak when the second constructor throws; factories remove the naked allocation, making the hazard unreachable.
 2. "Maybe null, not owning" parameters take `T*`; "present, not owning" parameters take `T&`. Pointer out-parameters are forbidden; return values instead.
-3. A `shared_ptr` in a signature is a design decision, not convenience. Copying one costs an atomic operation and freezes object lifetime; justify it in a comment or downgrade to `unique_ptr`/references.
+3. A `shared_ptr` in a signature is a design decision, not convenience. Copying one costs an atomic operation and freezes object lifetime; justify it in a comment or downgrade to `unique_ptr`/references — `R.21`: `unique_ptr` outranks `shared_ptr` for deterministic destruction and zero refcount traffic.
 4. Observing a shared object without extending its life takes `std::weak_ptr` and locks — mandatory for back-edges in parent/child graphs, caches, and observer lists.
+5. Non-`std` smart pointers join the ladder through the `std` pattern (`R.31`): copyable counts as shared-like, move-only as unique-like — every smart-pointer signature rule below applies to them unchanged.
 
 Caught by: ASan (use-after-free and double-free from broken ownership), LSan (leaked cycles that `weak_ptr` should have broken), review for shared-ptr sprawl.
 
@@ -111,8 +120,29 @@ Notes:
 - View parameters are borrow-only: if the value must outlive the call, copy it deliberately (see the pitfalls below before storing one).
 - Do not maintain both a `const std::string&` and a `string_view` overload for the same parameter; one spelling wins.
 - Sinks take by value even when callers usually pass lvalues: the copy happens at the boundary where the compiler can prove the source is no longer needed.
+- Array parameters decay: `void f(int[])` *is* `f(int*)` after adjustment — the length is simply gone (`R.14`). Sequences take `std::span` (pointer-plus-size spelling until C++20), matching the table above.
 
 Caught by: clang-tidy `performance-unnecessary-value-param` (missing moves in sinks); the `const std::string&`-that-should-be-a-view case has no reliable automatic check and is a review item.
+
+---
+
+## Smart Pointers in Signatures
+
+Take smart pointers as parameters only to explicitly express lifetime semantics (`R.30`): readers take Borrowed views (`widget*`, `widget&`, `std::span`), sinks take by-value owners, and a by-value `shared_ptr` parameter nobody stores is an atomic no-op billed to every caller.
+
+| Parameter | Contract | Notes |
+|-----------|----------|-------|
+| `unique_ptr<widget>` by value | Callee assumes ownership — stores or consumes the widget | Anything less takes `widget*` or `widget&` (`R.32`) |
+| `unique_ptr<widget>&` | Callee reseats the slot — assigns or calls `reset()` on some path | Never reassigned, it is a forbidden pointer out-parameter wearing a template (`R.33`) |
+| `shared_ptr<widget>` by value | Callee joins the owner set — stores a copy, ideally moved | Otherwise every call pays atomic refcount traffic for nothing; the Shared-owner justification applies to signatures, not just members (`R.34`) |
+| `shared_ptr<widget>&` | Callee might reseat the pointer | Same contract as the unique case: no assignment or reset anywhere, no parameter (`R.35`) |
+| `const shared_ptr<widget>&` | Reserved for conditionally retaining a count | See the deviation below |
+
+Deviation from `R.36`: upstream offers `const shared_ptr<widget>&`, hedged with warnings, for the "might retain a refcount" case; the ladder resolves the hedge. Definite sharers take the `shared_ptr` by value, definite readers take a plain view, and the const-lvalue-reference spelling survives only for genuinely conditional retention.
+
+Never pass a pointer or reference obtained from an aliased smart pointer down a call chain (`R.37`): resetting through another alias mid-call destroys the object under the borrowed reference. Pin the subtree first with a cheap local strong copy, then extract the view.
+
+Caught by: review — no checker reliably distinguishes takeover from borrow, so treat smart-pointer parameter types as reviewed API surface.
 
 ---
 
@@ -172,7 +202,7 @@ A `std::vector<std::string_view>` sliced from a `std::vector<std::string>` dangl
 
 ### shared_ptr cycles
 
-Parent owns children through `shared_ptr`; child stores a `shared_ptr` back to the parent; nothing is ever destroyed. All back-edges — parent links, observer registrations, cache entries — use `weak_ptr` and lock briefly.
+Parent owns children through `shared_ptr`; child stores a `shared_ptr` back to the parent; nothing is ever destroyed. All back-edges — parent links, observer registrations, cache entries — use `weak_ptr` and lock briefly (`R.24`: a cycle's use count never reaches zero).
 
 Caught by: LeakSanitizer reports the unreachable cycle cluster; the leak dump pointing at both ends of a mutual `shared_ptr` is the classic signature.
 
@@ -184,6 +214,7 @@ Where the profiler shows allocator pressure, arenas (bump allocators) and object
 2. Nothing escapes the arena scope. Handing an arena-backed pointer out across the boundary is the dangling-local bug wearing a costume; document arena-lifetime at every such API edge.
 3. Preserve the sanitizer story: wire `reset()` to poison/unpoison the region (ASan container annotations or explicit poison calls) so use-after-reset stays detectable. An arena that blinds ASan turns tomorrow's bug into a heisenbug.
 4. Measure first. Pools justified by intuition rather than a profile are complexity debt, not performance work.
+5. Custom allocators ship matched pairs (`R.15`): any custom `operator new` comes with its matching `operator delete`, or that deallocation function is deliberately `=delete`-ed. Application code writes neither operator, so this bites only arena and pool authors.
 
 Caught by: ASan when annotations are wired; review for pointers escaping the arena scope.
 
@@ -203,38 +234,6 @@ Review checklist:
 - [ ] Views (`string_view`, `span`, raw pointers) are never stored past the call they were passed to unless the owner is documented
 - [ ] Container mutations near held iterators/references checked against the invalidation table
 - [ ] Hot-path allocation changes backed by a measurement, arenas annotated for ASan
-
----
-
-## Complete Coverage: R
-
-The remaining ISO C++ Core Guidelines resource-management rules, each dispositioned against the ownership ladder: a row either restates a rung, enforces one of the ladder rules, or records a deliberate difference.
-
-| Rule | Stance | Disposition |
-|------|--------|-------------|
-| `R.2` | Adopt | A raw `T*` denotes exactly one borrowed object; arrays decay and lose their length, so sequences travel as `std::span`/`string_view` — subscripting a lone pointer is the range-error opening this closes. |
-| `R.3` | Adopt | Raw pointers sit on the Borrowed-view rung by definition; owning raw pointers occupy the Forbidden rung outright, so unlike upstream this project needs no `owner<T*>` annotation — nothing legal remains for it to mark. |
-| `R.4` | Adopt | References borrow too: `T&` is a present, non-owning view with no null state; binding one to `*new` is an owning raw pointer in disguise and dies in review like any Forbidden-rung allocation. |
-| `R.5` | Adopt | Scoped objects — locals, members, globals — cost no separate cleanup and let destructors manage members; reach for the Default owner only when lifetime must exceed the scope, keeping the guideline's own escape hatch for oversized locals: a `const unique_ptr<BigObject>`. |
-| `R.6` | Adopt | A non-`const` global is an undeclared shared owner and a data-race candidate; constants are `constexpr`, mutable state gets explicit ownership plus the Concurrency guide's locking story, and init-order traps follow Quality Guidelines' accessor-function pattern. |
-| `R.10` | Adopt | `malloc`/`free` construct and destroy nothing — a `malloc`-ed record's `string` member is just a string-sized bag of bits — and mixing them with `new`/`delete` is undefined; both verbs share the Forbidden rung, with `nothrow` new as the fallback where exceptions truly cannot fly. |
-| `R.12` | Adopt | Hand every acquisition to its manager object immediately: registering the guard even one line after the open leaves a window where the next allocation throws and leaks the handle — an RAII wrapper at the acquisition site closes it entirely. |
-| `R.13` | Adopt | Two allocations in one statement can interleave under unspecified evaluation order and leak when the second constructor throws; factories (`make_unique`, `make_shared`) remove the naked allocation, making the hazard unreachable — ladder rule 1. |
-| `R.14` | Adopt | `void f(int[])` is `f(int*)` after decay — the length is simply gone; sequence parameters take `std::span` (pointer-plus-size spelling until C++20) per the pass-by table. |
-| `R.15` | Adopt | Any custom `operator new` ships with its matching `operator delete`, or that deallocation function is deliberately `=delete`-ed; in practice this bites only arena and pool authors, since application code writes neither operator. |
-| `R.20` | Adopt | Ownership is spelled in types: `unique_ptr` as Default owner, `shared_ptr` as Shared owner with written justification; assigning `new`'s result to a raw pointer strands the object outside the ladder by construction. |
-| `R.21` | Adopt | `unique_ptr` outranks `shared_ptr` for the guideline's exact reasons — deterministic destruction, no atomic refcount traffic — so sharing is a design decision carrying its justification comment (ladder rule 3). |
-| `R.22` | Adopt | `make_shared` names the type once and fuses control block with object into a single allocation; it is the only accepted spelling for creating a shared owner. |
-| `R.23` | Adopt | `make_unique` avoids repeating the type name and keeps naked `new` out of call sites; factory functions returning a Default owner are built on it. |
-| `R.24` | Adopt | Back-edges in shared graphs — parent links, observers, cache entries — hold `weak_ptr` and lock briefly, because a `shared_ptr` cycle's use count never reaches zero; LSan clusters pointing at both ends of a mutual pair are the signature of forgetting. |
-| `R.30` | Adopt | Smart-pointer parameters are lifetime statements, not habits: readers take Borrowed views (`T*`, `T&`, span), sinks take by-value `unique_ptr`, and a by-value `shared_ptr` parameter nobody stores is an atomic no-op billed to every caller. |
-| `R.31` | Adopt | Third-party and custom handle wrappers join the ladder via the std pattern — copyable counts as shared-like, move-only as unique-like — so every parameter rule below applies to them unchanged. |
-| `R.32` | Adopt | A by-value `unique_ptr<widget>` parameter documents and enforces an ownership takeover — the callee intends to store or consume the widget; anything less takes `widget*` or `widget&`. |
-| `R.33` | Adopt | `unique_ptr<widget>&` means the callee reseats the slot — assigns or calls `reset()` on some path; an lvalue-reference parameter never reassigned is a forbidden pointer out-parameter wearing a template. |
-| `R.34` | Adopt | Take `shared_ptr<widget>` by value only to join the owner set (store a copy, ideally moved); otherwise every call pays atomic refcount traffic for nothing — the Shared-owner justification applies to signatures, not just members. |
-| `R.35` | Adopt | `shared_ptr<widget>&` declares possible reseating, under the same contract as the unique case: no assignment or reset anywhere, no lvalue-reference parameter. |
-| `R.36` | Adapt | Upstream hedges this rule and so does the ladder: reserve `const shared_ptr<widget>&` for conditionally retaining a count; definite sharers take the smart pointer by value, definite readers take a plain view. |
-| `R.37` | Adopt | Never pass a pointer or reference pulled from an aliased smart pointer: pin the subtree first with a cheap local strong copy, then extract the view — resetting through another alias mid-call destroys the object under the borrowed reference. |
 
 ---
 

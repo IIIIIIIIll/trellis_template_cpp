@@ -51,13 +51,52 @@ private:
 };
 ```
 
+The `Right` class above also demonstrates the conventional member declaration order (`NL.16`): types, then constructors/assignment/destructor, then functions, then data — `public` before `protected` before `private`, never scattered access blocks. The formatter never reorders declarations, so member order stays a review convention rather than a formatting setting.
+
+### Comment Discipline
+
+Comments that narrate what the code already says are rot-prone noise (`NL.1`): compilers never read them and they drift. State it in code or delete the comment. Comments earn their place by stating intent the code cannot express — why, constraints, expected behavior (`NL.2`). If a comment and its code disagree, treat both as wrong until reconciled. Keep comments crisp, grammatical, and professional: verbosity spreads understanding thin, SMS spelling ages badly (`NL.3`). Purely a review matter — no tool can catch a bad comment.
+
+### House Style Beyond the Table
+
+- No Hungarian-style type warts (`NL.5`): names describe functionality, and overloading matches types automatically. Role prefixes stay legal (`size_`, `cnt_hits`) because they encode purpose, not type — exactly what the table above permits.
+- Name length proportional to scope (`NL.7`): short conventional names (`i`, `p`) locally, descriptive names for anything visible across functions; a cryptic one-letter global is always wrong.
+- One house style for our code, imported libraries keep theirs (`NL.8`) — the table above is that house style. Reserved identifiers (`__`-prefixed or leading `_X`) stay banned along with everything else the standard reserves.
+- `ALL_CAPS` is reserved for macros (`NL.9`) so a shouting identifier always means text-substitution hazard; constants and scoped-enum values take `k` names per the table, never caps.
+- Deviation from `NL.10`: upstream prefers `underscore_style` names across the board; we adopt snake_case where the table says so (functions, variables) and PascalCase for types — same intent (standard-library rhythm, consistency beats taste) with the split documented here as the difference.
+- Reject easily misread names (`NL.19`) — `oO01lL`, near-twin pairs like `splunk`/`splonk`: screens differ and humans skim. A standing naming-review duty alongside the table.
+- One name per declaration (`NL.21`): `int a, b;` invites declarator-syntax confusion, and splitting costs nothing while reading better.
+- Write `f()`, not `f(void)` (`NL.25`): in C++ the empty parameter list already means no parameters, and the C-compat ceremony adds nothing.
+- West const (`const int x`, `const T&`) per conventional notation (`NL.26`): east const is logically defensible but unfamiliar to most readers; consistency wins and suffixed `const` is rejected in review.
+- Interface files end `.h`, implementation files `.cpp` (`NL.27`); the exact letters matter less than uniformity — same disposition as `SF.1` under Header Hygiene below.
+
+### Readable Literals
+
+Make literals readable (`NL.11`): digit separators (`299'792'458`) and typed suffixes (`"..."s`, `100ms`) where the type matters. Long bare digit runs are typo farms, and magic constants stay banned separately.
+
+### Layout Is Delegated to clang-format
+
+Five Guidelines rules are layout-shaped, and hand-policing formatting wastes the exact attention reviews exist for. The committed `.clang-format` encodes each decision once:
+
+- Indentation (`NL.4`): consistent indentation prevents real defects — the swallowed-control-statement bug — but the decision is mechanical.
+- Whitespace restraint (`NL.15`): no `< map >`-style padding.
+- Brace placement (`NL.17`): K&R-derived Stroustrup layout, encoded once by the formatter.
+- Declarator layout (`NL.18`): C++ style, `T& name`, type-emphasized rather than expression-emphasized.
+- Line packing (`NL.20`): two statements on one line hide defects from skimmers and diff readers alike; keeping them apart is the formatter's job.
+
+Deviation from each of `NL.4`, `NL.15`, `NL.17`, `NL.18`, and `NL.20`: the intent is adopted and the mechanism delegated entirely to the committed clang-format configuration — deliberately not hand-policed.
+
 ---
 
 ## Header Hygiene
 
+### File Suffixes and Namespaces
+
+`.cpp` for code files, `.h` for interface files, everywhere unless an existing project convention wins (`SF.1`) — identical in substance to `NL.27` in the naming section; uniformity is the point, not the letters. Namespaces mirror logical structure (`SF.20`): components and layers, short and lowercase per the naming table — `net`, `http`.
+
 ### Include What You Use
 
-Every header must be **self-contained**: it includes everything its own code names, and never relies on a transitive include arriving first by luck. Enforce mechanically: make each header the *first* include of its own `.cpp`.
+Every header must be **self-contained** (`SF.11`): it includes everything its own code names — include what you name (`SF.10`), never depending on what a transitively included header happens to drag in; deliberate aggregation headers remain acceptable. Enforce mechanically (`SF.5`): make each header the *first* include of its own `.cpp`. Includes go first in both `.h` and `.cpp` (`SF.4`); upstream's include-after-code insulation trick protects exactly one level, which is why it is not adopted here.
 
 ```cpp
 // Wrong: compiles today because <vector> happens to pull in <cstdint>
@@ -74,6 +113,10 @@ class Widget {
     std::uint32_t id_;
 };
 ```
+
+### Include Spelling and Form
+
+Quoted includes for locally relative files, angle brackets for everything else (`SF.12`): quoting a search-path header risks a future sibling file silently shadowing the intended one. Spell header identifiers exactly as on disk (`SF.13`) — matching case, `/` separators, never backslashes — because the standard leaves lookup unspecified and platform-specific paths do not survive porting.
 
 ### Forward Declarations
 
@@ -101,9 +144,15 @@ Rules of thumb:
 - Prefer including over forward-declaring for project headers unless compile-time pain is measured, not assumed.
 - One header declares one primary type; do not chain forward declarations to break artificial cycles that better layering would remove.
 
+### Cycles Mean Layering Bugs
+
+Eliminate cyclic includes with better layering; do not paper over them with guards (`SF.9`) — the same stance as refusing forward-declaration chains to break artificial cycles that better layering would remove.
+
 ### Include Guards: `#pragma Once`
 
 Use `#pragma once`. It is non-standard but universally supported by GCC, Clang, and MSVC — decades of mainstream support. Classic guards are longer, invite copy-paste typos (`#endif // WRONG_NAME` fails silently), and collide when two directories contain identically named headers. Fall back to guards only if you must support exotic preprocessors.
+
+Deviation from `SF.8`: the intent — every header included at most once per translation unit — is adopted wholesale, while the mechanism differs deliberately: `#pragma once` over classic guards, with fallback guards still carrying component-keyed names despite upstream's ISO-guard preference.
 
 ```cpp
 // Preferred
@@ -116,9 +165,17 @@ Use `#pragma once`. It is non-standard but universally supported by GCC, Clang, 
 #endif  // MYLIB_NET_WIDGET_H_
 ```
 
+### What Belongs in a Header
+
+Headers carry declarations, templates, class definitions, and `inline`/`constexpr` definitions (`SF.2`) — never namespace-scope object definitions or non-inline function bodies, which duplicate per translation unit and die in linkage errors. Inline Variables below shows the sanctioned shape for header constants. Anything declared in multiple source files gets one home in a header (`SF.3`): hand-written `extern` declarations drift silently until the linker complains late.
+
+### `using namespace`
+
+Deviation from `SF.6`: `using namespace` is tolerated sparingly inside `.cpp` files (a translation unit counts as local scope) and during transitions, but we stop short of blessing blanket `using namespace std;` — qualify when ambiguity threatens. Never in headers (`SF.7`): at global scope it hijacks every includer's name lookup and makes include order semantically load-bearing. The `std::literals` exception stands because user-defined-literal rules prevent collisions.
+
 ### Internal Linkage: Anonymous Namespaces
 
-File-local helpers in `.cpp` files go in an anonymous namespace (preferred over `static` for uniformity with type declarations). Anonymous namespaces in headers are forbidden: every including translation unit gets its own private copies, silently duplicating code and data and tripping ODR-sensitive tools.
+File-local helpers in `.cpp` files go in an anonymous namespace (`SF.22`: all internal, non-exported entities live there — preferred over `static` for uniformity with type declarations, with exported entities staying outside). Anonymous namespaces in headers are forbidden (`SF.21`): every including translation unit gets its own private copies, silently duplicating code and data and tripping ODR-sensitive tools.
 
 ```cpp
 // parser.cpp
@@ -142,7 +199,7 @@ int helper_count = 0;                   // N distinct variables after inclusion
 
 ### Inline Variables (C++17)
 
-Namespace-scope constants defined in headers must be `inline constexpr` so there is exactly one entity across all translation units. A plain `const` integral at namespace scope has internal linkage: legal, but each TU gets its own copy, and any address-taken use diverges or breaks.
+Namespace-scope constants defined in headers must be `inline constexpr` (`SF.2` bans object definitions in headers outright; this inline form is the sanctioned shape) so there is exactly one entity across all translation units. A plain `const` integral at namespace scope has internal linkage: legal, but each TU gets its own copy, and any address-taken use diverges or breaks.
 
 ```cpp
 // config.h — included everywhere
@@ -223,6 +280,27 @@ The same caution applies to throwing custom exception types across module bounda
 
 ---
 
+## Enumerations
+
+Scoped `enum class` everywhere (`Enum.3`): plain enums convert to `int` too readily, and unrelated enumerations collide on shared enumerator names. Enumerators take constant naming — `k` prefix, `PascalCase` — never `ALL_CAPS`, which stays reserved for macros (`Enum.5`; see the scoped-enum row in the naming table).
+
+```cpp
+// Wrong: implicit conversion to int, shouting names, collision-prone
+enum Color { RED, GREEN };
+int x = RED;
+
+// Right: scoped, quiet names, no implicit conversion
+enum class Color { kRed, kGreen };
+Color c = Color::kRed;
+// int x = Color::kRed;   // does not compile
+```
+
+Define the operations enumeration users need (`Enum.4`) — a wrapping `operator++` for iteration-like sets, for instance. The required `static_cast` round-trip is accepted idiom, while expressions repeatedly casting back into the enum signal a missing operation. Unnamed enumerations are unrelated integer constants in costume: declare each value as `constexpr` instead (`Enum.6`), which also gives it the right individual type — the constexpr-discipline section below applied.
+
+Leave the underlying type at its default unless necessary (`Enum.7`); specifying it is required for forward-declarable enums and fixed bit width — precisely the ABI-sensitive-header situations flagged under ODR and ABI above. Give enumerators explicit values only when meaning demands it (`Enum.8`): conventional numbering such as months starting at 1, or bit-flag sets. Duplicate values are typos, and hand-written consecutive values are noise. Cross-module kind tags (see the RTTI caution above) follow exactly this shape: scoped enum, `k`-named enumerators.
+
+---
+
 ## Compile-Time Discipline: `constexpr` and Friends
 
 Use compile-time evaluation **where it is free**: pure computations, lookup tables, literal formatting, trait-like dispatch. Do not obfuscate straightforward runtime logic as template metaprogramming without a measured benefit; unreadable zero-cost is usually negative-cost once maintenance is priced in.
@@ -276,56 +354,9 @@ Before merging, confirm:
 - [ ] Binary-published library headers use PIMPL with out-of-line destructor/moves
 - [ ] No `dynamic_cast`/`typeid` in cross-module headers
 - [ ] `constexpr` used only where it clarifies or measurably helps
-
----
-
-## Complete Coverage: NL, SF, Enum
-
-The sections above teach the rules that need explaining; this closing table sweeps up the remaining `NL` (naming and layout), `SF` (source files), and `Enum` (enumerations) rules from the ISO C++ Core Guidelines so no rule ID is left implicit. Rules marked **Adapt** are layout-shaped and delegated entirely to the committed clang-format configuration — they are deliberately not hand-policed.
-
-| Rule | Stance | Disposition |
-|------|--------|-------------|
-| `NL.1` | Adopt | Comments that narrate what the code already says are rot-prone noise: compilers never read them and they drift. State it in code or delete the comment. |
-| `NL.2` | Adopt | Comments earn their place stating intent the code cannot express — why, constraints, expected behavior. If a comment and its code disagree, treat both as wrong until reconciled. |
-| `NL.3` | Adopt | Keep comments crisp, grammatical, and professional: verbosity spreads understanding thin, SMS spelling ages badly. Purely a review matter — no tool can catch it. |
-| `NL.4` | Adapt | Consistent indentation prevents real defects (the swallowed-control-statement bug), but the decision is mechanical: delegated to committed .clang-format. |
-| `NL.5` | Adopt | No Hungarian-style type warts: names describe functionality, overloading matches types automatically. Role prefixes stay legal (`size_`, `cnt_hits`) because they encode purpose, not type — exactly what the naming table permits. |
-| `NL.7` | Adopt | Name length proportional to scope: short conventional names (`i`, `p`) locally, descriptive names for anything visible across functions; a cryptic one-letter global is always wrong. |
-| `NL.8` | Adopt | One house style for our code, imported libraries keep theirs — the naming table above is that house style. Also bans reserved identifiers (`__`, leading `_X`). |
-| `NL.9` | Adopt | `ALL_CAPS` is reserved for macros so a shouting identifier always means text-substitution hazard; constants and scoped-enum values take `k` names per the table, never caps. |
-| `NL.10` | Adapt | Upstream prefers underscore_style across the board; we adopt snake_case where the table says so (functions, variables) and PascalCase for types — same intent (standard-library rhythm, consistency beats taste) with the split documented here. |
-| `NL.11` | Adopt | Make literals readable: digit separators (`299'792'458`) and typed suffixes (`"..."s`, `100ms`) where the type matters; long bare digit runs are typo farms, and magic constants stay banned separately. |
-| `NL.15` | Adapt | Whitespace restraint (no `< map >`-style padding) is purely mechanical formatting: delegated to committed .clang-format. |
-| `NL.16` | Adopt | Conventional member order — types, constructors/assignment/destructor, functions, data, `public` before `protected` before `private`, no scattered access blocks. The formatter never reorders declarations, so this remains a review convention. |
-| `NL.17` | Adapt | K&R-derived (Stroustrup) brace placement is a layout decision like any other: delegated to committed .clang-format, which encodes brace style once. |
-| `NL.18` | Adapt | C++-style declarator layout (`T& name`, type-emphasized rather than expression-emphasized) is a formatter setting: delegated to committed .clang-format rather than re-litigated per review. |
-| `NL.19` | Adopt | Reject easily misread names — `oO01lL`, near-twin pairs like `splunk`/`splonk`: screens differ and humans skim. A standing naming-review duty alongside the table. |
-| `NL.20` | Adapt | Two statements on one line hide defects from skimmers and diff readers alike; line packing is the formatter's job: delegated to committed .clang-format. |
-| `NL.21` | Adopt | One name per declaration: `int a, b;` invites declarator-syntax confusion, and splitting costs nothing while reading better. |
-| `NL.25` | Adopt | Write `f()`, not `f(void)` — in C++ the empty parameter list already means no parameters, and the C-compat ceremony adds nothing. |
-| `NL.26` | Adopt | West `const` (`const int x`, `const T&`): east const is logically defensible but unfamiliar to most readers; consistency wins and suffixed `const` is rejected in review. |
-| `NL.27` | Adopt | `.h` for interface files, `.cpp` for implementation — longstanding defaults whose exact letters matter less than uniformity; same disposition as `SF.1` below. |
-| `SF.1` | Adopt | `.cpp`/`.h` suffixes everywhere unless an existing project convention wins; identical in substance to `NL.27`. |
-| `SF.2` | Adopt | Headers carry declarations, templates, class definitions, and `inline`/`constexpr` definitions — never namespace-scope object definitions or non-inline function bodies, which duplicate per TU and die in linkage errors. |
-| `SF.3` | Adopt | Anything declared in multiple source files gets one home in a header; hand-written `extern` declarations drift silently until the linker complains late. |
-| `SF.4` | Adopt | Includes go first in both `.h` and `.cpp`; upstream's include-after-code insulation trick protects exactly one level, which is why it is not adopted here. |
-| `SF.5` | Adopt | Every `.cpp` includes its own interface header first, so declaration/definition mismatches surface at compile time instead of link time — the self-contained-header discipline above. |
-| `SF.6` | Adapt | `using namespace` is tolerated sparingly inside `.cpp` files (upstream counts a translation unit as local scope) and during transitions; we stop short of blessing blanket `using namespace std;` — qualify when ambiguity threatens. Never in headers (`SF.7`). |
-| `SF.7` | Adopt | `using namespace` at global scope in a header hijacks every includer's name lookup and makes include order semantically load-bearing; the `std::literals` exception stands because user-defined-literal rules prevent collisions. |
-| `SF.8` | Adapt | Intent adopted — each header included at most once per translation unit; mechanism differs deliberately: `#pragma once` over classic guards per Include Guards above, with fallback guards still carrying component-keyed names (upstream's collision advice kept despite its ISO-guard preference). |
-| `SF.9` | Adopt | Eliminate cyclic includes with better layering; do not paper over them with guards — the same stance as refusing forward-declaration chains to break artificial cycles. |
-| `SF.10` | Adopt | Never depend on what a transitively included header happens to drag in: include what you name. Deliberate aggregation headers remain acceptable. |
-| `SF.11` | Adopt | The self-contained-header rule above is this rule operationalized: a header compiles on its own, proven by making it the first include of its own `.cpp`. |
-| `SF.12` | Adopt | Quoted includes for locally relative files, angle brackets for everything else; quoting a search-path header risks a future sibling file silently shadowing the intended one. |
-| `SF.13` | Adopt | Header identifiers spelled exactly as on disk — matching case, `/` separators, never backslashes — because the standard leaves lookup unspecified and platform-specific paths do not survive porting. |
-| `SF.20` | Adopt | Namespaces mirror logical structure — components and layers, short and lowercase per the naming table. |
-| `SF.21` | Adopt | Anonymous namespaces in headers grant every includer private copies of everything inside: banned in the Internal Linkage section for exactly this reason. |
-| `SF.22` | Adopt | The inverse of `SF.21`, codified above: `.cpp` internals (helpers, constants) live in an anonymous namespace, preferred over `static` for uniformity with type declarations; exported entities stay outside. |
-| `Enum.3` | Adopt | Scoped `enum class` everywhere: plain enums convert to `int` too readily and unrelated enumerations collide on enumerator names. |
-| `Enum.4` | Adopt | Define the operations enumeration users need, such as a wrapping `operator++`; the required `static_cast` round-trip is accepted idiom, while expressions repeatedly cast back into the enum signal a missing operation. |
-| `Enum.6` | Adopt | Unnamed enumerations are unrelated integer constants in costume; declare each value as `constexpr` instead, which also gives it the right individual type — the constexpr-discipline section applied. |
-| `Enum.7` | Adopt | Leave the underlying type at its default unless necessary; specifying it is required for forward-declarable enums and for fixed bit width — precisely the ABI-sensitive-header situations this guide flags. |
-| `Enum.8` | Adopt | Explicit enumerator values only when meaning demands it: conventional numbering such as months starting at 1, or bit-flag sets; duplicate values are typos and hand-written consecutive values are noise. |
+- [ ] Scoped `enum class` with `k`-prefixed enumerators; unnamed enums standing in for constants are gone
+- [ ] Headers define no namespace-scope objects or non-inline functions; `using namespace` never appears in headers
+- [ ] Comments state intent rather than narration; layout decisions live in .clang-format, not in review
 
 ---
 

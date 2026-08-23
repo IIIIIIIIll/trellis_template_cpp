@@ -132,7 +132,7 @@ Routing table for the whole directory. When a task touches several rows, skim ea
 | [Testing Conventions](./testing-conventions.md) | What earns a test and how tests are organized | verification posture of `P` |
 | [Build and Toolchain](./build-and-toolchain.md) | Warning policy, sanitizer matrix, clang-tidy curation, CI gates | tooling mandate of `P` |
 
-This document owns none of those topics itself. It exists so the routing above stays consistent: when a guide changes a rule that came from the Guidelines, the stance table is updated in the same change. Coverage is explicit end to end: every guide in this directory closes with a Complete Coverage section that gives each remaining rule ID from its fed sections a recorded Adopt / Adapt / Covered-elsewhere disposition, and the sections that belong to no topic guide are ledgered at the bottom of this file.
+This document owns none of those topics itself. It exists so the routing above stays consistent: when a guide changes a rule that came from the Guidelines, the stance table is updated in the same change. Coverage is explicit end to end: each topic guide now integrates the full Core Guidelines rule set for the sections it owns directly in its body, so every rule ID carries its recorded Adopt / Adapt / Covered-elsewhere disposition in context; this document remains the authoritative stance map, and the sections that belong to no topic guide stay ledgered at the bottom of this file.
 
 ---
 

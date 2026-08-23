@@ -66,6 +66,7 @@ Notes:
 - Prefer making objects immutable over making them synchronized: `const`-first APIs keep the concurrency story out of most types entirely (constants-and-immutability defaults: immutable by default, `const` members by default, `const&` parameters by default — `Con.1`, `Con.2`, `Con.3`; recompute-at-compile-time where possible, `Con.5`).
 - Refactoring to remove sharing beats refactoring to protect it (`CP.40`). Before adding a second mutex to a class, ask which design produced two writers.
 - Returning shared *immutable* snapshots (`shared_ptr<const T>`) lets readers work without locks after the hand-off point.
+- Ownership crossing unrelated thread lifetimes goes through `shared_ptr` (`CP.32`) — the only safe deletion story; static objects, never-freed objects, and owner-outlives-sharer arrangements are exempt. Ladder-first: prefer the immutable snapshots above so readers need no locks, and justify sharing per [Memory and Ownership](./memory-and-ownership.md).
 
 Caught by: TSan reports the race when both accesses actually execute under the `tsan` preset — see the gate below. Nothing catches a race that CI's thread schedule happens never to trigger, which is why the design rule comes first.
 
@@ -83,6 +84,8 @@ A running thread is a resource like a file descriptor: someone must own it and w
 | Raw handles from third-party runtimes | Quarantined | Wrap immediately in an owning RAII adapter |
 
 The guideline phrasing that joins should behave like destructors — automatic, unconditional, exception-safe (`CP.23`) — and the preference for a joining thread abstraction over bare `std::thread` (`CP.25`) land on `std::jthread` in C++20 code. Never detach (`CP.26`).
+
+Think of a thread as a global container (`CP.24`): anything reachable from it must provably outlive every possible use, and a thread that might detach is assumed to outlive its constructing scope — including racing static-object teardown at program exit. The detach ban and joining owners subsume most of the risk, yet the framing stays load-bearing for third-party runtimes, which the table above quarantines behind owning RAII adapters.
 
 Wrong:
 
@@ -133,7 +136,7 @@ Locking is RAII-only. Plain `lock()`/`unlock()` pairs are forbidden (`CP.20`) �
 Rules:
 
 1. Define each mutex next to the data it guards, with names that pair visibly (`state_` / `stateMutex_`) (`CP.50`). A mutex guarding three distant fields is a distributed invariant waiting to break.
-2. Name every guard. An unnamed temporary destroys the lock at the end of the statement — this compiles, runs, and protects nothing:
+2. Name every guard (`CP.44`). An unnamed temporary destroys the lock at the end of the statement, and `std::unique_lock<std::mutex>(m1);` is worse still — a default-constructed local shadowing the mutex without locking it. Both compile, run, and protect nothing:
    ```cpp
    std::lock_guard<std::mutex>(queueMutex_);   // WRONG: temporary, gone immediately
    std::lock_guard<std::mutex> guard(queueMutex_);   // RIGHT: named, lives to scope end
@@ -173,11 +176,21 @@ Caught by: TSan for the resulting races; deadlock detection tools and code revie
 
 ---
 
+## Coroutines and Suspension Points
+
+A coroutine is a threading change like any other and answers to the TSan gate below. Three rules keep suspensions from shredding memory:
+
+1. Never write a capturing lambda that is a coroutine (`CP.51`): the captures die with the closure scope while resumption after the first suspension reads them — use-after-free even for `shared_ptr` and copyable captures. Take values as parameters, or write a plain coroutine function.
+2. Never hold a lock across a suspension point (`CP.52`): resumption may want the held lock (self-deadlock), may land on a different thread (undefined behavior), and an exception skips the guard's destruction — all while serializing everyone else for the suspension's duration. Scope the guard, release, then suspend; the shortest-critical-region rule gains a coroutine clause.
+3. Coroutine parameters pass by value (`CP.53`): reference parameters dangle from the first suspension onward, and some coroutine shapes suspend before their first line runs. The copy lives in the coroutine frame; output parameters are forbidden outright, matching the return-don't-out discipline.
+
+---
+
 ## Atomics: Flags and Counters Only
 
 Atomics provide lock-free reads/writes of single variables. They are the tool for progress flags, counters, sequence numbers, and published pointers. They are not a general synchronization mechanism: an atomic variable does not make neighboring non-atomic data safe, does not compose into multi-variable invariants, and its memory-ordering rules are easy to get subtly wrong.
 
-`volatile` is not synchronization (`CP.8`). It disables compiler caching around hardware-special accesses; it inserts no fences, orders nothing, and races on `volatile` remain undefined behavior.
+`volatile` is not synchronization (`CP.8`). It disables compiler caching around hardware-special accesses; it inserts no fences, orders nothing, and races on `volatile` remain undefined behavior. Its legitimate job is narrow (`CP.200`): memory shared with non-C++ code or hardware — clock registers, device mappings — almost never a local or data member; a flagged `volatile T` nearly always wanted `std::atomic<T>`.
 
 Wrong:
 
@@ -206,7 +219,7 @@ Rules:
 
 1. Default to sequential-consistency ordering. Relax/acquire/release require a comment naming the exact protocol they implement and why it suffices.
 2. Two variables whose relationship matters (a buffer pointer plus its length, a state plus a payload) need a mutex, a sequenced publication protocol, or a single larger atomic — never two independent atomic members.
-3. Do not write lock-free data structures by hand (`CP.100`). The standard containers, well-tested concurrent libraries, or a plain mutex cover nearly everything; a homemade queue is a research project with a bug quota. Beware classic hazards such as A-B-A reuse of addresses if you ever must (`CP.101` territory).
+3. Do not write lock-free data structures by hand (`CP.100`). The standard containers, well-tested concurrent libraries, or a plain mutex cover nearly everything; a homemade queue is a research project with a bug quota. Beyond atomics and a handful of standard patterns, lock-free programming is expert-only (`CP.102`): a proposal arrives citing the literature (Williams, Herlihy & Shavit, Boehm) and survives design review, or it stays a mutex. Beware classic hazards such as A-B-A reuse of addresses if you ever must (`CP.101` territory).
 4. Lazy initialization is solved by magic statics (`static local` initialization is thread-safe since C++11) or `std::call_once`. Hand-rolled double-checked locking is forbidden (`CP.110`, `CP.111`).
 
 Caught by: TSan for the racy cases; review for `volatile` used near threading and for any new `memory_order_` spelling beyond relaxed-with-comment.
@@ -229,7 +242,7 @@ void ingest(ThreadSafeQueue<Job>& jobs, std::stop_token stop) {
 }
 ```
 
-Futures carry one-shot results:
+Futures carry one-shot results (`CP.60`): a concurrent task returns its value through a future, preserving ordinary call semantics — value or exception, no explicit locking:
 
 ```cpp
 auto result = std::async(std::launch::async, compress_chunk, chunk);
@@ -246,6 +259,8 @@ Pitfalls:
 ---
 
 ## Thread Pools and Shutdown
+
+Thread creation and destruction cost real time (`CP.41`): a thread-per-message dispatcher is the anti-pattern, ad-hoc spawning hiding its cost structure until latency budgets vanish. Pre-created workers fed by a queue keep both visible.
 
 Default infrastructure for background work is one process-wide pool with:
 
@@ -274,6 +289,8 @@ Operating notes:
 - Expect real overhead (roughly 5–15x CPU, 5–10x memory in practice): schedule the full suite accordingly rather than skipping it.
 - A flaky sanitizer finding is still a finding. Fix it, or reduce it to a tracked issue the same day; quieting the tool is forbidden.
 
+Signal handlers sit inside this gate too. Deviation from `CP.201`: the upstream entry is itself a question mark; its usable content is that very little is async-signal-safe and the best handler communicates "not at all". Local posture: handlers store only to lock-free atomic flags consumed outside the handler — polled or drained via self-pipe — and any signal-handler change runs the `tsan` preset explicitly.
+
 ---
 
 ## Quality Check
@@ -295,25 +312,5 @@ ctest --preset tsan --output-on-failure
 - [ ] Atomics limited to single-variable flags/counters; ordering relaxations commented; no `volatile` used for synchronization
 - [ ] Queues bounded with a stated overflow policy; shutdown path drains and joins deterministically
 - [ ] Concurrent paths actually exercised under the `tsan` preset, findings resolved or tracked
-
----
-
-## Complete Coverage: CP
-
-Every remaining rule ID from the Guidelines' CP section, each with an explicit stance so the mapping contains no silent gaps. Ownership questions resolve against the isolation ladder; anything touching threads, atomics, locks, coroutines, or signals answers to the TSan gate.
-
-| Rule | Stance | Disposition |
-|------|--------|-------------|
-| `CP.24` | Adopt | Treat a thread as a global container: anything reachable from it must provably outlive every possible use, and a thread that might detach is assumed to outlive its constructing scope — including racing static-object teardown at program exit. Subsumed by banning `detach()` and requiring joining threads, yet still load-bearing for third-party runtimes, which the Threads table quarantines behind owning RAII adapters |
-| `CP.32` | Adopt | Free-store ownership crossing unrelated thread lifetimes goes through `shared_ptr` (or equivalent) — the only safe deletion story; static objects, never-freed objects, and owner-outlives-sharer arrangements are exempt. Ladder-first: prefer immutable snapshots (`shared_ptr<const T>`) so readers need no locks, and justify sharing per Memory and Ownership |
-| `CP.41` | Adopt | Thread creation and destruction cost real time; a thread-per-message dispatcher is the anti-pattern. Use pre-created workers fed by a queue — locally, the one bounded process-wide pool from Thread Pools and Shutdown, thinking in tasks (`CP.4`) rather than threads |
-| `CP.44` | Adopt | Name every `lock_guard` and `unique_lock`: an unnamed object is a temporary that unlocks instantly — and `unique_lock<mutex>(m1)` is worse, a default-constructed local shadowing the global mutex without locking it. Already codified verbatim as rule 2 of the Locks section |
-| `CP.51` | Adopt | A coroutine lambda's captures die with its closure scope, yet resumption after the first suspension reads them — use-after-free even for `shared_ptr` and copyable captures. Take values as parameters or write a plain coroutine function; coroutine changes answer to the TSan gate like any threading change |
-| `CP.52` | Adopt | Holding a lock across a suspension point risks self-deadlock (resumed work wants the held lock), undefined behavior when resumption lands on a different thread, and a skipped guard destruction on exceptions — while serializing everyone for the suspension's duration. Scope the guard, release, then suspend; the shortest-critical-region rule gains a coroutine clause |
-| `CP.53` | Adopt | Coroutine reference parameters dangle from the first suspension onward — and some coroutine shapes suspend before the first line runs. Pass by value so the copy lives in the coroutine frame; output parameters are forbidden outright, matching the return-don't-out discipline |
-| `CP.60` | Adopt | A concurrent task returns its result through a `future`, preserving ordinary call semantics — value or exception, no explicit locking. The Message Passing section's futures example is the house spelling, single-use promises and the blocking-destructor caveat included |
-| `CP.102` | Adopt | Lock-free programming beyond atomics and a handful of standard patterns is expert-only: study the literature (Williams, Herlihy & Shavit, Boehm) before shipping such code. Reinforces the hand-made-lock-free ban — a proposal arrives citing sources and surviving design review, or it stays a mutex |
-| `CP.200` | Adopt | `volatile` exists solely for memory shared with non-C++ code or hardware — clock registers, device mappings — and almost never as a local or data member. It inserts no fences and synchronizes nothing (`CP.8`); a flagged `volatile T` nearly always wanted `std::atomic<T>` |
-| `CP.201` | Adapt | The upstream entry is itself a question mark; its usable content is that very little is async-signal-safe and the best handler communicates "not at all". Local posture: handlers only store to lock-free atomic flags consumed outside the handler (poll or self-pipe), and signal-handler changes sit explicitly inside the TSan gate |
 
 > Aligned with the [ISO C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines) © Standard C++ Foundation and its contributors. Rule IDs cited for cross-reference; original internal digest (internal business use).

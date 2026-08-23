@@ -26,7 +26,8 @@ Rules:
 1. Numbers quoted in reviews state machine, input, preset, and repetition count.
 2. Sanitizer builds answer correctness questions; their slowdowns make them useless for timing.
 3. The benchmark that justified a change stays in the tree so the next person can re-verify it (`Per.4`).
-4. Effort concentrates on code the profiler indicts, not code that merely looks slow.
+4. Effort concentrates on code the profiler indicts, not code that merely looks slow (`Per.3`): a 50% win on a component eating 4% of runtime moves the whole program less than a 5% win on one eating 40%. Optimizing anywhere else is churn paid in readability for an unmeasurable return.
+5. Keeping context switches off the critical path is threading work (`Per.30`) — lock hold times, shared-state minimization, and wakeup discipline live in [Concurrency](./concurrency.md); the measurement gate here still decides whether the path is critical at all.
 
 ```cpp
 // Minimal harness: steady_clock, warm cache, results observed so nothing is optimized away
@@ -48,7 +49,7 @@ Clock::duration bench(std::span<const Input> cases) {
 
 ## Allocation Hygiene
 
-Allocation dominates more profiles than any other micro-effect. Defaults:
+Allocation dominates more profiles than any other micro-effect. The target is the count of allocations and deallocations, not merely their unit cost (`Per.14`): `reserve()`, in-place construction, and buffers reused across iterations attack the count itself. Defaults:
 
 1. `reserve()` before growth loops — vectors, string builders, hash maps heading for a known size.
 2. `emplace_back(...)` over `push_back(T{...})`: construct in place instead of materializing a temporary to move.
@@ -72,6 +73,8 @@ for (const Entry& e : entries) {
 ```
 
 Where a profile shows allocator pressure that `reserve()` cannot fix, arenas and object pools are the escalation path — under the ownership and ASan-annotation rules in [Memory and Ownership](./memory-and-ownership.md). An arena introduced without a profile is complexity debt, not performance work (`Per.2`).
+
+Nothing allocates on the critical branch (`Per.15`): sizes are known and buffers staged before the hot region begins. An allocation surfacing mid-hot-path fails review even when today's profile forgives its cost.
 
 Caught by: heap profilers (allocation counts and byte totals); allocator statistics from sanitizer builds during correctness runs.
 
@@ -122,6 +125,8 @@ Two obligations come with views:
 
 Redundant temporaries are the same sin inside bodies (`Per.13`): each `format(a) + ", " + format(b)` materializes intermediates, while an append chain into one buffer does not.
 
+The static type system is doing performance work too (`Per.10`): `void*` erasures, weak types, and byte-level manipulation strip exactly the information the optimizer needs — strongly typed simple code compiles better than clever low-level code.
+
 ---
 
 ## Shift Work to Compile Time
@@ -150,6 +155,7 @@ Data layout decides whether the memory subsystem feeds the CPU or starves it:
 1. Compact structures win (`Per.16`): fewer bytes means more objects per cache line. Order members largest-first to close padding holes, or cluster the hottest members together (`Per.17`).
 2. Space is time (`Per.18`): shaving a flag-swollen struct from 64 to 56 bytes cuts scan traffic by an eighth before anything else improves.
 3. Predictable access wins (`Per.19`): linear walks over contiguous memory beat pointer-chasing through node containers, and small sorted-array lookups often beat hash maps at low cardinality — measure, then choose.
+4. Hot data keeps one canonical access path (`Per.12`): redundant aliases — several names reaching the same storage — cost reader clarity and inhibit optimization.
 
 ```cpp
 // Wrong: flags interleaved between doubles widen the struct with padding
@@ -178,7 +184,7 @@ When profiles show scan-heavy numeric loops starving on strided access, restruct
 
 ## The Anti-Rule: No Data, No Micro-Optimization
 
-Readability is the default currency. Manual strength reduction, hand-unrolled loops, cached `end()` iterators, home-grown string implementations — none land without profiler evidence that this exact spot matters and a benchmark delta proving the variant helps (`Per.1`). Code optimized without data is a tax every future reader pays for a speedup nobody measured.
+Readability is the default currency. Manual strength reduction, hand-unrolled loops, cached `end()` iterators, home-grown string implementations — none land without profiler evidence that this exact spot matters and a benchmark delta proving the variant helps (`Per.1`). Code optimized without data is a tax every future reader pays for a speedup nobody measured. Low-level code is not automatically faster (`Per.5`) — hand-rolled variants routinely defeat optimizers that do marvels with clear high-level code — so simplicity is the default speed strategy, and going lower requires the measured delta.
 
 ---
 
@@ -199,19 +205,5 @@ Review checklist:
 - [ ] Constant tables are `constexpr`; no lazy runtime construction of fixed data
 - [ ] Hot struct layouts audited for padding; sizes pinned by `static_assert` where layout matters
 - [ ] No micro-optimization without an attached profile and a measured delta
-
----
-
-## Complete Coverage: Per
-
-| Rule | Stance | Disposition |
-|------|--------|-------------|
-| `Per.3` | Adopt | Effort goes only where the profile indicts: a 50% win on a component eating 4% of runtime moves the whole program less than a 5% win on one eating 40%. Optimizing anywhere else is churn paid in readability for an unmeasurable return. |
-| `Per.5` | Adopt | Low-level code is not automatically faster — hand-rolled variants routinely defeat optimizers that do marvels with clear high-level code. Simplicity is the default speed strategy; going lower requires the measured delta. |
-| `Per.10` | Adopt | The static type system is itself a performance tool: `void*` erasures, weak types, and byte-level manipulation strip exactly the information the optimizer needs. Strongly typed simple code compiles better than clever low-level code. |
-| `Per.12` | Adopt | Upstream states this one in its title alone: redundant aliases — several names reaching the same storage — cost reader clarity and inhibit optimization, so hot data keeps one canonical access path. |
-| `Per.14` | Adopt | Minimize the count of allocations and deallocations, not merely their unit cost: `reserve()`, in-place construction, and buffers reused across iterations attack the count itself (Allocation Hygiene). |
-| `Per.15` | Adopt | Nothing allocates on the critical branch: sizes are known and buffers staged before the hot region begins. An allocation surfacing mid-hot-path fails review even when today's profile forgives its cost. |
-| `Per.30` | Covered elsewhere | Keeping context switches off the critical path is threading work — lock hold times, shared-state minimization, and wakeup discipline live in [Concurrency](./concurrency.md); the measurement gate here still decides whether the path is critical at all. |
 
 > Aligned with the [ISO C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines) © Standard C++ Foundation and its contributors. Rule IDs cited for cross-reference; original internal digest (internal business use).
