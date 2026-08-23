@@ -302,3 +302,37 @@ Before merging error-handling code, confirm:
 - [ ] Every exported module function and callback trampoline has a total catch translating to status codes
 - [ ] Every `catch` handles, annotates-and-rethrows (`throw;`), or documents the ignore
 - [ ] Each failure is logged exactly once, at the layer that handles it
+
+---
+
+## Complete Coverage: E
+
+Census of the remaining ISO C++ Core Guidelines error-handling rules, each given an explicit disposition. Section-level stance comes from [Core Guidelines Alignment](./core-guidelines-alignment.md): the Guidelines' exception-centric default is adapted to this project's four-mechanism split wherever the two disagree.
+
+| Rule | Stance | Disposition |
+|------|--------|-------------|
+| `E.1` | Adopt | An error-handling strategy cannot be retrofitted onto finished interfaces; fix the assert-versus-status-versus-throw split from the decision table at design time, before signatures hard-code a mechanism. |
+| `E.2` | Adapt | A function that cannot perform its task must report it, but the signal follows the failure kind here: rare caller-reactable failures throw, internal bugs assert, and routine misses return as statuses — never one blanket answer. |
+| `E.3` | Adopt | Exceptions carry failures, never ordinary control flow: loop termination and cache misses are normal outcomes, and implementations optimize on exactly that assumption. |
+| `E.4` | Adopt | Invariants decide what counts as an error; design handling so that after recovery every surviving object is valid again, which is why the constructor-establishes-invariant discipline feeds straight into error paths. |
+| `E.5` | Adopt | A constructor either establishes the class invariant or throws — no half-built objects callers must remember to check; the class-design side of invariant discipline lives in Classes and Hierarchies. |
+| `E.7` | Adopt | State preconditions at the boundary so interface misuse is visible, and route violations through the decision table: internal assumptions become asserts, externally supplied values get checked status returns, because `NDEBUG` erases asserts from release builds. |
+| `E.8` | Adopt | State postconditions so callers need no defensive re-checks; the guarantee travels in the signature and documentation, and verifying it follows the same trust-boundary logic as preconditions. |
+| `E.12` | Adopt | Reserve `noexcept` for functions where exiting by a throw is impossible or unacceptable — the `noexcept` Discipline table operationalizes this, including the walk-the-callee-tree check before marking. |
+| `E.13` | Adopt | Throwing while directly owning a bare resource is a leak; the ownership ladder dissolves the hazard structurally — allocations live in RAII owners whose destructors run during unwinding, and stray cleanup happens before the throw or via a scoped guard. |
+| `E.14` | Adapt | Stricter than the rule: every thrown type derives from the single project base under `std::exception`, so built-in-type throws and free-floating enum values — tolerated upstream — are banned for bypassing generic `catch (const std::exception&)` handlers. |
+| `E.15` | Adopt | Throw temporaries, catch by `const&`: catching by value slices, catching by pointer invites lifetime questions, and rethrows use bare `throw;` so the original dynamic type survives. |
+| `E.16` | Adopt | Destructors, deallocation functions, `swap`, and the copy/move constructors of thrown types must never exit by an exception — standard-library basic guarantees assume it, and the `noexcept` table plus the container-move requirement enforce it. |
+| `E.17` | Adopt | Catch only where meaningful recovery exists; everywhere else let the exception propagate while RAII unwinds cleanup, and log the failure once, at the layer that finally handles it. |
+| `E.18` | Adopt | Each `try` block earns its place by handling, annotating-and-rethrowing, or deliberately ignoring; resource cleanup belongs in RAII objects, and the sanctioned dense-catch zone is the total catch at module edges. |
+| `E.19` | Covered elsewhere | Cleanup when no suitable resource handle exists maps to the small scoped guards of [Memory and Ownership](./memory-and-ownership.md) — a last resort beneath real RAII types, never a replacement for them. |
+| `E.25` | Adapt | This codebase runs exceptions by default, so the `valid()`-checking simulation stays hypothetical; its live residue is the module-edge policy, where RAII results are translated to status codes instead of being carried across ABI. |
+| `E.26` | Adapt | Failing fast survives only for unrecoverable corruption — terminate, or abort inside edge shims; allocation exhaustion is not failed fast, because `bad_alloc` propagates so a top level can decide whether a retry is real. |
+| `E.27` | Adapt | Systematic error codes are adopted beyond the rule's no-exceptions premise: expected-style status results are the standing mechanism for anticipated failures and the mandatory currency at ABI edges, centralized behind the `Result` alias so handling stays uniform. |
+| `E.28` | Adapt | Failures travel with the return value, never in `errno`-style global flags; the one deliberate difference is the module-edge shim's documented thread-local message buffer, which supplements — never replaces — the status code. |
+| `E.30` | Adopt | Dynamic exception specifications (`throw(X, Y)`) were removed from the language because library changes bubbled into crashes up long call chains; express the impossible case with `noexcept` instead. |
+| `E.31` | Adopt | Handlers match in source order, so order catches most-derived-first and put `catch (...)` last — a hidden handler is dead code that quietly changes behavior. |
+
+---
+
+> Aligned with the [ISO C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines) © Standard C++ Foundation and its contributors. Rule IDs cited for cross-reference; original internal digest (internal business use).

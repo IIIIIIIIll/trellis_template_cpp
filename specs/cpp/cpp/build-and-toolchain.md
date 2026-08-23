@@ -224,3 +224,5 @@ Checklist:
 - [ ] clang-format and clang-tidy clean on changed sources
 - [ ] Threading changes exercised under the `tsan` preset
 - [ ] New dependencies entered through manifest/system packages and pinned
+
+> Aligned with the [ISO C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines) © Standard C++ Foundation and its contributors. Rule IDs cited for cross-reference; original internal digest (internal business use).

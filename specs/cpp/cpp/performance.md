@@ -200,4 +200,18 @@ Review checklist:
 - [ ] Hot struct layouts audited for padding; sizes pinned by `static_assert` where layout matters
 - [ ] No micro-optimization without an attached profile and a measured delta
 
+---
+
+## Complete Coverage: Per
+
+| Rule | Stance | Disposition |
+|------|--------|-------------|
+| `Per.3` | Adopt | Effort goes only where the profile indicts: a 50% win on a component eating 4% of runtime moves the whole program less than a 5% win on one eating 40%. Optimizing anywhere else is churn paid in readability for an unmeasurable return. |
+| `Per.5` | Adopt | Low-level code is not automatically faster — hand-rolled variants routinely defeat optimizers that do marvels with clear high-level code. Simplicity is the default speed strategy; going lower requires the measured delta. |
+| `Per.10` | Adopt | The static type system is itself a performance tool: `void*` erasures, weak types, and byte-level manipulation strip exactly the information the optimizer needs. Strongly typed simple code compiles better than clever low-level code. |
+| `Per.12` | Adopt | Upstream states this one in its title alone: redundant aliases — several names reaching the same storage — cost reader clarity and inhibit optimization, so hot data keeps one canonical access path. |
+| `Per.14` | Adopt | Minimize the count of allocations and deallocations, not merely their unit cost: `reserve()`, in-place construction, and buffers reused across iterations attack the count itself (Allocation Hygiene). |
+| `Per.15` | Adopt | Nothing allocates on the critical branch: sizes are known and buffers staged before the hot region begins. An allocation surfacing mid-hot-path fails review even when today's profile forgives its cost. |
+| `Per.30` | Covered elsewhere | Keeping context switches off the critical path is threading work — lock hold times, shared-state minimization, and wakeup discipline live in [Concurrency](./concurrency.md); the measurement gate here still decides whether the path is critical at all. |
+
 > Aligned with the [ISO C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines) © Standard C++ Foundation and its contributors. Rule IDs cited for cross-reference; original internal digest (internal business use).

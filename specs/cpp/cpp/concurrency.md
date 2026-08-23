@@ -13,7 +13,7 @@ Therefore the design order of preference is:
 1. **Do not share** mutable state across threads at all (`CP.3`).
 2. **Share immutable** data freely — immutability needs no synchronization.
 3. **Communicate instead of sharing**: move ownership through channels, queues, futures (`CP.9`).
-4. Where sharing survives, guard every access with a mutex co-designed with its data (`CP.10`).
+4. Where sharing survives, guard every access with a mutex co-designed with its data (`CP.50`).
 5. Atomics for narrow, single-variable cases only.
 
 Baseline: C++17 (`std::thread` plus explicit join discipline). C++20's `std::jthread`, `std::stop_token`, and counting semaphores are preferred where the toolchain provides them; differences are noted inline.
@@ -295,5 +295,25 @@ ctest --preset tsan --output-on-failure
 - [ ] Atomics limited to single-variable flags/counters; ordering relaxations commented; no `volatile` used for synchronization
 - [ ] Queues bounded with a stated overflow policy; shutdown path drains and joins deterministically
 - [ ] Concurrent paths actually exercised under the `tsan` preset, findings resolved or tracked
+
+---
+
+## Complete Coverage: CP
+
+Every remaining rule ID from the Guidelines' CP section, each with an explicit stance so the mapping contains no silent gaps. Ownership questions resolve against the isolation ladder; anything touching threads, atomics, locks, coroutines, or signals answers to the TSan gate.
+
+| Rule | Stance | Disposition |
+|------|--------|-------------|
+| `CP.24` | Adopt | Treat a thread as a global container: anything reachable from it must provably outlive every possible use, and a thread that might detach is assumed to outlive its constructing scope — including racing static-object teardown at program exit. Subsumed by banning `detach()` and requiring joining threads, yet still load-bearing for third-party runtimes, which the Threads table quarantines behind owning RAII adapters |
+| `CP.32` | Adopt | Free-store ownership crossing unrelated thread lifetimes goes through `shared_ptr` (or equivalent) — the only safe deletion story; static objects, never-freed objects, and owner-outlives-sharer arrangements are exempt. Ladder-first: prefer immutable snapshots (`shared_ptr<const T>`) so readers need no locks, and justify sharing per Memory and Ownership |
+| `CP.41` | Adopt | Thread creation and destruction cost real time; a thread-per-message dispatcher is the anti-pattern. Use pre-created workers fed by a queue — locally, the one bounded process-wide pool from Thread Pools and Shutdown, thinking in tasks (`CP.4`) rather than threads |
+| `CP.44` | Adopt | Name every `lock_guard` and `unique_lock`: an unnamed object is a temporary that unlocks instantly — and `unique_lock<mutex>(m1)` is worse, a default-constructed local shadowing the global mutex without locking it. Already codified verbatim as rule 2 of the Locks section |
+| `CP.51` | Adopt | A coroutine lambda's captures die with its closure scope, yet resumption after the first suspension reads them — use-after-free even for `shared_ptr` and copyable captures. Take values as parameters or write a plain coroutine function; coroutine changes answer to the TSan gate like any threading change |
+| `CP.52` | Adopt | Holding a lock across a suspension point risks self-deadlock (resumed work wants the held lock), undefined behavior when resumption lands on a different thread, and a skipped guard destruction on exceptions — while serializing everyone for the suspension's duration. Scope the guard, release, then suspend; the shortest-critical-region rule gains a coroutine clause |
+| `CP.53` | Adopt | Coroutine reference parameters dangle from the first suspension onward — and some coroutine shapes suspend before the first line runs. Pass by value so the copy lives in the coroutine frame; output parameters are forbidden outright, matching the return-don't-out discipline |
+| `CP.60` | Adopt | A concurrent task returns its result through a `future`, preserving ordinary call semantics — value or exception, no explicit locking. The Message Passing section's futures example is the house spelling, single-use promises and the blocking-destructor caveat included |
+| `CP.102` | Adopt | Lock-free programming beyond atomics and a handful of standard patterns is expert-only: study the literature (Williams, Herlihy & Shavit, Boehm) before shipping such code. Reinforces the hand-made-lock-free ban — a proposal arrives citing sources and surviving design review, or it stays a mutex |
+| `CP.200` | Adopt | `volatile` exists solely for memory shared with non-C++ code or hardware — clock registers, device mappings — and almost never as a local or data member. It inserts no fences and synchronizes nothing (`CP.8`); a flagged `volatile T` nearly always wanted `std::atomic<T>` |
+| `CP.201` | Adapt | The upstream entry is itself a question mark; its usable content is that very little is async-signal-safe and the best handler communicates "not at all". Local posture: handlers only store to lock-free atomic flags consumed outside the handler (poll or self-pipe), and signal-handler changes sit explicitly inside the TSan gate |
 
 > Aligned with the [ISO C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines) © Standard C++ Foundation and its contributors. Rule IDs cited for cross-reference; original internal digest (internal business use).

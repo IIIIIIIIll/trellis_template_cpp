@@ -241,4 +241,53 @@ Review checklist:
 - [ ] Nesting stays shallow; guards return early; repeated compound conditions became named predicates
 - [ ] No structural container mutation inside a range-for; no iteration over dying temporaries
 
+---
+
+## Complete Coverage: ES
+
+| Rule | Stance | Disposition |
+|------|--------|-------------|
+| `ES.1` | Adopt | Reach for the standard library before any third-party library or hand-written loop: it is better tested, higher level, and present in every toolchain. The sole carve-out is allocation-restricted contexts, which escalate to the arena and pool patterns in [Memory and Ownership](./memory-and-ownership.md). |
+| `ES.2` | Adopt | Suitable abstractions — library types and classes — sit closer to the problem than bare language features and give shorter, clearer, better-tested code; raw `char*`-style encodings of concepts are rejected in review. |
+| `ES.3` | Adopt | Duplicated logic obscures intent and diverges silently under maintenance; hoist it into one function or replace both copies with a standard algorithm. Review plus static analysis are the catchers. |
+| `ES.5` | Adopt | Names live in the smallest scope that can hold them: short scopes release resources early, shrink the state a reader tracks, and block accidental later misuse. Long stretches between a handle's last use and its scope end are the flagged smell. |
+| `ES.6` | Adopt | Loop counters are declared in the `for` initializer, and C++17 `if`/`switch` initializer statements confine selection variables to their block — nothing outlives the construct that needed it. |
+| `ES.7` | Covered elsewhere | Name-length policy (short common locals, longer uncommon non-locals) is owned by [Quality Guidelines](./quality-guidelines.md) as part of its naming rules. |
+| `ES.8` | Covered elsewhere | Confusable-name avoidance — `l1`/`I0`-class look-alikes and type/non-type name collisions — belongs to [Quality Guidelines](./quality-guidelines.md)' naming section. |
+| `ES.9` | Covered elsewhere | `ALL_CAPS` stays reserved for macros so constants and enumerators cannot collide with preprocessor substitution; the resulting constant-naming rule lives in [Quality Guidelines](./quality-guidelines.md) (see `Enum.5`). |
+| `ES.10` | Adopt | One declarator per statement: comma lists hide an uninitialized variable among initialized ones and blur pointer decoration. Function parameters and structured bindings are the sanctioned exceptions. |
+| `ES.12` | Adopt | Shadowing is forbidden — an inner scope introduces a new name instead of reusing an outer one, members included. Restating a base-class function name alongside a `using` declaration remains the exception. |
+| `ES.21` | Adopt | A variable appears no earlier than its first use; a declaration drifting ahead of its initializer gets pulled down next to it. |
+| `ES.24` | Covered elsewhere | Owning pointers travel in smart pointers with `unique_ptr<T>` as the default holder — the ownership ladder in [Memory and Ownership](./memory-and-ownership.md) owns this end to end. |
+| `ES.26` | Adapt | One variable serves one purpose. The single sanctioned overlap is a scoped scratch buffer reused across iterations to dodge reallocation ([Performance](./performance.md)) — same buffer job each pass, never two meanings; stale contents from the previous round stay a reviewed hazard. |
+| `ES.27` | Adopt | Fixed-size stack arrays are `std::array`: they carry their bound in the type and never decay to pointers. Built-in arrays with non-local bounds and VLA-style runtime bounds are rejected outright as the security risks they are. |
+| `ES.30` | Adopt | No macro rewrites program text: macros ignore scope and type, show the reader something different from what the compiler sees, and break tooling. Configuration-control `#ifdef` blocks remain acceptable; stringification and token pasting do not. |
+| `ES.31` | Adopt | Constants are `constexpr` variables and pseudo-functions are templates or overloads, never object-like or function-like macros — untyped expansion and unevaluated-argument surprises ship free with the latter. |
+| `ES.32` | Adopt | Any macro that survives the bans above is spelled `ALL_CAPS` so readers see the preprocessor at work; a lowercase macro is treated as a defect. |
+| `ES.33` | Adopt | Macros ignore scope, so survivors carry long, prefix-qualified names unique enough to survive contact with third-party headers. |
+| `ES.34` | Adopt | C-style variadic functions are not definable here: `va_arg` trusts unchecked casts and a miscounted call crashes. Variadic templates and overloads express the same shapes safely; `<cstdarg>` in a diff fails review. |
+| `ES.40` | Adopt | Expressions read in one pass: no assignments or multi-object side effects buried in subexpressions, no reliance on subtle precedence or undefined behavior. The counter-duty holds too — splitting every operation into its own statement is its own obfuscation. |
+| `ES.41` | Adopt | Arithmetic, comparison, and logical precedence are assumed knowledge; anything mixing bitwise operators with other operators takes explicit parentheses (`(a & flag) != 0`). Assignments sit leftmost or nowhere. |
+| `ES.42` | Covered elsewhere | Pointer simplicity — no pointer arithmetic, sequences as spans, no array decay — is owned by [Memory and Ownership](./memory-and-ownership.md), with the span-at-the-boundary rules in [Performance](./performance.md). |
+| `ES.43` | Adopt | Expressions with undefined order of evaluation do not exist here: a value written in an expression is not read elsewhere in it (`v[i] = ++i` shape). C++17 tightened some sequencing, but code gets pasted into pre-C++17 builds, so no cleverness. |
+| `ES.44` | Adopt | Function-argument evaluation order is unspecified even after C++17, so interdependent arguments are sequenced into separate statements instead of `f(++i, ++i)` shapes. |
+| `ES.45` | Adopt | Unnamed literals beyond the trivial set (`0`, `1`, `nullptr`, `'\n'`, `""`) become named `constexpr` constants; a number needing a comment deserves a name. Wider compile-time-constant conventions live in [Quality Guidelines](./quality-guidelines.md). |
+| `ES.47` | Adopt | Null pointers are `nullptr`, never `0` or `NULL` — literal zero quietly resolves `f(0)` onto the integer overload, and deduction misfires around `NULL`. |
+| `ES.55` | Adopt | Prefer constructs that cannot go out of range — range-`for`, position-returning algorithms — over indexed access wrapped in checks. An explicit bounds check is usually the tell that the wrong abstraction was picked. |
+| `ES.60` | Covered elsewhere | No naked `new` or `delete` outside resource-management code: the ownership ladder in [Memory and Ownership](./memory-and-ownership.md) bans them outright in favor of RAII holders. |
+| `ES.61` | Covered elsewhere | Matching `delete[]` to array news matters only where a bare `delete` exists; [Memory and Ownership](./memory-and-ownership.md) removes the mismatch by removing owning raw pointers. |
+| `ES.62` | Adopt | Relational comparison or subtraction of pointers into different arrays is undefined; ordering and differences mean something only within one array. |
+| `ES.63` | Covered elsewhere | Slicing is prevented structurally — polymorphic bases suppress copying (`C.67`) and deliberate partial copies demand a named operation — per [Classes and Hierarchies](./classes-and-hierarchies.md). |
+| `ES.64` | Adopt | Construction is spelled `T{e}`: it announces construction, refuses narrowing, and stays safe where cast forms are not. The container wart — `(10)` for size versus `{10}` for one element — remains confined to that idiom and is stated plainly at call sites. |
+| `ES.65` | Covered elsewhere | Never dereferencing an invalid pointer — null, dangling, or invalidated — is the lifetime-safety core of [Memory and Ownership](./memory-and-ownership.md), including its container-invalidation table. |
+| `ES.71` | Adopt | Range-`for` is the default loop: it cannot mis-index and states intent. Index-based `for` survives only when the body truly needs the index — neighbor elements, strides, deliberate counter work — and the loop variable binds by reference, never by value copy. |
+| `ES.72` | Adopt | With an obvious loop variable, a classic `for` beats `while`: the whole mechanism sits up front and the counter's scope ends with the loop. |
+| `ES.73` | Adopt | With no loop variable, `while` wins: an event-driven condition wedged into a `for` frame with an unrelated increment misleads every reader. |
+| `ES.77` | Adopt | `break` and `continue` stay rare: a loop needing `break` usually wants extraction into a function where it becomes `return`, and `continue` chains collapse into one positive `if`. Kept ones are visible at a glance. |
+| `ES.79` | Adopt | `default` handles the genuinely common case; when only specific cases matter, an explicit empty `default` records that decision so neither maintainer nor compiler assumes a missed enumerator. Switches over enums name every case or carry a default. |
+| `ES.84` | Adopt | Unnamed locals do not exist: `lock_guard<mutex>{mx};` builds a temporary that unlocks immediately — a silent race. Scoped guards get names so their lifetime binds to the scope. |
+| `ES.85` | Adopt | A deliberate no-op body is an empty block carrying a comment; a stray semicolon behind a loop head is invisible and flips the meaning of the program. |
+| `ES.86` | Adopt | The `for` header alone steers the counter; mutating it inside the body destroys top-down reasoning about iterations. Skip logic uses a separate flag — two concepts, two variables — or a restructured loop. |
+| `ES.105` | Adopt | Integer `/` and `%` by a possibly-zero divisor take an explicit precondition at the boundary; the undefined crash is never left implicit. Precondition mechanics live in [Functions and Interfaces](./functions-and-interfaces.md); floating-point division by zero is a separate domain decision. |
+
 > Aligned with the [ISO C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines) © Standard C++ Foundation and its contributors. Rule IDs cited for cross-reference; original internal digest (internal business use).

@@ -132,7 +132,7 @@ Routing table for the whole directory. When a task touches several rows, skim ea
 | [Testing Conventions](./testing-conventions.md) | What earns a test and how tests are organized | verification posture of `P` |
 | [Build and Toolchain](./build-and-toolchain.md) | Warning policy, sanitizer matrix, clang-tidy curation, CI gates | tooling mandate of `P` |
 
-This document owns none of those topics itself. It exists so the routing above stays consistent: when a guide changes a rule that came from the Guidelines, the stance table is updated in the same change.
+This document owns none of those topics itself. It exists so the routing above stays consistent: when a guide changes a rule that came from the Guidelines, the stance table is updated in the same change. Coverage is explicit end to end: every guide in this directory closes with a Complete Coverage section that gives each remaining rule ID from its fed sections a recorded Adopt / Adapt / Covered-elsewhere disposition, and the sections that belong to no topic guide are ledgered at the bottom of this file.
 
 ---
 
@@ -207,6 +207,53 @@ Before merging changes to this file or citing new rule IDs elsewhere, confirm:
 - [ ] Deviation comments name the rule ID and reason; bare suppressions stay rejected
 - [ ] Attribution footer present on every guide in this directory
 
+---
+
+## Residual Sections Ledger
+
+Six Guidelines sections contain nothing a topic guide can operationalize as coding practice on its own: `A` (library architecture), `CPL` (C interop), `FAQ` (upstream project background and GSL history), `NR` (deliberate anti-rules), `SL` (standard-library policy), and `In` (meta-advice). Each entry below records where its substance lands so no rule ID in those sections goes unaddressed.
+
+| Rule | Stance | Disposition |
+|------|--------|-------------|
+| `A.1` | Adopt | Isolate less stable code behind stable seams so it can be unit-tested, refactored, and deprecated without dragging the rest of the system along. |
+| `A.2` | Adopt | Potentially reusable parts ship as maintained libraries — headers plus optional binaries, documented together — not copy-pasted fragments scattered through applications. |
+| `A.4` | Adopt | Library dependency graphs stay acyclic: cycles complicate builds and invite indeterminism; the file-level twin lives in Quality Guidelines under `SF.9`. |
+| `CPL.1` | Adopt | Prefer C++ to C for its type checking and notation; enforced by simply compiling everything with a C++ compiler. |
+| `CPL.2` | Adapt | If C survives anywhere it stays in the common C/C++ subset compiled as C++, so the C++ compiler checks it; a genuine C-only translation unit would be a Build-and-Toolchain-visible deviation. |
+| `CPL.3` | Adopt | Call C through a C++ facade: `extern "C"` declarations sit at the boundary while callers get RAII and type safety, never raw C idioms. |
+| `FAQ.1` | Covered elsewhere | Interpretive guidance absorbed into topic stances: the aims are restated as this directory's Overview charter — modern, machine-checkable C++. |
+| `FAQ.2` | Covered elsewhere | Announcement history from CppCon 2015; provenance trivia with no practice to adopt. |
+| `FAQ.3` | Covered elsewhere | Authorship credit, satisfied once by the attribution footer every guide carries. |
+| `FAQ.4` | Covered elsewhere | Upstream contribution process; improving this digest follows ordinary task flow instead. |
+| `FAQ.5` | Covered elsewhere | Upstream editor/maintainer path; no analogue needed here. |
+| `FAQ.6` | Covered elsewhere | Confirms the Guidelines are advisory rather than committee-approved — the premise of this file's "advice rather than law" framing. |
+| `FAQ.7` | Covered elsewhere | Repository-hosting explanation (Standard C++ Foundation); consistent with the License Note. |
+| `FAQ.8` | Adopt | Modern-C++-only scope confirmed; matches this directory's C++17 baseline with noted C++20 refinements. |
+| `FAQ.9` | Adopt | The Guidelines propose no new language features, and likewise every cited practice here uses shippable standard features only. |
+| `FAQ.10` | Covered elsewhere | Markdown and toolchain trivia about upstream sources; irrelevant to this digest. |
+| `FAQ.50` | Adapt | We take the concept and decline the dependency: standard library plus curated warnings replace any GSL requirement — the documented difference is the clang-tidy curation above. |
+| `FAQ.51` | Adapt | Microsoft's GSL is one implementation among several; nothing here vendors or assumes it. |
+| `FAQ.52` | Adopt | Interfaces-not-implementations reasoning backs preferring standard types over GSL aliases wherever an equivalent exists. |
+| `FAQ.53` | Covered elsewhere | Why GSL bypassed Boost; historical context only. |
+| `FAQ.54` | Adopt | GSL was never standardized — one more reason the `std` equivalent wins by default. |
+| `FAQ.55` | Adopt | The view taxonomy adopted directly: `std::string_view` for read-only views (C++17) and `std::span` for read-write ones (C++20), not `gsl::span<char>`. |
+| `FAQ.56` | Covered elsewhere | Context for `owner` versus `observer_ptr`; moot because owning raw pointers are banned outright in Memory and Ownership. |
+| `FAQ.57` | Covered elsewhere | Context for `stack_array`; `std::array` fills that need under Memory and Ownership's container guidance. |
+| `FAQ.58` | Covered elsewhere | Context for `dyn_array`; fixed-size heap arrays are rare and `std::vector` covers them. |
+| `FAQ.59` | Adapt | `Expects` is a contract-syntax placeholder, not `assert`; precondition discipline lives in Error Handling pending language contracts. |
+| `FAQ.60` | Adapt | Same story for `Ensures` postconditions: Error Handling owns the failure-contract vocabulary, not a GSL macro. |
+| `NR.1` | Adopt | Deliberate anti-rule acknowledged: declare at first use with an initializer; declarations-on-top manufactures uninitialized variables. |
+| `NR.2` | Adopt | Deliberate anti-rule acknowledged: early returns concentrate error handling; single-return gymnastics invent extra state variables. |
+| `NR.3` | Adapt | Deliberate anti-rule acknowledged with a documented carve-out: exceptions stay the default, replaced by status returns at module and ABI edges per Error Handling. |
+| `NR.4` | Adopt | Deliberate anti-rule acknowledged: cohesive classes group under namespaces and shared headers; one-class-per-file sprawl slows builds without aiding maintenance. |
+| `NR.5` | Adopt | Deliberate anti-rule acknowledged: constructors deliver ready-to-use objects with established invariants; two-phase `Init()` patterns leak semi-constructed objects. |
+| `NR.6` | Adopt | Deliberate anti-rule acknowledged: RAII makes goto-exit cleanup ladders obsolete pre-exception relics. |
+| `NR.7` | Adopt | Deliberate anti-rule acknowledged: protected data is global data scoped to a hierarchy; keep data private — Classes and Hierarchies territory. |
+| `SL.1` | Adopt | Use libraries wherever possible: reinvented wheels lack reviewers, tests, and fixes; adopted through Quality Guidelines' library posture. |
+| `SL.2` | Adopt | Standard library before third-party libraries — most scrutinized, most portable, least supply-chain risk; baked into Quality Guidelines' uniformity principle. |
+| `SL.3` | Adopt | Nothing user-defined enters namespace `std`: the same `[namespace.std]` reasoning behind banning forward-declared `std::` types in Quality Guidelines. |
+| `SL.4` | Adopt | Umbrella rule: use standard components within their contracts; concrete catchers distributed across the profile mappings earlier in this file. |
+| `In.0` | Adopt | Meta-entry: don't panic — understand a rule's implications before applying it, embodied here in the demand for reasoned stances and justified deviations. |
 ---
 
 > Aligned with the [ISO C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines) © Standard C++ Foundation and its contributors. Rule IDs cited for cross-reference; original internal digest (internal business use).

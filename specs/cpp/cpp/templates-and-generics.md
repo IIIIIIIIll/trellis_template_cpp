@@ -225,7 +225,7 @@ Guidance:
 
 1. Value-based selection between statements in one function: `if constexpr`. Discarded branches are not instantiated, which is precisely what tag dispatch and `enable_if` used to buy.
 2. Selecting between *overloads* visible to callers, or constraining a public API: concepts on C++20 (`T.26`); on C++17, a traits-based `enable_if` remains acceptable — but hide it behind a descriptive alias.
-3. Class-template shape differences still belong to (partial) specialization (`T.145`); `if constexpr` does not replace choosing a different data layout.
+3. Class-template shape differences still belong to (partial) specialization; `if constexpr` does not replace choosing a different data layout.
 4. Do not specialize function templates — overload or delegate instead (`T.144`); specialization interacts badly with overload resolution and surprises even experts.
 
 ```cpp
@@ -295,5 +295,49 @@ clang-tidy -p build/default path/to/changed.cpp
 - [ ] Type erasure introduced only where heterogeneous storage or a hidden-implementation boundary demands it
 - [ ] CRTP additions carry a justification (hot-path dispatch, mixin reuse) in the declaring header
 - [ ] New templates compile in the two-compiler CI matrix without warnings
+
+---
+
+## Complete Coverage: T
+
+Every remaining rule ID from the Guidelines' T section, each with an explicit stance so the mapping contains no silent gaps. Vocabulary follows Core Guidelines Alignment; dialect notes resolve to the C++17 baseline with C++20 spellings preferred where available.
+
+| Rule | Stance | Disposition |
+|------|--------|-------------|
+| `T.4` | Adapt | Upstream placeholder — Reason and Example are unfinished. Accepted in principle: compile-time syntax-tree manipulation is TMP's legitimate niche, but it enters the codebase only through the measured-payoff gate of `T.120`, never as casual cleverness |
+| `T.12` | Adapt | A bare `auto` is the weakest possible concept; where a fitting concept exists and the toolchain speaks C++20, prefer the constrained spelling. On the C++17 baseline the notation does not exist and plain `auto` stays acceptable |
+| `T.13` | Adapt | Prefer the shorthand for simple single-type-argument concepts — `template<Sortable T>`, or `Sortable auto&&` — because it reads the way we speak. Applies on C++20; the C++17 fallback remains the traits-based `static_assert` spelled out under Document Requirements with Concepts |
+| `T.21` | Adopt | A concept must require a coherent, complete set of operations: `Subtractable` alone is meaningless without `+`, and comparison comes as the full six-operator set. Flag odd subsets such as `==` without `!=` — surprising for users and sometimes slower |
+| `T.22` | Adopt | Concepts carry axioms — the mathematical assumptions (`a - a == 0`, distributivity) written as comments beside the `requires` clause until language support exists. An axiom is assumed like a precondition; early experimental concepts may ship incomplete, but are then explicitly not stable |
+| `T.23` | Adopt | Refine by adding use patterns: a forward iterator is an input iterator plus suffix `++`, so the compiler derives subsumption from requirement sets alone. Two concepts with identical requirements are equivalents, not a hierarchy |
+| `T.24` | Adopt | When two concepts differ only in semantics, separate them with a trait or tag class — contiguous is random-access plus `is_contiguous_v` — preferring standard-library traits and wrapping the trait back into a named concept |
+| `T.25` | Adopt | Never write complementary `requires C<T>` / `requires !C<T>` pairs; provide an unconstrained primary plus a constrained refinement (or delete the primary). `enable_if` code commits this habit routinely, and two constraints already explode into four definitions |
+| `T.40` | Adopt | Pass operations to algorithms as function objects — lambdas included — which carry state through the interface and inline well, rather than function pointers; enforcement flags function-pointer template arguments |
+| `T.41` | Adopt | Require only what the algorithm essentially needs: debug streamability does not belong in `sort`'s concept. Deliberately leaving non-essential operations unchecked delays their failure to instantiation time — the price of a stable interface, and worth paying |
+| `T.43` | Adopt | `using` aliases over `typedef`: the new name leads, the syntax parallels `auto`, and only `using` can form template aliases. Expect enforcement to flag legacy `typedef`s widely |
+| `T.48` | Adapt | Without concept support, the guideline's best emulation is `enable_if` — with the warning that it drags in complementary-constraint designs. Our C++17 dialect prefers `static_assert` trait checks for stating contracts and quarantines SFINAE behind named aliases for genuine overload selection |
+| `T.49` | Adopt | Type erasure buys flexibility at the price of an indirection hidden behind a compilation boundary; avoid it by default. Sanctioned exceptions map onto this guide's erasure-versus-template defaults: plugin seams, heterogeneous storage, `std::function`-style needs |
+| `T.64` | Adopt | Class-template alternatives come from specialization: one general interface, specialized implementations for the shapes that need them — consistent with the `if constexpr` section's rule that data-layout changes stay specializations |
+| `T.65` | Adapt | Tag dispatch selects function implementations from type properties at compile time — legitimate technique, demoted here: `if constexpr` and constrained overloads express the same selection more readably, so tag machinery survives only where those cannot |
+| `T.67` | Adapt | Upstream content is largely unwritten; the usable intent is that types needing a different representation earn a dedicated specialization (the mechanism of `T.64`) rather than bending the primary template |
+| `T.68` | Adopt | Inside templates prefer `{}` initialization: `()` invites both the parse where `T v1(T(u))` declares a function and silent casts like `f(1, "asdf")`. Braced form states variable-hood outright; enforcement flags paren initializers and function-style casts |
+| `T.69` | Adopt | An unqualified call to a non-member with a dependent argument is an ADL customization point whether intended or not; private helpers live in a `detail` namespace and are called qualified. Unqualified calls remain only where callers are meant to hook in |
+| `T.80` | Adopt | Templatizing a hierarchy multiplies every virtual into per-instantiation code the compiler must emit whether called or not. Keep the base unparameterized and stable; add type variation in thin derived wrappers |
+| `T.81` | Covered elsewhere | Array-of-derived decaying into a base pointer is owned by [Classes and Hierarchies](./classes-and-hierarchies.md) — never point a base pointer into a derived array, element stride differs (`C.152`) — with slicing handled in the same guide |
+| `T.82` | Adopt | Linearizing a hierarchy — shared non-virtual base machinery with static dispatch to the leaf — is this guide's CRTP charter exactly: vtable-free polymorphism where dispatch cost matters, paid for with worse errors and backwards-looking inheritance, so justify it in the declaring header |
+| `T.83` | Adopt | A member function template cannot be virtual — the compiler rejects it, since vtables would need link-time generation. Route dynamic behavior through double dispatch, visitors, or computed dispatch instead |
+| `T.84` | Covered elsewhere | ABI-stable published interfaces live in [Quality Guidelines](./quality-guidelines.md): PIMPL for binary-shipped headers. The non-template-core pattern (stable base plus typed wrapper) follows the same principle and stays sanctioned where instantiation volume meets a frozen interface |
+| `T.100` | Adopt | Variadic templates are the tool for functions taking varied types in varying counts — efficient and type-safe. C varargs never appear in user code; enforcement flags `va_arg` outright |
+| `T.101` | Adapt | Upstream placeholder whose one recorded caution is to beware move-only and reference arguments entering a pack. Working guidance until upstream fills in: forward deliberately (`T&&` plus `std::forward`) and otherwise take copies so nothing dangles once stored |
+| `T.102` | Adapt | Also unfinished upstream, hinting at forwarding, type checking, and references. Process pack elements with fold expressions or recursion, validating each against traits or `static_assert` before use rather than trusting the caller |
+| `T.103` | Adopt | Homogeneous argument lists have precise spellings — `initializer_list`, `std::array`, spans — so variadic machinery is reserved for genuinely mixed-type packs |
+| `T.120` | Adopt | Template metaprogramming is hard to write, slow to compile, and harder to maintain; deploy it only when it measurably wins or expresses the fundamental idea better than runtime code. Value-shaped results become `constexpr` functions, and TMP hidden inside macros has gone too far |
+| `T.121` | Adopt | Where TMP is unavoidable pre-C++20, its day job is emulating concepts: `enable_if`-selected overloads standing in for constrained ones. Real concepts retire that scaffolding entirely |
+| `T.122` | Adopt | Computing types at compile time belongs to template aliases; classic trait-struct techniques survive mainly inside the standard library itself |
+| `T.123` | Adopt | Values are computed at compile time by `constexpr` functions — the conventional, cheaper spelling; value-yielding TMP gets flagged for replacement. Operational detail lives in Quality Guidelines' Compile-Time Discipline section |
+| `T.124` | Adopt | Reach for the standard library's TMP facilities first — `conditional`, `enable_if`, `tuple` — because they are portable and universally known; custom machinery has to beat them to appear |
+| `T.125` | Adapt | Beyond the standard facilities, prefer an established TMP library to home-grown support. Locally, adopting such a dependency carries the usual justification bar, and hand-rolled advanced TMP infrastructure is rejected outright |
+| `T.143` | Adopt | Do not commit accidentally to specifics in generic code: compare iterators with `!=` not `<`, test emptiness with `empty()`, accept the least-derived type providing what you use — or skip the ceremony with range-`for` where it applies |
+| `T.150` | Adopt | When a class claims to model a concept, prove it early with `static_assert(Modelable<T>)` — the same idiom this guide mandates inside template bodies, pointed at concrete model types. Enforcement is review-visible and cheap |
 
 > Aligned with the [ISO C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines) © Standard C++ Foundation and its contributors. Rule IDs cited for cross-reference; original internal digest (internal business use).

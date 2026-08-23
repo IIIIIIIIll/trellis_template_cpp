@@ -203,3 +203,39 @@ Review checklist:
 - [ ] Views (`string_view`, `span`, raw pointers) are never stored past the call they were passed to unless the owner is documented
 - [ ] Container mutations near held iterators/references checked against the invalidation table
 - [ ] Hot-path allocation changes backed by a measurement, arenas annotated for ASan
+
+---
+
+## Complete Coverage: R
+
+The remaining ISO C++ Core Guidelines resource-management rules, each dispositioned against the ownership ladder: a row either restates a rung, enforces one of the ladder rules, or records a deliberate difference.
+
+| Rule | Stance | Disposition |
+|------|--------|-------------|
+| `R.2` | Adopt | A raw `T*` denotes exactly one borrowed object; arrays decay and lose their length, so sequences travel as `std::span`/`string_view` — subscripting a lone pointer is the range-error opening this closes. |
+| `R.3` | Adopt | Raw pointers sit on the Borrowed-view rung by definition; owning raw pointers occupy the Forbidden rung outright, so unlike upstream this project needs no `owner<T*>` annotation — nothing legal remains for it to mark. |
+| `R.4` | Adopt | References borrow too: `T&` is a present, non-owning view with no null state; binding one to `*new` is an owning raw pointer in disguise and dies in review like any Forbidden-rung allocation. |
+| `R.5` | Adopt | Scoped objects — locals, members, globals — cost no separate cleanup and let destructors manage members; reach for the Default owner only when lifetime must exceed the scope, keeping the guideline's own escape hatch for oversized locals: a `const unique_ptr<BigObject>`. |
+| `R.6` | Adopt | A non-`const` global is an undeclared shared owner and a data-race candidate; constants are `constexpr`, mutable state gets explicit ownership plus the Concurrency guide's locking story, and init-order traps follow Quality Guidelines' accessor-function pattern. |
+| `R.10` | Adopt | `malloc`/`free` construct and destroy nothing — a `malloc`-ed record's `string` member is just a string-sized bag of bits — and mixing them with `new`/`delete` is undefined; both verbs share the Forbidden rung, with `nothrow` new as the fallback where exceptions truly cannot fly. |
+| `R.12` | Adopt | Hand every acquisition to its manager object immediately: registering the guard even one line after the open leaves a window where the next allocation throws and leaks the handle — an RAII wrapper at the acquisition site closes it entirely. |
+| `R.13` | Adopt | Two allocations in one statement can interleave under unspecified evaluation order and leak when the second constructor throws; factories (`make_unique`, `make_shared`) remove the naked allocation, making the hazard unreachable — ladder rule 1. |
+| `R.14` | Adopt | `void f(int[])` is `f(int*)` after decay — the length is simply gone; sequence parameters take `std::span` (pointer-plus-size spelling until C++20) per the pass-by table. |
+| `R.15` | Adopt | Any custom `operator new` ships with its matching `operator delete`, or that deallocation function is deliberately `=delete`-ed; in practice this bites only arena and pool authors, since application code writes neither operator. |
+| `R.20` | Adopt | Ownership is spelled in types: `unique_ptr` as Default owner, `shared_ptr` as Shared owner with written justification; assigning `new`'s result to a raw pointer strands the object outside the ladder by construction. |
+| `R.21` | Adopt | `unique_ptr` outranks `shared_ptr` for the guideline's exact reasons — deterministic destruction, no atomic refcount traffic — so sharing is a design decision carrying its justification comment (ladder rule 3). |
+| `R.22` | Adopt | `make_shared` names the type once and fuses control block with object into a single allocation; it is the only accepted spelling for creating a shared owner. |
+| `R.23` | Adopt | `make_unique` avoids repeating the type name and keeps naked `new` out of call sites; factory functions returning a Default owner are built on it. |
+| `R.24` | Adopt | Back-edges in shared graphs — parent links, observers, cache entries — hold `weak_ptr` and lock briefly, because a `shared_ptr` cycle's use count never reaches zero; LSan clusters pointing at both ends of a mutual pair are the signature of forgetting. |
+| `R.30` | Adopt | Smart-pointer parameters are lifetime statements, not habits: readers take Borrowed views (`T*`, `T&`, span), sinks take by-value `unique_ptr`, and a by-value `shared_ptr` parameter nobody stores is an atomic no-op billed to every caller. |
+| `R.31` | Adopt | Third-party and custom handle wrappers join the ladder via the std pattern — copyable counts as shared-like, move-only as unique-like — so every parameter rule below applies to them unchanged. |
+| `R.32` | Adopt | A by-value `unique_ptr<widget>` parameter documents and enforces an ownership takeover — the callee intends to store or consume the widget; anything less takes `widget*` or `widget&`. |
+| `R.33` | Adopt | `unique_ptr<widget>&` means the callee reseats the slot — assigns or calls `reset()` on some path; an lvalue-reference parameter never reassigned is a forbidden pointer out-parameter wearing a template. |
+| `R.34` | Adopt | Take `shared_ptr<widget>` by value only to join the owner set (store a copy, ideally moved); otherwise every call pays atomic refcount traffic for nothing — the Shared-owner justification applies to signatures, not just members. |
+| `R.35` | Adopt | `shared_ptr<widget>&` declares possible reseating, under the same contract as the unique case: no assignment or reset anywhere, no lvalue-reference parameter. |
+| `R.36` | Adapt | Upstream hedges this rule and so does the ladder: reserve `const shared_ptr<widget>&` for conditionally retaining a count; definite sharers take the smart pointer by value, definite readers take a plain view. |
+| `R.37` | Adopt | Never pass a pointer or reference pulled from an aliased smart pointer: pin the subtree first with a cheap local strong copy, then extract the view — resetting through another alias mid-call destroys the object under the borrowed reference. |
+
+---
+
+> Aligned with the [ISO C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines) © Standard C++ Foundation and its contributors. Rule IDs cited for cross-reference; original internal digest (internal business use).

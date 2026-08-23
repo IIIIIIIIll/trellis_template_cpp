@@ -225,3 +225,5 @@ Before merging test code, confirm:
 - [ ] Assertions target observable public behavior; no private-member access
 - [ ] Error paths and boundaries covered, not just the happy path
 - [ ] No tests of trivial wrappers, third-party internals, or generated code
+
+> Aligned with the [ISO C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines) © Standard C++ Foundation and its contributors. Rule IDs cited for cross-reference; original internal digest (internal business use).
