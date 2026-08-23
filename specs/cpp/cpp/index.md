@@ -19,6 +19,13 @@ This directory contains the guidelines for C++ development. They are opinionated
 | [Error Handling](./error-handling.md) | Exceptions versus `expected`/error-code policy, failure contracts across API boundaries |
 | [Quality Guidelines](./quality-guidelines.md) | Naming, header hygiene, ODR and ABI pitfalls |
 | [Testing Conventions](./testing-conventions.md) | Test framework and layout, test naming, what deserves a test |
+| [Functions and Interfaces](./functions-and-interfaces.md) | Function signature design, parameter and return-value conventions at API boundaries |
+| [Classes and Hierarchies](./classes-and-hierarchies.md) | Class design and inheritance: invariants, composition versus virtual dispatch |
+| [Templates and Generics](./templates-and-generics.md) | Templates, concepts, and generic library design |
+| [Concurrency](./concurrency.md) | Threads and shared state, synchronization discipline, data-race prevention |
+| [Expressions and Flow](./expressions-and-flow.md) | Expression-level correctness, initialization, conversions, control flow |
+| [Performance](./performance.md) | Optimization work guided by measurement: hot paths, allocation pressure |
+| [Core Guidelines Alignment](./core-guidelines-alignment.md) | Adopt/adapt/covered-elsewhere stance per Core Guidelines section, section-to-guide map, curated clang-tidy checks, license note |
 
 ---
 
@@ -44,6 +51,13 @@ Before writing code, route the task through the relevant guide:
 | Reporting failures, designing error paths across APIs | [Error Handling](./error-handling.md) |
 | New headers or files, public API surface, naming decisions | [Quality Guidelines](./quality-guidelines.md) |
 | Writing, changing, or removing tests | [Testing Conventions](./testing-conventions.md) |
+| Function signatures or API design at module boundaries | [Functions and Interfaces](./functions-and-interfaces.md) |
+| Class design, inheritance, or object lifecycle decisions | [Classes and Hierarchies](./classes-and-hierarchies.md) |
+| Templates, concepts, or generic code | [Templates and Generics](./templates-and-generics.md) |
+| Threading, atomics, mutexes, or shared state | [Concurrency](./concurrency.md) |
+| Expression-level correctness or control flow changes | [Expressions and Flow](./expressions-and-flow.md) |
+| Optimization or hot-path work | [Performance](./performance.md) |
+| Questions about adopting or deviating from a Core Guidelines rule | [Core Guidelines Alignment](./core-guidelines-alignment.md) |
 
 A change touching several rows above should skim every listed guide before starting — the expensive C++ mistakes are cross-cutting.
 
@@ -74,3 +88,5 @@ Concurrency changes additionally run the `tsan` preset.
 ---
 
 **Language**: All documentation should be written in **English**.
+
+> Aligned with the [ISO C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines) © Standard C++ Foundation and its contributors. Rule IDs cited for cross-reference; original internal digest (internal business use).
