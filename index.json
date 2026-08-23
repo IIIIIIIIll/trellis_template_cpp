@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "templates": [
+    {
+      "id": "cpp",
+      "type": "spec",
+      "name": "C++ Guidelines",
+      "description": "Project-independent C++ coding guidelines: toolchain, memory safety, error handling, quality, testing",
+      "path": "specs/cpp",
+      "tags": ["cpp", "c++", "native", "cmake"]
+    }
+  ]
+}
