@@ -225,3 +225,5 @@ Before merging test code, confirm:
 - [ ] Assertions target observable public behavior; no private-member access
 - [ ] Error paths and boundaries covered, not just the happy path
 - [ ] No tests of trivial wrappers, third-party internals, or generated code
+
+<!-- registry-e2e-marker -->
