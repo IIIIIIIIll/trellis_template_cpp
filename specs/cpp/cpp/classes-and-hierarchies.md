@@ -107,7 +107,7 @@ Two innocent-looking member declarations quietly break the generated set. A `con
 
 ## Rule of Five When Resources Are Manual
 
-Managing a raw resource directly — descriptor, handle, heap block outside a smart pointer — means defining **all five** or deleting them explicitly (`C.21`). Defining one while defaulting another is how double-frees happen. The destructor releases and never throws (`C.30`, `C.36`); moves steal the guts, leave the source empty-but-destructible, and are `noexcept` so container growth actually moves (`C.64`, `C.66`).
+Managing a raw resource directly — descriptor, handle, heap block outside a smart pointer — means defining **all five** or deleting them explicitly (`C.21`). Defining one while defaulting another is how double-frees happen. The destructor releases and never throws (`C.30`, `C.36`); moves steal the guts, leave the source empty-but-destructible, and are `noexcept` so container growth actually moves (`C.64`, `C.66`). The nothrow-move mechanics behind that `noexcept` are owned by [Error Handling](./error-handling.md) under Nothrow Move and Swap.
 
 ```cpp
 class FileDesc {

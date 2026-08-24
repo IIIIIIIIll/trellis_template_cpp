@@ -5,9 +5,9 @@
       "id": "cpp",
       "type": "spec",
       "name": "C++ Guidelines",
-      "description": "Project-independent C++ coding guidelines: toolchain, memory safety, error handling, quality, testing",
+      "description": "Project-independent C++ coding guidelines: toolchain, memory safety, error handling, classes and interfaces, templates, concurrency, expressions, performance, quality, testing",
       "path": "specs/cpp",
-      "tags": ["cpp", "c++", "native", "cmake"]
+      "tags": ["cpp", "c++", "native", "cmake", "concurrency", "performance"]
     }
   ]
 }

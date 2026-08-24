@@ -108,7 +108,7 @@ Return values need no help: `return local;` already moves or elides, and writing
 
 ## Cheap-by-Default Boundaries
 
-Signatures decide whether callers pay for copies. Read-only text arrives as `std::string_view`; read-only sequences arrive as `std::span<const T>` (pointer-plus-size until C++20), so literals, substrings, and slices cross the boundary without allocating.
+Signatures decide whether callers pay for copies. Read-only text arrives as `std::string_view`; read-only sequences arrive as `std::span<const T>` (pointer-plus-size until C++20), so literals, substrings, and slices cross the boundary without allocating. The signature policy itself is owned by [Functions and Interfaces](./functions-and-interfaces.md) — View Inputs Borrow, Never Store; what stays here is the cost rationale.
 
 ```cpp
 // Wrong: every caller holding a literal or a slice pays for a std::string

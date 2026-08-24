@@ -125,13 +125,18 @@ Unit tests are run under sanitizers in CI; a green test run without them proves 
 - Leak detection ships with ASan (LSan).
 
 ```bash
-cmake -B build-san -DCMAKE_BUILD_TYPE=Debug \
-      -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-sanitize-recover=all -g"
-cmake --build build-san -j
-ctest --test-dir build-san --output-on-failure
+# Unit-suite CI jobs: the asan preset carries ASan + UBSan + LSan
+cmake --preset asan
+cmake --build --preset asan
+ctest --preset asan --output-on-failure
+
+# Separate job: ASan and TSan cannot combine, so TSan gets its own preset
+cmake --preset tsan
+cmake --build --preset tsan
+ctest --preset tsan --output-on-failure
 ```
 
-`-fno-sanitize-recover=all` turns UB into immediate hard failures — a sanitizer warning printed and ignored is a bug deferred to production.
+The `asan` preset builds UBSan with `-fno-sanitize-recover=all` (Build and Toolchain's sanitizer matrix), so findings fail the run instead of printing and continuing — a sanitizer warning printed and ignored is a bug deferred to production.
 
 ---
 

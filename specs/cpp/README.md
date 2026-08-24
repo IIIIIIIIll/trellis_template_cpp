@@ -19,7 +19,14 @@ specs/cpp/            →  .trellis/spec/
     ├── memory-and-ownership.md
     ├── error-handling.md
     ├── quality-guidelines.md
-    └── testing-conventions.md
+    ├── testing-conventions.md
+    ├── functions-and-interfaces.md
+    ├── classes-and-hierarchies.md
+    ├── templates-and-generics.md
+    ├── concurrency.md
+    ├── expressions-and-flow.md
+    ├── performance.md
+    └── core-guidelines-alignment.md
 ```
 
 - The `cpp/` directory at the template root becomes a spec layer at
@@ -34,11 +41,18 @@ specs/cpp/            →  .trellis/spec/
 | File | Summary |
 |------|---------|
 | [index.md](./cpp/index.md) | Layer entry point: guidelines index, pre-development checklist, quality check |
-| [build-and-toolchain.md](./cpp/build-and-toolchain.md) | CMake presets, compiler warning flags, clang-tidy, sanitizer setup |
-| [memory-and-ownership.md](./cpp/memory-and-ownership.md) | RAII, smart-pointer policy, ownership and lifetime rules |
-| [error-handling.md](./cpp/error-handling.md) | Exception vs status/`expected` decision table, `noexcept` discipline, module-boundary propagation |
-| [quality-guidelines.md](./cpp/quality-guidelines.md) | Naming conventions, header hygiene, ODR/ABI pitfalls |
-| [testing-conventions.md](./cpp/testing-conventions.md) | GoogleTest as default framework, test naming and layout, sanitizer-backed test runs |
+| [build-and-toolchain.md](./cpp/build-and-toolchain.md) | CMake presets as the only entry point, compiler warning policy, clang-format and clang-tidy curation, sanitizer matrix, CI build matrix, dependency management |
+| [memory-and-ownership.md](./cpp/memory-and-ownership.md) | RAII invariant, ownership ladder, pass-by conventions, iterator invalidation and other lifetime pitfalls |
+| [error-handling.md](./cpp/error-handling.md) | Exceptions versus `expected`/error-code policy, failure contracts across API boundaries |
+| [quality-guidelines.md](./cpp/quality-guidelines.md) | Naming, header hygiene, ODR and ABI pitfalls |
+| [testing-conventions.md](./cpp/testing-conventions.md) | Test framework and layout, test naming, what deserves a test |
+| [functions-and-interfaces.md](./cpp/functions-and-interfaces.md) | Function signature design, parameter and return-value conventions at API boundaries |
+| [classes-and-hierarchies.md](./cpp/classes-and-hierarchies.md) | Class design and inheritance: invariants, composition versus virtual dispatch |
+| [templates-and-generics.md](./cpp/templates-and-generics.md) | Templates, concepts, and generic library design |
+| [concurrency.md](./cpp/concurrency.md) | Threads and shared state, synchronization discipline, data-race prevention |
+| [expressions-and-flow.md](./cpp/expressions-and-flow.md) | Expression-level correctness, initialization, conversions, control flow |
+| [performance.md](./cpp/performance.md) | Optimization work guided by measurement: hot paths, allocation pressure |
+| [core-guidelines-alignment.md](./cpp/core-guidelines-alignment.md) | Adopt/adapt/covered-elsewhere stance per Core Guidelines section, section-to-guide map, curated clang-tidy checks, license note |
 
 Baseline is C++17; deviations available in C++20/23 are called out where they
 matter. The guidelines are opinionated defaults, not neutral surveys — adapt
@@ -54,6 +68,9 @@ registry (GitHub-first):
 ```sh
 trellis init --registry gh:<owner>/trellis-specs --template cpp
 ```
+
+Want the full walkthrough — adoption, updates, source strings,
+troubleshooting? See [`USAGE.md`](../../USAGE.md) at the registry root.
 
 To refresh an already-adopted installation later:
 

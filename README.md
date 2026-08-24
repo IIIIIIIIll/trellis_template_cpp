@@ -24,14 +24,26 @@ pick a template, and copies its contents into the consuming project's
 ## Layout
 
 ```
-drafts/cpp-spec-registry/
+.
 ├── index.json                 ← registry manifest (template id, type, path)
 ├── README.md                  ← this file
 ├── HOSTING.md                 ← ops deep-dive: source strings, modes, updates
 └── specs/cpp/
     ├── README.md              ← template overview for consumers
-    └── cpp/                   ← the guideline layer itself
-        └── *.md               ← six guideline documents
+    └── cpp/                   ← the guideline layer itself (thirteen documents)
+        ├── index.md           ← layer entry point
+        ├── build-and-toolchain.md
+        ├── memory-and-ownership.md
+        ├── error-handling.md
+        ├── quality-guidelines.md
+        ├── testing-conventions.md
+        ├── functions-and-interfaces.md
+        ├── classes-and-hierarchies.md
+        ├── templates-and-generics.md
+        ├── concurrency.md
+        ├── expressions-and-flow.md
+        ├── performance.md
+        └── core-guidelines-alignment.md
 ```
 
 The template's layer directory (`cpp/`) becomes `.trellis/spec/cpp/` after
@@ -65,6 +77,8 @@ install; layer discovery picks it up automatically.
 
 ## More
 
+Consumers installing or refreshing this template start with
+[USAGE.md](./USAGE.md), the end-to-end adopt-and-update guide.
 Hosting mechanics, source string anatomy, private-repo access, version
 pinning, and CI validation of this registry are covered in
 [HOSTING.md](./HOSTING.md). Template contents and install layout are described

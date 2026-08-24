@@ -120,11 +120,11 @@ Routing table for the whole directory. When a task touches several rows, skim ea
 
 | Guide | Owns | Fed by sections |
 |-------|------|-----------------|
-| [Functions and Interfaces](./functions-and-interfaces.md) | Signature design, parameter and return conventions at API boundaries, overloads and operators | `I`, `F` |
+| [Functions and Interfaces](./functions-and-interfaces.md) | Signature design, parameter and return conventions at API boundaries, overloads and operators, constants and immutability | `I`, `F`, `Con` |
 | [Classes and Hierarchies](./classes-and-hierarchies.md) | Class design, invariants, inheritance versus composition, virtual dispatch | `C` |
 | [Templates and Generics](./templates-and-generics.md) | Concepts, generic library design, metaprogramming restraint | `T` |
 | [Concurrency](./concurrency.md) | Threading model, synchronization primitives, shared-state minimization | `CP` |
-| [Expressions and Flow](./expressions-and-flow.md) | Expression-level correctness, initialization, conversions, control flow | `ES`, `Con` |
+| [Expressions and Flow](./expressions-and-flow.md) | Expression-level correctness, initialization, conversions, control flow | `ES` (named constants only; `Con` lives in Functions and Interfaces) |
 | [Performance](./performance.md) | Measurement-first optimization, hot-path discipline, allocation pressure | `PER` |
 | [Memory and Ownership](./memory-and-ownership.md) | Ownership ladder, lifetimes, container invalidation | `R`, parts of `I` |
 | [Error Handling](./error-handling.md) | Failure contracts, exceptions versus expected-style results, module edges | `E` |

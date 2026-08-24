@@ -8,7 +8,7 @@
 
 A signature is a contract compilers partially enforce and reviewers fully judge. This page fixes that contract: parameter roles (`in`/`out`/`inout`), value-versus-reference decisions, view inputs, return economics, function size and purity, and the surface details — explicit constructors, named constants, `[[nodiscard]]` — that make intent unambiguous. The principle underneath (`P.3`): code states intent through names, types, and roles so a reader can tell whether it does what it should — a signature-first page is that principle applied. And when the standard library or a well-maintained third-party library already provides a capability, reaching for it beats hand-rolling (`P.13`): correctness, performance, and portability come pre-tested.
 
-Ownership mechanics live in [Memory and Ownership](./memory-and-ownership.md), which makes leaks structural instead of hunting them one by one (`P.8`); failure signaling lives in [Error Handling](./error-handling.md), owning what compile time cannot catch and run time must (`P.6`) — the assert/status/throw taxonomy, executed for real by ASan/TSan/UBSan presets in [Build and Toolchain](./build-and-toolchain.md). Baseline is C++17, pinned there with `-Wpedantic` and `-Werror` so compiler extensions fail CI (`P.2`); C++20's `std::span` replaces pointer-plus-size spellings without changing any rule below.
+Ownership mechanics live in [Memory and Ownership](./memory-and-ownership.md), which makes leaks structural instead of hunting them one by one (`P.8`); failure signaling lives in [Error Handling](./error-handling.md), owning what compile time cannot catch and run time must (`P.6`) — the assert/status/throw taxonomy, executed for real by the `asan` and `tsan` presets in [Build and Toolchain](./build-and-toolchain.md). Baseline is C++17, pinned there with `-Wpedantic` and `-Werror` so compiler extensions fail CI (`P.2`); C++20's `std::span` replaces pointer-plus-size spellings without changing any rule below.
 
 ---
 
@@ -46,7 +46,7 @@ Caught by: review — hidden `inout` behavior has no dependable static check; th
 
 ## Value versus Const Reference
 
-Copy cost decides, not habit (`F.16`). These tables are the project's spelling of the Guidelines' conventional-passing advice (`F.15`); anything cleverer than the rows below owes a measurement plus a comment. Indirection is not free either: a `const T&` bound to a `double` costs more than copying eight bytes.
+Copy cost decides, not habit (`F.16`). These tables are the project's spelling of the Guidelines' conventional-passing advice (`F.15`); anything cleverer than the rows below owes a measurement plus a comment. Indirection is not free either: a `const T&` bound to a `double` costs more than copying eight bytes. The full parameter-kind mapping — views, sinks, out-params, optionality — lives in the Pass-by Rules section of [Memory and Ownership](./memory-and-ownership.md).
 
 | Argument situation | Pass | Why |
 |--------------------|------|-----|

@@ -77,6 +77,8 @@ Caught by: ASan (use-after-free and double-free from broken ownership), LSan (le
 
 ## Pass-by Rules
 
+The copy-cost side of these same decisions lives in [Functions and Interfaces](./functions-and-interfaces.md) under Value versus Const Reference (`F.15`, `F.16`) — its table prices copies, the one below fixes parameter kinds: companions, not rivals.
+
 | Parameter kind | Convention |
 |----------------|------------|
 | Read-only text or bytes | `std::string_view` |
