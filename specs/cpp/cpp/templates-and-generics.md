@@ -65,10 +65,10 @@ T median(const std::vector<T>& values);
 
 Rules:
 
-1. Constrain every public template. The guideline phrased positively — state the requirements of each template argument up front (`T.10`) — is the whole section in one sentence. A pile of unrelated, barely-related parameters is a smell too (`T.11`): split the function instead of listing five type knobs.
+1. Constrain every public template. The guideline phrased positively — state the requirements of each template argument up front (`T.10`) — is the whole section in one sentence. A pile of unrelated, barely-related parameters is a smell too: split the function instead of listing five type knobs.
 2. A constraint must carry meaning, not just syntax. Requiring "has `size()`" says almost nothing; requiring "a range whose size query is O(1)" is a requirement. Concepts without semantics are documentation-shaped noise (`T.20`).
-3. Prefer one concept over `enable_if` gymnastics wherever the dialect allows (`T.26`). Keep legacy SFINAE quarantined behind a named alias if it must exist.
-4. Constrain to what the algorithm essentially needs, nothing more (`T.41`; `T.46` asks for Regular-or-ordering arguments where applicable): debug streamability does not belong in `sort`'s concept, and nobody demands `operator<<` inside a sorting routine because some caller once debugged through it. Deliberately leaving non-essential operations unchecked delays their failure to instantiation time — the accepted price of a stable interface.
+3. Prefer one concept over `enable_if` gymnastics wherever the dialect allows. Keep legacy SFINAE quarantined behind a named alias if it must exist.
+4. Constrain to what the algorithm essentially needs, nothing more (`T.41`): debug streamability does not belong in `sort`'s concept, and nobody demands `operator<<` inside a sorting routine because some caller once debugged through it. Deliberately leaving non-essential operations unchecked delays their failure to instantiation time — the accepted price of a stable interface.
 5. An unconstrained template with a common, attractive name (`swap`, `begin`, `hash`) hijacks overload resolution far beyond its home directory; give such helpers a constrained or namespaced spelling (`T.47`).
 6. A concept must require a coherent, complete set of operations (`T.21`): `Subtractable` alone is meaningless without `+`, and comparison arrives as the full six-operator set. Flag odd subsets such as `==` without `!=` — surprising for users and sometimes slower.
 7. Concepts carry axioms (`T.22`) — the mathematical assumptions (`a - a == 0`, distributivity) written as comments beside the `requires` clause until language support exists. An axiom is assumed like a precondition; early experimental concepts may ship incomplete, but are then explicitly not stable.
@@ -261,7 +261,7 @@ auto distance(It first, It last) {
 Guidance:
 
 1. Value-based selection between statements in one function: `if constexpr`. Discarded branches are not instantiated, which is precisely what tag dispatch and `enable_if` used to buy.
-2. Selecting between *overloads* visible to callers, or constraining a public API: concepts on C++20 (`T.26`); on C++17, a traits-based `enable_if` remains acceptable — but hide it behind a descriptive alias.
+2. Selecting between *overloads* visible to callers, or constraining a public API: concepts on C++20; on C++17, a traits-based `enable_if` remains acceptable — but hide it behind a descriptive alias.
 3. Class-template shape differences still belong to (partial) specialization (`T.64`) — one general interface, specialized implementations for the shapes that need them; `if constexpr` does not replace choosing a different data layout. Irregular types earn the same treatment: Deviation from `T.67`: upstream's entry is largely unwritten, but the usable intent stands — types needing a different representation get a dedicated specialization rather than bending the primary template.
 4. Do not specialize function templates — overload or delegate instead (`T.144`); specialization interacts badly with overload resolution and surprises even experts.
 5. Deviation from `T.65`: tag dispatch — selecting function implementations from type properties at compile time — is a legitimate technique, but demoted here: `if constexpr` and constrained overloads express the same selection more readably, so tag machinery survives only where those cannot.

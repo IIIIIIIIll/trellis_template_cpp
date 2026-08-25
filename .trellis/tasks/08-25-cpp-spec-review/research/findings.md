@@ -154,3 +154,65 @@ disk == top-level README tree (12 docs; README self-listing expected).
 - Verified correct: narrowing-brace discipline, T{e} construction,
   unsigned-wrap loop hazard, one-pass expression rules, macro family bans,
   unnamed-guard silent race, range-for temporary binding.
+
+## core-guidelines-alignment.md dissolved (2026-08-25, developer decision B)
+
+- Rationale: topical guides already integrate Core Guidelines rule IDs inline
+  with recorded dispositions; the standalone doc duplicated the index's
+  routing role and half its ledger was provenance trivia.
+- Landed: stance vocabulary + 14-section disposition map + deviation
+  convention + residual ledger (27 substantive rows) + adoption/upkeep notes
+  + profile mapping → `specs/cpp/cpp/index.md` "Core Guidelines
+  Disposition"; clang-tidy picks (7 enable / 5 evaluate / 2 skip) merged
+  into quality-guidelines "Static Analysis Curation"; license note →
+  `specs/cpp/README.md`. File deleted; layer = 11 documents.
+- Footer contract rescoped in guideline-authoring.md: Language line +
+  attribution required on every guide under `specs/cpp/cpp/`; layer-overview
+  README exempt (matches the License Note's own "every guide" phrasing).
+- Final gate: manifest paths, relative links, per-guide footers, four-way
+  file-set invariant (cpp README tree/table == index table == top README ==
+  disk), zero stale references — ALL PASS. Commits: d8bf444, c31b9c3, 6c4ed5c.
+
+## Review queue remaining
+
+classes-and-hierarchies.md and templates-and-generics.md full passes;
+final read-through of the rebuilt index.
+
+## classes-and-hierarchies.md verdicts (2026-08-25)
+
+- Citation audit: ~75 C-family anchors checked against upstream titles —
+  zero misattributions. All six written deviations (C.43/C.100/C.136/
+  C.137/C.153/C.180) carry documented differences per contract.
+- Verified correct: Rule-of-Zero/Five framing, FileDesc five-member example
+  incl. self-move-swap safety, deleted-copy-suppresses-move trap,
+  implicitly-noexcept destructor chain rule, two-legal-shapes polymorphic
+  base table, dynamic_cast reference-vs-pointer trio, clone-with-
+  unique_ptr covariance reasoning, union type-punning UB claims,
+  Particle-style padding arithmetic n/a here but tag-dispatch example sound.
+- Note (left as-is): C.128 cited for the final-sealing decision where it
+  strictly governs virtual/override/final spelling; C.139 carries the
+  sparing-final policy right after, so no factual error.
+
+## templates-and-generics.md verdicts (2026-08-25) — FINAL DOCUMENT
+
+- Citation audit: 36 T-family anchors + C.129 against upstream titles;
+  32 exact matches including honest deviations for upstream placeholders
+  (T.67/T.101/T.102 verified as literal `???` entries upstream; T.4
+  placeholder claim consistent).
+- FIXED: `T.11` misattribution (upstream: "use standard concepts", not
+  parameter-count smell); two `T.26` misattributions (upstream:
+  define-concepts-via-use-patterns, not prefer-concepts-over-SFINAE);
+  removed reference to upstream-deleted `T.46`.
+- Verified correct: static_assert-vs-concepts dialect table, CTAD/factory,
+  SCARY hoisting pair (T.61/62), if-constexpr-vs-tag-dispatch guidance,
+  no-function-template-specialization rule, CRTP costs section incl.
+  T.80-T.84 hierarchy boundary cluster, fold-expression example.
+
+## REVIEW COMPLETE — all shipped documents audited (2026-08-25)
+
+Totals across the sweep: ~300 citation anchors verified against an upstream
+catalog snapshot (2026-06-14); 15 misattributions or stale anchors fixed
+(P.9, E.26-premise, CP.9 x2, CP.40, Per.4, Per.13, ES.28/70/74, T.11,
+T.26 x2, T.46-deleted); 2 non-compiling/self-contradictory examples repaired
+(error_code traits, Window ctor order); footer contract enforced then
+rescoped; layer restructured to 11 docs after two scope decisions.
