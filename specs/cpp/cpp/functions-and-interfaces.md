@@ -76,7 +76,7 @@ void add_user(User u) {           // sink: one copy, moved into place
 double apply(double rate);
 ```
 
-Hot paths measuring differently may revert a sink to `const T&` plus an explicit copy — with the measurement in the comment; pricing changes belongs to measurement-first discipline ([Performance](./performance.md), `P.9`). Do not maintain parallel `const std::string&` and `string_view` overloads; pick the view spelling once.
+Hot paths measuring differently may revert a sink to `const T&` plus an explicit copy, the measurement recorded in the comment — pricing such changes is measurement-first territory ([Performance](./performance.md), `Per.6`).
 
 Ownership and absence change the calculus. A smart-pointer parameter exists to transfer or share ownership — never to borrow; a copyable smart pointer that is only dereferenced restricts callers for no benefit (`F.7`; the ownership ladder lives in [Memory and Ownership](./memory-and-ownership.md)). When "no object" is a valid input, say so with `T*`; when absence is impossible, `T&` is simpler and often faster (`F.60`). Deviation from `F.23`: the Guidelines spell non-null parameters with GSL `not_null<T>`; we keep native forms — documented `const T*` for may-be-null, `T&` for cannot-be-null — because GSL vocabulary does not cross project APIs.
 
@@ -176,8 +176,10 @@ Discarding a computed answer or status is a bug wearing an optimization hat. Pol
 | Effect-only procedures (logging, duplicate-tolerant inserts) | No |
 
 ```cpp
-[[nodiscard]] Result<Config, Error> load_config(std::string_view path);
+Result<Config, Error> load_config(std::string_view path);
 load_config("app.conf");          // Wrong: compiles; failure swallowed
+
+[[nodiscard]] Result<Config, Error> load_config(std::string_view path);
 
 auto cfg = load_config("app.conf");
 if (!cfg) return cfg.error();     // Right: handled, not dropped
@@ -308,7 +310,7 @@ private:
 
 ### Named Constants, Not Magic Numbers
 
-Meaningful literals get names (`Enum.2`): `constexpr` for single constants (`Con.5`), `enum class` for related sets (`Enum.1`). Loose booleans cluster into `enum class` parameters — `open(file, true, false)` is unreadable. Functions whose bodies are naturally constant-evaluable take `constexpr` — without contorting logic to earn the keyword; `constexpr` permits compile-time evaluation, it does not force it (compile-time discipline lives in [Quality Guidelines](./quality-guidelines.md), `F.4`).
+Meaningful literals get names (`Enum.2`): `constexpr` for single constants (`Con.5`), `enum class` for related sets (`Enum.1`). Loose booleans cluster into `enum class` parameters — `open(file, true, false)` is unreadable. Functions whose bodies are naturally constant-evaluable take `constexpr` — without contorting logic to earn the keyword; `constexpr` permits compile-time evaluation, it does not force it (`F.4`; compile-time discipline lives in [Quality Guidelines](./quality-guidelines.md)).
 
 ```cpp
 if (attempts > 3) return false;                        // Wrong: what is 3?

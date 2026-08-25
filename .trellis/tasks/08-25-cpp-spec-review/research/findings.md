@@ -89,3 +89,23 @@ content is removed:
 Manifest paths exist · relative links resolve · every shipped doc ends with
 exactly one Language line + attribution · `specs/cpp/README.md` tree/table ==
 disk == top-level README tree (12 docs; README self-listing expected).
+
+## functions-and-interfaces.md verdicts (2026-08-25)
+
+- Citation audit: every cited P./F./I./C.46/Con./Enum./SL.str ID exists
+  upstream; paraphrases accurate incl. all five written deviations
+  (F.23/F.25/I.5/I.6/I.7/I.8/I.10/I.12/I.26) — deviation contract honored.
+- FIXED: `P.9` misattribution on the measurement-first sentence — upstream
+  P.9 is "Don't waste time or space"; re-anchored to `Per.6` ("Don't make
+  claims about performance without measurements") + grammar repair.
+- FIXED: duplicated rule "no parallel view/non-view overloads" — normative
+  text removed here; home remains Memory and Ownership Pass-by notes
+  (checklist clause kept as review routing).
+- FIXED: `[[nodiscard]]` example now contrasts un-annotated vs annotated
+  declarations (was a single self-referencing pair); fence restored after an
+  edit mishap.
+- FIXED: `F.4` parenthetical moved onto its constexpr-function clause.
+- Verified correct: guaranteed elision / NRVO claims, return-move-local,
+  F.42-F.49 return family, lambda capture matrix incl. F.54 `[=]` trap,
+  explicit-single-arg (C.46), const-documentation quartet (P.10/Con.1-4),
+  I-series interface rules and options-struct adaptation of I.23.
