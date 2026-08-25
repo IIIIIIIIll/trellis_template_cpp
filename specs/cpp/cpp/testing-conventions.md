@@ -35,16 +35,9 @@ tests/
   test_util.h            // shared fixtures/helpers, no tests of its own
 ```
 
-Every new test file must be registered in the build and discovered by the runner:
+Every new test file must be registered with the test runner so the suite discovers it automatically.
 
-```cmake
-add_executable(parser.test net/http/parser.test.cpp)
-target_link_libraries(parser.test PRIVATE mylib GTest::gtest_main)
-include(GoogleTest)
-gtest_discover_tests(parser.test)
-```
-
-A test that exists but is not registered does not exist — it will not run in CI and it will rot.
+A test that exists but is not registered does not exist — nothing ever executes it, and it rots.
 
 ```cpp
 // Wrong: unregistered "temporary" test living in src/, still there two years later
@@ -67,7 +60,7 @@ Format: `TEST(<Suite>, Test_<Subject>_<Behavior>_<Expectation>)`.
 - `<Behavior>`: input or circumstance (`TruncatedHeader`, `AtCapacity`).
 - `<Expectation>`: outcome (`ReturnsError`, `DropsOldest`).
 
-The name must read as a sentence describing the contract, so a CI failure communicates the bug without opening the file.
+The name must read as a sentence describing the contract, so a red test communicates the bug without opening the file.
 
 ```cpp
 // Good
@@ -118,25 +111,16 @@ TEST_F(CacheTest, Test_Expiry_AfterTtl_EntryNotFindable) {
 
 ## Sanitizer Pairing
 
-Unit tests are run under sanitizers in CI; a green test run without them proves less than it appears to. Memory bugs often manifest as *passing* tests that corrupt state for later ones.
+Unit tests run under sanitizers by default; a green test run without them proves less than it appears to. Memory bugs often manifest as *passing* tests that corrupt state for later ones.
 
-- **ASan + UBSan** on every unit-suite CI job, failing hard instead of limping on.
-- **TSan** in a separate job (ASan and TSan cannot combine).
-- Leak detection ships with ASan (LSan).
+| Sanitizer | What it catches | Hard constraints | Rough cost |
+|-----------|-----------------|------------------|------------|
+| ASan (+LSan) | Heap/stack/global buffer overflow, use-after-free, use-after-return, double free; LSan reports leaked allocations | Never shares a binary with TSan or MSan | ~2x |
+| UBSan | Undefined behavior short of corruption: signed overflow, bad shifts, misaligned access, invalid enum values | Compiled with `-fno-sanitize-recover=all` so findings fail the run instead of printing and continuing | small |
+| TSan | Data races, lock-order inversions, destruction-of-locked-mutex hazards | Never combined with ASan; reports only interleavings that actually execute | 5–15x |
+| MSan | Reads of uninitialized memory | Clang-only; needs an instrumented libc++ and fully instrumented dependencies | ~3x |
 
-```bash
-# Unit-suite CI jobs: the asan preset carries ASan + UBSan + LSan
-cmake --preset asan
-cmake --build --preset asan
-ctest --preset asan --output-on-failure
-
-# Separate job: ASan and TSan cannot combine, so TSan gets its own preset
-cmake --preset tsan
-cmake --build --preset tsan
-ctest --preset tsan --output-on-failure
-```
-
-The `asan` preset builds UBSan with `-fno-sanitize-recover=all` (Build and Toolchain's sanitizer matrix), so findings fail the run instead of printing and continuing — a sanitizer warning printed and ignored is a bug deferred to production.
+Two postures follow from the table. The unit suite runs under **ASan + UBSan**, failing hard on the first finding — a sanitizer warning printed and ignored is a bug deferred to production. Threading changes additionally run under **TSan** in its own build, because TSan cannot combine with ASan.
 
 ---
 
@@ -230,5 +214,9 @@ Before merging test code, confirm:
 - [ ] Assertions target observable public behavior; no private-member access
 - [ ] Error paths and boundaries covered, not just the happy path
 - [ ] No tests of trivial wrappers, third-party internals, or generated code
+
+---
+
+**Language**: All documentation should be written in **English**.
 
 > Aligned with the [ISO C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines) © Standard C++ Foundation and its contributors. Rule IDs cited for cross-reference; original internal digest (internal business use).

@@ -15,7 +15,6 @@ specs/cpp/            →  .trellis/spec/
 ├── README.md         →  .trellis/spec/README.md        (ignored by layer discovery)
 └── cpp/              →  .trellis/spec/cpp/             (auto-discovered layer)
     ├── index.md
-    ├── build-and-toolchain.md
     ├── memory-and-ownership.md
     ├── error-handling.md
     ├── quality-guidelines.md
@@ -41,7 +40,6 @@ specs/cpp/            →  .trellis/spec/
 | File | Summary |
 |------|---------|
 | [index.md](./cpp/index.md) | Layer entry point: guidelines index, pre-development checklist, quality check |
-| [build-and-toolchain.md](./cpp/build-and-toolchain.md) | CMake presets as the only entry point, compiler warning policy, clang-format and clang-tidy curation, sanitizer matrix, CI build matrix, dependency management |
 | [memory-and-ownership.md](./cpp/memory-and-ownership.md) | RAII invariant, ownership ladder, pass-by conventions, iterator invalidation and other lifetime pitfalls |
 | [error-handling.md](./cpp/error-handling.md) | Exceptions versus `expected`/error-code policy, failure contracts across API boundaries |
 | [quality-guidelines.md](./cpp/quality-guidelines.md) | Naming, header hygiene, ODR and ABI pitfalls |

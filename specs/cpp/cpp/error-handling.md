@@ -57,7 +57,7 @@ Two design-time corollaries keep this table honest. An error-handling strategy c
 
 Deviation from `E.2`: upstream says a function that cannot perform its assigned task throws. Here the signal follows the failure kind instead — rare caller-reactable failures throw, internal bugs assert, routine misses return statuses — never one blanket answer.
 
-Failing fast belongs to the last row only (`E.26`): corruption beyond repair terminates immediately — inside module-edge shims, abort rather than translate. Allocation exhaustion deliberately does *not* fail fast: `std::bad_alloc` propagates so a top level that genuinely frees memory can decide whether a retry is real.
+Failing fast belongs to the last row only (`E.26`; upstream frames it for builds without exceptions — the principle transfers verbatim): corruption beyond repair terminates immediately — inside module-edge shims, abort rather than translate. Allocation exhaustion deliberately does *not* fail fast: `std::bad_alloc` propagates so a top level that genuinely frees memory can decide whether a retry is real.
 
 ---
 
@@ -97,7 +97,9 @@ Centralize the choice behind one alias so migration is mechanical:
 template <typename T, typename E>
 using Result = tl::expected<T, E>;
 
-inline std::error_code make_error(ParseErr e) { return std::error_code{e}; }
+// Enum-backed error codes need the standard traits hook before the line
+// above compiles: specialize std::is_error_code_enum<ParseErr> and provide
+// an error_category. Keep that wiring beside Result, never at call sites.
 ```
 
 ```cpp
@@ -351,5 +353,7 @@ Before merging error-handling code, confirm:
 - [ ] Each failure is logged exactly once, at the layer that handles it
 
 ---
+
+**Language**: All documentation should be written in **English**.
 
 > Aligned with the [ISO C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines) © Standard C++ Foundation and its contributors. Rule IDs cited for cross-reference; original internal digest (internal business use).

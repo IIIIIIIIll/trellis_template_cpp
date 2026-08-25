@@ -6,7 +6,7 @@
 
 ## Overview
 
-Performance work follows one order: measure, change the algorithm or the layout, measure again. Micro-edits justified only by intuition are rejected in review even when harmless — an unmeasured optimization costs future readers comprehension and reviewers time. Baseline is C++17. Build presets come from the Build and Toolchain guide: `default` for development, `release` for any number you intend to quote, `asan`/`tsan` for correctness runs — never as stopwatches.
+Performance work follows one order: measure, change the algorithm or the layout, measure again. Micro-edits justified only by intuition are rejected in review even when harmless — an unmeasured optimization costs future readers comprehension and reviewers time. Baseline is C++17. Numbers you intend to quote come from optimized (`Release`) builds; sanitizer builds answer correctness questions — never as stopwatches.
 
 ---
 
@@ -18,12 +18,12 @@ No optimization lands without evidence (`Per.1`) and none begins before the curr
 |----------|-------------|
 | Is this path actually hot? | Profiler flame graph on a representative workload |
 | What dominates it — allocation, cache misses, syscalls, locks? | Profiler counters, allocator statistics |
-| Did the change help? | Before/after numbers: same machine, same input, `release` preset |
+| Did the change help? | Before/after numbers: same machine, same input, optimized (`Release`) build |
 | Does the win survive other inputs? | Benchmark spread over realistic sizes |
 
 Rules:
 
-1. Numbers quoted in reviews state machine, input, preset, and repetition count.
+1. Numbers quoted in reviews state machine, input, build configuration, and repetition count.
 2. Sanitizer builds answer correctness questions; their slowdowns make them useless for timing.
 3. The benchmark that justified a change stays in the tree so the next person can re-verify it (`Per.4`).
 4. Effort concentrates on code the profiler indicts, not code that merely looks slow (`Per.3`): a 50% win on a component eating 4% of runtime moves the whole program less than a 5% win on one eating 40%. Optimizing anywhere else is churn paid in readability for an unmeasurable return.
@@ -190,20 +190,20 @@ Readability is the default currency. Manual strength reduction, hand-unrolled lo
 
 ## Quality Check
 
-```bash
-cmake --preset release && cmake --build --preset release
-ctest --preset release --output-on-failure
-# plus the benchmark target covering any touched hot path
-```
+Gates before merging optimization work: the unit suite green, plus before/after benchmark numbers for any touched hot path produced by an optimized (`Release`) build.
 
 Review checklist:
 
-- [ ] Optimization claims carry before/after numbers: machine, input, `release` preset, repetitions
+- [ ] Optimization claims carry before/after numbers: machine, input, optimized (`Release`) build, repetitions
 - [ ] Growth loops `reserve()` up front; hot-path buffers reused across iterations
 - [ ] Sinks take by value and move; no `std::move` on `const` sources or on returned values
 - [ ] Read-only boundaries take `string_view`/`span`; stored data re-owned exactly once
 - [ ] Constant tables are `constexpr`; no lazy runtime construction of fixed data
 - [ ] Hot struct layouts audited for padding; sizes pinned by `static_assert` where layout matters
 - [ ] No micro-optimization without an attached profile and a measured delta
+
+---
+
+**Language**: All documentation should be written in **English**.
 
 > Aligned with the [ISO C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines) © Standard C++ Foundation and its contributors. Rule IDs cited for cross-reference; original internal digest (internal business use).

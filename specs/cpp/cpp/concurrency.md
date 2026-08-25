@@ -1,6 +1,6 @@
 # Concurrency
 
-> Threads, locks, atomics, and message passing for C++ in this project: shared mutable state is always deliberate, synchronization is RAII-based, and threading changes are gated through the `tsan` preset.
+> Threads, locks, atomics, and message passing for C++ in this project: shared mutable state is always deliberate, synchronization is RAII-based, and threading changes are gated through a ThreadSanitizer build.
 
 ---
 
@@ -68,7 +68,7 @@ Notes:
 - Returning shared *immutable* snapshots (`shared_ptr<const T>`) lets readers work without locks after the hand-off point.
 - Ownership crossing unrelated thread lifetimes goes through `shared_ptr` (`CP.32`) — the only safe deletion story; static objects, never-freed objects, and owner-outlives-sharer arrangements are exempt. Ladder-first: prefer the immutable snapshots above so readers need no locks, and justify sharing per [Memory and Ownership](./memory-and-ownership.md).
 
-Caught by: TSan reports the race when both accesses actually execute under the `tsan` preset — see the gate below. Nothing catches a race that CI's thread schedule happens never to trigger, which is why the design rule comes first.
+Caught by: TSan reports the race when both accesses actually execute under a ThreadSanitizer build — see the gate below. Nothing catches a race whose interleaving the test run happens never to trigger, which is why the design rule comes first.
 
 ---
 
@@ -275,32 +275,22 @@ Library code never spawns unbounded threads per call and never assumes a pool ex
 
 ## The TSan Gate
 
-Any change touching threads, atomics, locks, or signal handlers runs the `tsan` preset before merge — the build guide's sanitizer matrix assigns TSan exactly this role (`cmake --preset tsan` family, Debug plus `-fsanitize=thread`):
-
-```bash
-cmake --preset tsan && cmake --build --preset tsan
-ctest --preset tsan --output-on-failure
-```
+Any change touching threads, atomics, locks, or signal handlers runs a ThreadSanitizer build (`-fsanitize=thread`) of the full test suite before merge:
 
 Operating notes:
 
 - TSan detects data races, lock-order inversions, and destruction-of-locked-mutex hazards *when executed*. Tests must genuinely exercise the concurrent paths; a test that never overlaps two threads validates nothing here.
-- TSan and ASan never share one binary — separate presets exist precisely for that reason.
+- TSan and ASan never share one binary — the separate builds exist precisely for that reason.
 - Expect real overhead (roughly 5–15x CPU, 5–10x memory in practice): schedule the full suite accordingly rather than skipping it.
 - A flaky sanitizer finding is still a finding. Fix it, or reduce it to a tracked issue the same day; quieting the tool is forbidden.
 
-Signal handlers sit inside this gate too. Deviation from `CP.201`: the upstream entry is itself a question mark; its usable content is that very little is async-signal-safe and the best handler communicates "not at all". Local posture: handlers store only to lock-free atomic flags consumed outside the handler — polled or drained via self-pipe — and any signal-handler change runs the `tsan` preset explicitly.
+Signal handlers sit inside this gate too. Deviation from `CP.201`: the upstream entry is itself a question mark; its usable content is that very little is async-signal-safe and the best handler communicates "not at all". Local posture: handlers store only to lock-free atomic flags consumed outside the handler — polled or drained via self-pipe — and any signal-handler change runs a ThreadSanitizer build explicitly.
 
 ---
 
 ## Quality Check
 
-Before merging concurrency code, confirm:
-
-```bash
-cmake --preset tsan && cmake --build --preset tsan
-ctest --preset tsan --output-on-failure
-```
+Before merging concurrency code, confirm the suite is green under a ThreadSanitizer build:
 
 - [ ] New shared mutable state justified against the isolation ladder; message passing or immutability considered first
 - [ ] Every mutex defined adjacent to its data; all access routes go through it
@@ -311,6 +301,10 @@ ctest --preset tsan --output-on-failure
 - [ ] Threads owned by `std::jthread` (or a joining wrapper on C++17); zero `detach()` calls
 - [ ] Atomics limited to single-variable flags/counters; ordering relaxations commented; no `volatile` used for synchronization
 - [ ] Queues bounded with a stated overflow policy; shutdown path drains and joins deterministically
-- [ ] Concurrent paths actually exercised under the `tsan` preset, findings resolved or tracked
+- [ ] Concurrent paths actually exercised under a ThreadSanitizer build, findings resolved or tracked
+
+---
+
+**Language**: All documentation should be written in **English**.
 
 > Aligned with the [ISO C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines) © Standard C++ Foundation and its contributors. Rule IDs cited for cross-reference; original internal digest (internal business use).

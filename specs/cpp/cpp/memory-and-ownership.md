@@ -6,7 +6,7 @@
 
 ## Overview
 
-Memory-safety defects dominate long-lived C++ codebases. This document makes ownership explicit: every object has exactly one owner, ownership is expressed in types, and non-owning access is visibly borrowed. Every pitfall names the tool that catches it, so violations surface in CI rather than in production.
+Memory-safety defects dominate long-lived C++ codebases. This document makes ownership explicit: every object has exactly one owner, ownership is expressed in types, and non-owning access is visibly borrowed. Every pitfall names the tool that catches it, so violations surface under sanitizers rather than in production.
 
 Baseline: C++17 (`std::string_view`, `std::optional`, `std::unique_ptr`). C++20's `std::span` replaces pointer-plus-size pairs where available; the rules are identical either way.
 
@@ -44,7 +44,7 @@ A resource without an existing wrapper gets one immediately: a `std::unique_ptr<
 
 Give the result of an acquisition to its manager immediately (`R.12`): registering the guard even one line after the open leaves a window where the next allocation throws and leaks the handle. Wrapping at the acquisition site closes the window entirely.
 
-Prefer scoped objects (`R.5`): locals, members, and globals cost no separate cleanup and let destructors manage members; reach for the Default owner rung only when lifetime must exceed the scope. For an oversized local, the guideline's own escape hatch stands — a `const std::unique_ptr<BigObject>` keeps the heap allocation scoped anyway.
+Prefer scoped objects (`R.5`): locals, members, and globals cost no separate cleanup and let destructors manage members; reach for the Default owner rung only when lifetime must exceed the scope. For an oversized local, the common escape hatch stands — a `const std::unique_ptr<BigObject>` moves the bytes onto the heap while keeping the lifetime scoped.
 
 Caught by: ASan's LeakSanitizer (leaks), static analyzer leak checkers for handle types.
 
@@ -170,7 +170,7 @@ The same trap with a temporary:
 std::string_view sv = make_name();   // make_name returns std::string by value: dangles immediately
 ```
 
-Caught by: GCC 13+ `-Wdangling-reference` in simple cases; ASan flags the use-after-return at first access. Any view returned across a function boundary deserves a look in the `asan` preset.
+Caught by: GCC 13+ `-Wdangling-reference` flags simple cases but is prone to false positives — treat findings as leads, not verdicts; ASan flags the use-after-return at first access. Any view returned across a function boundary deserves a look under an ASan+UBSan build.
 
 ### Iterator and reference invalidation
 
@@ -192,7 +192,7 @@ use(first);            // dangling reference
 
 Right: `reserve()` before the growth loop, hold keys/indices instead of references across mutations, or re-fetch after mutating.
 
-Caught by: ASan for the heap cases; libstdc++ debug mode (`_GLIBCXX_DEBUG`) or libc++ hardened/debug assertions catches container-internal violations deterministically — worth one dedicated CI job if the budget allows.
+Caught by: ASan for the heap cases; libstdc++ debug mode (`_GLIBCXX_DEBUG`) or libc++ hardened/debug assertions catches container-internal violations deterministically — worth a dedicated debug-mode build if the budget allows.
 
 ### Containers of views versus owning containers
 
@@ -224,10 +224,7 @@ Caught by: ASan when annotations are wired; review for pointers escaping the are
 
 ## Quality Check
 
-```bash
-cmake --preset asan && cmake --build --preset asan
-ctest --preset asan --output-on-failure
-```
+Gates before merging ownership work: format-clean (`clang-format --dry-run`) and tidy-clean on changed sources, and the unit suite green under an ASan+UBSan build — allocation and lifetime are exactly what sanitizers exist to catch.
 
 Review checklist:
 
@@ -238,5 +235,7 @@ Review checklist:
 - [ ] Hot-path allocation changes backed by a measurement, arenas annotated for ASan
 
 ---
+
+**Language**: All documentation should be written in **English**.
 
 > Aligned with the [ISO C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines) © Standard C++ Foundation and its contributors. Rule IDs cited for cross-reference; original internal digest (internal business use).

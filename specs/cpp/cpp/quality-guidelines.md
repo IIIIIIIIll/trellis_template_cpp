@@ -88,6 +88,32 @@ Deviation from each of `NL.4`, `NL.15`, `NL.17`, `NL.18`, and `NL.20`: the inten
 
 ---
 
+## Static Analysis Curation
+
+clang-tidy earns its keep on changed sources only when curated — wholesale category dumps bury signal under hundreds of hits.
+
+Worth enabling (low noise, high yield):
+
+| Checks | Why |
+|--------|-----|
+| `bugprone-*` | Real defect patterns: use-after-move, dangling references, suspicious casts |
+| `performance-*` | Unnecessary copies, pass-by-value misses, inefficient calls |
+| `modernize-*` | Mechanical language hygiene (`use-override`, `use-nullptr`, `use-emplace`) |
+| Selected `misc-*` (`misc-unused-*`) | Dead declarations and parameters |
+
+Leave off by default:
+
+| Checks | Why off |
+|--------|---------|
+| `bugprone-easily-swappable-parameters` | Notoriously noisy; the parameter-role contract in [Functions and Interfaces](./functions-and-interfaces.md) fixes the design instead |
+| `modernize-use-trailing-return-type` | Style churn; the local return-type convention already decides |
+| `readability-identifier-naming` without a committed config | Churn generator unless the naming table ships beside the repo (see Naming Conventions above) |
+| House-style families (`llvm-*`, `fuchsia-*`, ...) | Someone else's conventions; mechanical style belongs to clang-format |
+
+Individual `cppcoreguidelines-*` picks — slicing, uninitialized locals, old-style casts (`cppcoreguidelines-slicing`, `-init-variables`, `-pro-type-cstyle-cast`) — are curated with rationale in [Core Guidelines Alignment](./core-guidelines-alignment.md); enabling that family wholesale stays rejected.
+
+---
+
 ## Header Hygiene
 
 ### File Suffixes and Namespaces
@@ -359,5 +385,7 @@ Before merging, confirm:
 - [ ] Comments state intent rather than narration; layout decisions live in .clang-format, not in review
 
 ---
+
+**Language**: All documentation should be written in **English**.
 
 > Aligned with the [ISO C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines) © Standard C++ Foundation and its contributors. Rule IDs cited for cross-reference; original internal digest (internal business use).

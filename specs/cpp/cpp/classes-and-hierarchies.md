@@ -394,15 +394,7 @@ Unions never serve type punning: reading a member other than the stored one is u
 
 ## Quality Check
 
-```bash
-cmake --preset default && cmake --build --preset default
-ctest --preset default --output-on-failure
-clang-tidy -p build/default path/to/changed.cpp
-
-# Hierarchy changes touch lifetime edges; repeat under sanitizers.
-cmake --preset asan && cmake --build --preset asan
-ctest --preset asan --output-on-failure
-```
+Gates before merging hierarchy work: format-clean (`clang-format --dry-run`) and tidy-clean on changed sources, the unit suite green, and — because hierarchies touch lifetime edges — the suite repeated under an ASan+UBSan build.
 
 Review checklist:
 
@@ -416,5 +408,7 @@ Review checklist:
 - [ ] Polymorphics passed/stored by reference or pointer — no slicing, no base pointers into arrays
 
 ---
+
+**Language**: All documentation should be written in **English**.
 
 > Aligned with the [ISO C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines) © Standard C++ Foundation and its contributors. Rule IDs cited for cross-reference; original internal digest (internal business use).

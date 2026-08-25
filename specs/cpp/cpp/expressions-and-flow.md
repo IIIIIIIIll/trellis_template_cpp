@@ -295,4 +295,8 @@ Review checklist:
 - [ ] Nesting stays shallow; guards return early; repeated compound conditions became named predicates
 - [ ] No structural container mutation inside a range-for; no iteration over dying temporaries
 
+---
+
+**Language**: All documentation should be written in **English**.
+
 > Aligned with the [ISO C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines) © Standard C++ Foundation and its contributors. Rule IDs cited for cross-reference; original internal digest (internal business use).

@@ -8,7 +8,7 @@
 
 A signature is a contract compilers partially enforce and reviewers fully judge. This page fixes that contract: parameter roles (`in`/`out`/`inout`), value-versus-reference decisions, view inputs, return economics, function size and purity, and the surface details — explicit constructors, named constants, `[[nodiscard]]` — that make intent unambiguous. The principle underneath (`P.3`): code states intent through names, types, and roles so a reader can tell whether it does what it should — a signature-first page is that principle applied. And when the standard library or a well-maintained third-party library already provides a capability, reaching for it beats hand-rolling (`P.13`): correctness, performance, and portability come pre-tested.
 
-Ownership mechanics live in [Memory and Ownership](./memory-and-ownership.md), which makes leaks structural instead of hunting them one by one (`P.8`); failure signaling lives in [Error Handling](./error-handling.md), owning what compile time cannot catch and run time must (`P.6`) — the assert/status/throw taxonomy, executed for real by the `asan` and `tsan` presets in [Build and Toolchain](./build-and-toolchain.md). Baseline is C++17, pinned there with `-Wpedantic` and `-Werror` so compiler extensions fail CI (`P.2`); C++20's `std::span` replaces pointer-plus-size spellings without changing any rule below.
+Ownership mechanics live in [Memory and Ownership](./memory-and-ownership.md), which makes leaks structural instead of hunting them one by one (`P.8`); failure signaling lives in [Error Handling](./error-handling.md), owning what compile time cannot catch and run time must (`P.6`). Baseline is C++17; C++20's `std::span` replaces pointer-plus-size spellings without changing any rule below.
 
 ---
 
@@ -183,7 +183,7 @@ auto cfg = load_config("app.conf");
 if (!cfg) return cfg.error();     // Right: handled, not dropped
 ```
 
-This extends `F.20`: once outputs travel as values, discarding them stops compiling. Treat new violations as CI errors.
+This extends `F.20`: once outputs travel as values, discarding them trips the attribute at every call site. Treat new violations as merge blockers.
 
 Caught by: `-Wunused-result` via the attribute; review for categories the attribute cannot see.
 
@@ -382,11 +382,7 @@ Template parameters document themselves — a named concept on C++20, a `static_
 
 ## Quality Check
 
-```bash
-cmake --preset default && cmake --build --preset default
-ctest --preset default --output-on-failure
-clang-tidy -p build/default path/to/changed.cpp
-```
+Gates before merging interface work: format-clean (`clang-format --dry-run`) and tidy-clean on changed sources, and the unit suite green.
 
 Review checklist:
 
@@ -401,5 +397,7 @@ Review checklist:
 - [ ] Magic numbers replaced by `constexpr`/`enum class`; observers are `const`
 
 ---
+
+**Language**: All documentation should be written in **English**.
 
 > Aligned with the [ISO C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines) © Standard C++ Foundation and its contributors. Rule IDs cited for cross-reference; original internal digest (internal business use).

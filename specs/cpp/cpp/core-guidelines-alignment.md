@@ -29,7 +29,7 @@ The table covers all fourteen major sections of the Guidelines plus their most l
 
 | Section | Area | Stance | Disposition |
 |---------|------|--------|-------------|
-| `P` | Philosophy | Adopt selectively | The intent is absorbed across every guide: express ideas directly in code (`P.1`), prefer compile-time checking (`P.5`), catch run-time errors early (`P.7`), and use supporting tools (`P.12`) — the last is why CI carries sanitizers and static analysis instead of trust |
+| `P` | Philosophy | Adopt selectively | The intent is absorbed across every guide: express ideas directly in code (`P.1`), prefer compile-time checking (`P.5`), catch run-time errors early (`P.7`), and use supporting tools (`P.12`) — the last is why sanitizers and static analysis sit inside each guide's enforcement story instead of trust |
 | `I` | Interfaces | Adapt | Routed to Functions and Interfaces; the ban on transferring ownership through raw pointers (`I.11`) is adopted outright via the memory guide's ownership ladder |
 | `F` | Functions | Adapt | Routed to Functions and Interfaces; cheap-to-copy inputs by value (`F.16`), returned out-values instead of out-parameters (`F.20`), named structs for multiple results (`F.21`), all with project-specific spelling |
 | `ES` | Expressions and statements | Adapt | Routed to Expressions and Flow; initialize everything (`ES.20`) and refuse silent narrowing conversions (`ES.46`) carry over unchanged |
@@ -53,7 +53,7 @@ Notes on upkeep:
 
 ## Recording a Deviation
 
-When a task genuinely cannot follow a rule we adopted, deviating is allowed but must be visible: the comment names the rule ID and states the reason, mirroring Build and Toolchain's policy that silencing static analysis without justification is rejected in review.
+When a task genuinely cannot follow a rule we adopted, deviating is allowed but must be visible: the comment names the rule ID and states the reason, mirroring this directory's policy that silencing static analysis without justification is rejected in review.
 
 Wrong:
 
@@ -92,7 +92,7 @@ A rule moves from the Guidelines into daily practice through four steps, and ski
 
 1. **Propose with an ID.** A task or review names the rule it wants followed (`F.21`, `ES.46`) — not a paraphrase of its mood. The ID makes the discussion checkable.
 2. **Pick a stance.** The rule lands in the stance table as adopt, adapt, or covered-elsewhere. "Adapt" requires writing down the difference in the companion guide at the same time; a stance without a documented difference is just an ignored rule with paperwork.
-3. **Land enforcement.** Every adopted rule gets a catcher: a clang-tidy check from the curated list, a compiler warning already in the build, a sanitizer preset, or an explicit review checklist item. If nothing can catch it, say so in the guide rather than pretending CI has it covered.
+3. **Land enforcement.** Every adopted rule gets a catcher: a clang-tidy check from the curated list, a compiler warning, a sanitizer run, or an explicit review checklist item. If nothing can catch it, say so in the guide rather than pretending tooling has it covered.
 4. **Update this file in the same change.** The stance table and the routing map are part of the diff, so the registry never describes a directory that no longer exists.
 
 The reverse path exists too: when an adopted rule stops earning its keep — findings are all suppressed, or the pattern no longer occurs — remove the enforcement and demote the stance row in the same change. Guidelines hygiene is ordinary code hygiene.
@@ -106,9 +106,9 @@ The Guidelines group their highest-value rules into profiles (type safety, bound
 | Guideline profile | Our equivalent enforcement |
 |-------------------|----------------------------|
 | Type safety | Warning set plus narrowing-conversion checks; `enum class` and explicit conversions per Expressions and Flow |
-| Bounds safety | ASan preset for out-of-bounds access, container-invalidation table in Memory and Ownership for the cases ASan misses deterministically |
+| Bounds safety | An ASan+UBSan build for out-of-bounds access, container-invalidation table in Memory and Ownership for the cases ASan misses deterministically |
 | Lifetime safety | Ownership ladder plus dangling-view review rules; ASan catches the escapes that reach memory |
-| Concurrency safety | TSAN preset for threading changes, lock discipline in Concurrency |
+| Concurrency safety | A ThreadSanitizer build for threading changes, lock discipline in Concurrency |
 
 The mapping is deliberate: where the Guidelines ask developers to be careful, we prefer a tool that is careless about feelings. A profile claim nobody measures is a mood, not a gate.
 
@@ -130,7 +130,6 @@ Routing table for the whole directory. When a task touches several rows, skim ea
 | [Error Handling](./error-handling.md) | Failure contracts, exceptions versus expected-style results, module edges | `E` |
 | [Quality Guidelines](./quality-guidelines.md) | Naming, header hygiene, ODR/ABI safety, constexpr discipline | `SF`, `NL`, `Enum` |
 | [Testing Conventions](./testing-conventions.md) | What earns a test and how tests are organized | verification posture of `P` |
-| [Build and Toolchain](./build-and-toolchain.md) | Warning policy, sanitizer matrix, clang-tidy curation, CI gates | tooling mandate of `P` |
 
 This document owns none of those topics itself. It exists so the routing above stays consistent: when a guide changes a rule that came from the Guidelines, the stance table is updated in the same change. Coverage is explicit end to end: each topic guide now integrates the full Core Guidelines rule set for the sections it owns directly in its body, so every rule ID carries its recorded Adopt / Adapt / Covered-elsewhere disposition in context; this document remains the authoritative stance map, and the sections that belong to no topic guide stay ledgered at the bottom of this file.
 
@@ -138,7 +137,7 @@ This document owns none of those topics itself. It exists so the routing above s
 
 ## Curated clang-tidy Checks from the Guidelines
 
-Build and Toolchain decides *how* clang-tidy runs (changed-lines in CI, curated allowlist, justified inline suppressions). It also already warns against enabling `cppcoreguidelines-*` wholesale: hundreds of hits bury signal. This guide proposes *which* individual checks earn a slot, grouped by how confidently they pay off.
+Each project decides how clang-tidy runs — on changed sources, against this curated allowlist, with justified inline suppressions. This guide proposes *which* individual checks earn a slot, grouped by how confidently they pay off — and rejects enabling `cppcoreguidelines-*` wholesale either way, because hundreds of hits bury signal.
 
 Enable first — low noise, direct defect yield:
 
@@ -150,6 +149,7 @@ Enable first — low noise, direct defect yield:
 | `cppcoreguidelines-pro-type-member-init` | Members left uninitialized | `C.48` |
 | `cppcoreguidelines-special-member-functions` | Half-defined copy/move/destroy sets | `C.21` |
 | `cppcoreguidelines-prefer-member-initializer` | Constructor-body assignments that belong in the init list | `C.49` |
+| `cppcoreguidelines-pro-type-cstyle-cast` | C-style casts bypass every access check; named casts state intent | `ES.49` |
 
 Slicing deserves the example, because the compiler stays happy while behavior vanishes:
 
@@ -202,7 +202,7 @@ Before merging changes to this file or citing new rule IDs elsewhere, confirm:
 - [ ] Stance table lists all fourteen sections: `P`, `I`, `F`, `ES`, `C`, `Enum`, `R`, `E`, `T`, `CP`, `SF`, `NL`, `PER`, `Con`
 - [ ] Every disposition pointer targets a guide that actually exists in this directory
 - [ ] Rule IDs appear as inline code and serve cross-reference only; no Guideline prose or examples reproduced anywhere in the directory
-- [ ] New clang-tidy candidates were weighed against the Build and Toolchain curation policy before entering `.clang-tidy`, and skips carry reasons
+- [ ] New clang-tidy candidates were weighed against the curation tables above before entering the check set, and skips carry reasons
 - [ ] Any adopted-rule change in a companion guide updated its row here in the same change
 - [ ] Deviation comments name the rule ID and reason; bare suppressions stay rejected
 - [ ] Attribution footer present on every guide in this directory
@@ -219,7 +219,7 @@ Six Guidelines sections contain nothing a topic guide can operationalize as codi
 | `A.2` | Adopt | Potentially reusable parts ship as maintained libraries — headers plus optional binaries, documented together — not copy-pasted fragments scattered through applications. |
 | `A.4` | Adopt | Library dependency graphs stay acyclic: cycles complicate builds and invite indeterminism; the file-level twin lives in Quality Guidelines under `SF.9`. |
 | `CPL.1` | Adopt | Prefer C++ to C for its type checking and notation; enforced by simply compiling everything with a C++ compiler. |
-| `CPL.2` | Adapt | If C survives anywhere it stays in the common C/C++ subset compiled as C++, so the C++ compiler checks it; a genuine C-only translation unit would be a Build-and-Toolchain-visible deviation. |
+| `CPL.2` | Adapt | If C survives anywhere it stays in the common C/C++ subset compiled as C++, so the C++ compiler checks it; a genuine C-only translation unit would be a recorded, visible deviation. |
 | `CPL.3` | Adopt | Call C through a C++ facade: `extern "C"` declarations sit at the boundary while callers get RAII and type safety, never raw C idioms. |
 | `FAQ.1` | Covered elsewhere | Interpretive guidance absorbed into topic stances: the aims are restated as this directory's Overview charter — modern, machine-checkable C++. |
 | `FAQ.2` | Covered elsewhere | Announcement history from CppCon 2015; provenance trivia with no practice to adopt. |
@@ -255,5 +255,7 @@ Six Guidelines sections contain nothing a topic guide can operationalize as codi
 | `SL.4` | Adopt | Umbrella rule: use standard components within their contracts; concrete catchers distributed across the profile mappings earlier in this file. |
 | `In.0` | Adopt | Meta-entry: don't panic — understand a rule's implications before applying it, embodied here in the demand for reasoned stances and justified deviations. |
 ---
+
+**Language**: All documentation should be written in **English**.
 
 > Aligned with the [ISO C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines) © Standard C++ Foundation and its contributors. Rule IDs cited for cross-reference; original internal digest (internal business use).

@@ -30,9 +30,8 @@ pick a template, and copies its contents into the consuming project's
 ├── HOSTING.md                 ← ops deep-dive: source strings, modes, updates
 └── specs/cpp/
     ├── README.md              ← template overview for consumers
-    └── cpp/                   ← the guideline layer itself (thirteen documents)
+    └── cpp/                   ← the guideline layer itself (twelve documents)
         ├── index.md           ← layer entry point
-        ├── build-and-toolchain.md
         ├── memory-and-ownership.md
         ├── error-handling.md
         ├── quality-guidelines.md

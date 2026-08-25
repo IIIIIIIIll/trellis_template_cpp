@@ -346,15 +346,7 @@ Reach for the standard library's TMP facilities first (`T.124`) — `std::condit
 
 ## Quality Check
 
-Before merging generic code, confirm:
-
-```bash
-cmake --preset default && cmake --build --preset default
-ctest --preset default --output-on-failure
-
-# Static analysis on changed sources
-clang-tidy -p build/default path/to/changed.cpp
-```
+Before merging generic code, confirm format-clean (`clang-format --dry-run`) and tidy-clean on changed sources plus a green unit suite:
 
 - [ ] Every new public template has written requirements: a C++20 concept or a C++17 `static_assert` trait check at the top of the definition
 - [ ] Constraints describe semantics the algorithm actually needs, no more
@@ -362,6 +354,10 @@ clang-tidy -p build/default path/to/changed.cpp
 - [ ] No new `std::enable_if`, tag dispatch, or function-template specialization where `if constexpr`, overloads, or concepts express it
 - [ ] Type erasure introduced only where heterogeneous storage or a hidden-implementation boundary demands it
 - [ ] CRTP additions carry a justification (hot-path dispatch, mixin reuse) in the declaring header
-- [ ] New templates compile in the two-compiler CI matrix without warnings
+- [ ] New templates compile warning-clean under at least two compilers
+
+---
+
+**Language**: All documentation should be written in **English**.
 
 > Aligned with the [ISO C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines) © Standard C++ Foundation and its contributors. Rule IDs cited for cross-reference; original internal digest (internal business use).
