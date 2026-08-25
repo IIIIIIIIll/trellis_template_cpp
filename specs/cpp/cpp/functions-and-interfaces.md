@@ -374,7 +374,7 @@ A failure to perform a required task must be impossible to ignore. Deviation fro
 
 ### Abstraction Boundaries
 
-Ugly but necessary techniques get wrapped once behind a clean interface, the suppression commented inside the abstraction (`I.30`); raw allocation, pointer arithmetic, and casting stay inside implementations — the standard library is the model, and low-level mess outside abstraction implementations is a review finding (`P.11`). Rule violations must never leak through an API into user code (the deviation-comment policy lives in [Core Guidelines Alignment](./core-guidelines-alignment.md)).
+Ugly but necessary techniques get wrapped once behind a clean interface, the suppression commented inside the abstraction (`I.30`); raw allocation, pointer arithmetic, and casting stay inside implementations — the standard library is the model, and low-level mess outside abstraction implementations is a review finding (`P.11`). Rule violations must never leak through an API into user code (the deviation-comment policy lives in [the guidelines index](./index.md)).
 
 Module edges are the one boundary where the interface surface shrinks. Deviation from `I.26`: cross-compiler ABI compatibility is not a project target, so full C++ interfaces are fine in-process; the C-style subset discipline applies only at genuine module edges — total catches translating to status codes in [Error Handling](./error-handling.md), ABI-stable headers in [Quality Guidelines](./quality-guidelines.md).
 

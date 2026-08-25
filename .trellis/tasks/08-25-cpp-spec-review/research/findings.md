@@ -109,3 +109,48 @@ disk == top-level README tree (12 docs; README self-listing expected).
   F.42-F.49 return family, lambda capture matrix incl. F.54 `[=]` trap,
   explicit-single-arg (C.46), const-documentation quartet (P.10/Con.1-4),
   I-series interface rules and options-struct adaptation of I.23.
+
+## performance.md verdicts (2026-08-25)
+
+- Citation audit against upstream bodies: Per.1/2/3/5/6/7/10/11/12/14/15/
+  16/17/18/19/30 accurate; ES.56 verified verbatim ("Write std::move() only
+  when you need to explicitly move an object to another scope").
+- FIXED: `Per.4` was cited for benchmark persistence — upstream Per.4 is
+  "complicated code is not necessarily faster"; ID dropped, practice kept.
+- FIXED: `Per.13` ("eliminate redundant indirections") misapplied to
+  redundant temporaries; ID dropped.
+- Verified correct: allocation-count framing, const-source move fallback,
+  string_view free slicing, constexpr-vs-lazy-static tradeoff, Particle
+  layout arithmetic (72→56 bytes checked by hand), AoS-to-SoA gate.
+
+## concurrency.md verdicts (2026-08-25)
+
+- Citation audit: 33 anchors accurate (CP.1/2/3/4/8/20-26/31/32/41-44/
+  50-53/60/61/100-102/110/111/200/201, Con.1-5); CP.24 "thread as global
+  container" quoted exactly; CP.201 deviation text matches upstream's own
+  "???" placeholder honestly.
+- FIXED: `CP.9` misattributed twice — upstream is "use tools to validate
+  concurrent code", not message-passing preference; IDs dropped at the
+  design-ladder item and the task-flow section (CP.31 kept where it fits).
+- FIXED: `CP.40` misattributed — upstream is "minimize context switching",
+  unrelated to the refactor-away-sharing aphorism; ID dropped.
+- Verified correct: lock_guard CTAD on C++17, unnamed-guard temporary trap,
+  async-future destructor blocking (CP.61 body), magic statics vs DCL ban,
+  coroutine capture/suspension/parameter trio, TSan gate prose.
+
+## expressions-and-flow.md verdicts (2026-08-25)
+
+- Citation audit: ~55 ES-family anchors checked against upstream titles;
+  52 accurate (incl. ES.56 move-scope rule reused correctly from
+  performance.md's perspective). Three misattributions FIXED:
+  ES.28 (upstream: lambdas for complex initialization) was cited for
+  predicate extraction; ES.70 (switch over if) for "delete cleverness";
+  ES.74 (loop-variable in for-initializer) for smallest-scope where ES.5
+  is the anchor.
+- FIXED: Window constructor example contradicted its own comment (the
+  initializer read Size parameters, not members); replaced with a genuine
+  declaration-order hazard (area_ declared first, initialized first,
+  reading width_/height_).
+- Verified correct: narrowing-brace discipline, T{e} construction,
+  unsigned-wrap loop hazard, one-pass expression rules, macro family bans,
+  unnamed-guard silent race, range-for temporary binding.

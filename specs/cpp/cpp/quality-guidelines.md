@@ -101,6 +101,48 @@ Worth enabling (low noise, high yield):
 | `modernize-*` | Mechanical language hygiene (`use-override`, `use-nullptr`, `use-emplace`) |
 | Selected `misc-*` (`misc-unused-*`) | Dead declarations and parameters |
 
+Individual `cppcoreguidelines-*` checks follow the same discipline — curated one by one, never enabled as a family:
+
+Enable first — low noise, direct defect yield:
+
+| Check | Guards against | Related rules |
+|-------|----------------|---------------|
+| `cppcoreguidelines-slicing` | Derived-to-base copies silently dropping the dynamic type | `C.67` |
+| `cppcoreguidelines-init-variables` | Uninitialized locals | `ES.20` |
+| `cppcoreguidelines-narrowing-conversions` | Lossy implicit conversions | `ES.46` |
+| `cppcoreguidelines-pro-type-member-init` | Members left uninitialized | `C.48` |
+| `cppcoreguidelines-special-member-functions` | Half-defined copy/move/destroy sets | `C.21` |
+| `cppcoreguidelines-prefer-member-initializer` | Constructor-body assignments that belong in the init list | `C.49` |
+| `cppcoreguidelines-pro-type-cstyle-cast` | C-style casts bypass every access check; named casts state intent | `ES.49` |
+
+Slicing deserves the example: the compiler stays happy while behavior vanishes:
+
+```cpp
+// Wrong: HttpHandler sliced into Base on the way in; dispatch and fields gone.
+void install(Base handler);
+install(HttpHandler{});
+
+// Right (C.67): borrow the object; storage decisions belong to the owner.
+void install(const Base& handler);
+```
+
+Second wave — evaluate against your codebase before enabling:
+
+| Check | Notes |
+|-------|-------|
+| `cppcoreguidelines-virtual-class-destructor` | Polymorphic bases need virtual destructors; noisy only where protected non-virtual destructors are deliberate |
+| `cppcoreguidelines-no-malloc` | Flags `malloc`/`free`/`calloc`/`realloc`; aligns with the ownership ladder — drop the check if C interop dominates the tree |
+| `cppcoreguidelines-pro-type-static-cast-downcast` | Unsound downcasts; the kind-tag dispatch under ODR and ABI Pitfalls below makes most of them unnecessary anyway |
+| `cppcoreguidelines-avoid-non-const-global-variables` | Mutable globals are review bait; expect findings in legacy glue and fix or justify each one |
+| `cppcoreguidelines-rvalue-reference-param-never-moved` | Sink parameters declared but never moved from; pairs with the pass-by rules in [Memory and Ownership](./memory-and-ownership.md) |
+
+Skip with a written reason, not by omission:
+
+| Check | Why skipped here |
+|-------|------------------|
+| `cppcoreguidelines-owning-memory` | Models `gsl::owner`; owning raw pointers are banned outright, so its findings duplicate review rules instead of adding yield |
+| `cppcoreguidelines-avoid-magic-numbers` | High churn, low signal alongside normal review |
+
 Leave off by default:
 
 | Checks | Why off |
@@ -110,7 +152,7 @@ Leave off by default:
 | `readability-identifier-naming` without a committed config | Churn generator unless the naming table ships beside the repo (see Naming Conventions above) |
 | House-style families (`llvm-*`, `fuchsia-*`, ...) | Someone else's conventions; mechanical style belongs to clang-format |
 
-Individual `cppcoreguidelines-*` picks — slicing, uninitialized locals, old-style casts (`cppcoreguidelines-slicing`, `-init-variables`, `-pro-type-cstyle-cast`) — are curated with rationale in [Core Guidelines Alignment](./core-guidelines-alignment.md); enabling that family wholesale stays rejected.
+When a check lands in `.clang-tidy`, record it in the same change that adopts the corresponding rule; when a check is rejected, leave the reason here so the question is answered once.
 
 ---
 

@@ -95,15 +95,15 @@ Use `=` where the type is spelled out and no conversion risk exists (`std::strin
 Members initialize in **declaration order**, not list order (`C.47`). Reordering the list to look tidy initializes members in an order their dependencies do not expect, and `-Wreorder` flags it.
 
 ```cpp
-// Wrong: list order lies about execution order
+// Wrong: list order lies -- width_ initializes AFTER area_ needs it
 class Window {
 public:
     explicit Window(Size s)
-        : area_{static_cast<int>(s.width()) * static_cast<int>(s.height())},
-          width_(s.width()),
-          height_(s.height()) {}
+        : width_(s.width()),
+          height_(s.height()),
+          area_(width_ * height_) {}   // area_ is declared FIRST, so it initializes FIRST
 private:
-    int area_;       // declared FIRST, so it initializes FIRST -- reads width_/height_
+    int area_;       // initialized before width_/height_ exist: reads garbage
     int width_;
     int height_;
 };
@@ -219,7 +219,7 @@ A value written in an expression is not read elsewhere in the same expression (`
 
 ## Control Flow Shape
 
-Functions read top-down: guard clauses first, main path last. Early returns are the default; single-exit is not a goal — one extra `return` that removes three indent levels is a win. The real budget is nesting depth: past two levels of compound conditionals, extract predicates (`ES.28`) and delete cleverness (`ES.70`).
+Functions read top-down: guard clauses first, main path last. Early returns are the default; single-exit is not a goal — one extra `return` that removes three indent levels is a win. The real budget is nesting depth: past two levels of compound conditionals, extract named predicates and delete cleverness.
 
 ```cpp
 // Wrong: the happy path is buried; every branch doubles the state space
@@ -266,7 +266,7 @@ const std::vector<Row> rows = make_rows();
 for (const Row& row : rows) { consume(row); }
 ```
 
-5. Variables live in the smallest scope that can hold them (`ES.74`); a loop variable is dead the moment its loop ends.
+5. Variables live in the smallest scope that can hold them (`ES.5`); a loop variable is dead the moment its loop ends.
 6. With an obvious loop variable, a classic `for` beats `while` (`ES.72`): the whole mechanism sits up front and the counter's scope ends with the loop. With no loop variable, `while` wins (`ES.73`): an event-driven condition wedged into a `for` frame with an unrelated increment misleads every reader.
 7. `break` and `continue` stay rare (`ES.77`): a loop needing `break` usually wants extraction into a function where it becomes `return`; `continue` chains collapse into one positive `if`. Kept ones are visible at a glance.
 8. The `for` header alone steers the counter (`ES.86`); mutating it inside the body destroys top-down reasoning about iterations. Skip logic uses a separate flag — two concepts, two variables — or a restructured loop.

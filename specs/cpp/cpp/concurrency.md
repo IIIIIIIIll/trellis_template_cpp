@@ -12,7 +12,7 @@ Therefore the design order of preference is:
 
 1. **Do not share** mutable state across threads at all (`CP.3`).
 2. **Share immutable** data freely — immutability needs no synchronization.
-3. **Communicate instead of sharing**: move ownership through channels, queues, futures (`CP.9`).
+3. **Communicate instead of sharing**: move ownership through channels, queues, futures.
 4. Where sharing survives, guard every access with a mutex co-designed with its data (`CP.50`).
 5. Atomics for narrow, single-variable cases only.
 
@@ -64,7 +64,7 @@ private:
 Notes:
 
 - Prefer making objects immutable over making them synchronized: `const`-first APIs keep the concurrency story out of most types entirely (constants-and-immutability defaults: immutable by default, `const` members by default, `const&` parameters by default — `Con.1`, `Con.2`, `Con.3`; recompute-at-compile-time where possible, `Con.5`).
-- Refactoring to remove sharing beats refactoring to protect it (`CP.40`). Before adding a second mutex to a class, ask which design produced two writers.
+- Refactoring to remove sharing beats refactoring to protect it. Before adding a second mutex to a class, ask which design produced two writers.
 - Returning shared *immutable* snapshots (`shared_ptr<const T>`) lets readers work without locks after the hand-off point.
 - Ownership crossing unrelated thread lifetimes goes through `shared_ptr` (`CP.32`) — the only safe deletion story; static objects, never-freed objects, and owner-outlives-sharer arrangements are exempt. Ladder-first: prefer the immutable snapshots above so readers need no locks, and justify sharing per [Memory and Ownership](./memory-and-ownership.md).
 
@@ -228,7 +228,7 @@ Caught by: TSan for the racy cases; review for `volatile` used near threading an
 
 ## Message Passing and Task-Based Flow
 
-Wherever the design allows, replace shared state with data flowing between owners: a work item moves down a queue, a future carries a result back, nobody needs a lock because nobody shares (`CP.9`, `CP.31`).
+Wherever the design allows, replace shared state with data flowing between owners: a work item moves down a queue, a future carries a result back, nobody needs a lock because nobody shares (`CP.31`).
 
 Think in tasks, not threads (`CP.4`): name *what* runs concurrently, and let infrastructure decide *where*. Ad-hoc `thread-per-request` scales poorly and hides its cost structure; a bounded pool makes both visible.
 

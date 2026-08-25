@@ -24,8 +24,7 @@ specs/cpp/            →  .trellis/spec/
     ├── templates-and-generics.md
     ├── concurrency.md
     ├── expressions-and-flow.md
-    ├── performance.md
-    └── core-guidelines-alignment.md
+    └── performance.md
 ```
 
 - The `cpp/` directory at the template root becomes a spec layer at
@@ -50,7 +49,6 @@ specs/cpp/            →  .trellis/spec/
 | [concurrency.md](./cpp/concurrency.md) | Threads and shared state, synchronization discipline, data-race prevention |
 | [expressions-and-flow.md](./cpp/expressions-and-flow.md) | Expression-level correctness, initialization, conversions, control flow |
 | [performance.md](./cpp/performance.md) | Optimization work guided by measurement: hot paths, allocation pressure |
-| [core-guidelines-alignment.md](./cpp/core-guidelines-alignment.md) | Adopt/adapt/covered-elsewhere stance per Core Guidelines section, section-to-guide map, curated clang-tidy checks, license note |
 
 Baseline is C++17; deviations available in C++20/23 are called out where they
 matter. The guidelines are opinionated defaults, not neutral surveys — adapt
@@ -104,3 +102,20 @@ Files you have not touched refresh silently. Files you modified locally
 trigger the "Modified by you" prompt during update, so your project-specific
 changes are never overwritten silently. An unreachable registry degrades to a
 yellow warning — updates never fail hard because of the network.
+
+---
+
+## License Note
+
+The Core Guidelines are published by Standard C++ Foundation under terms that
+permit derivative works for internal business purposes, provided attribution
+accompanies the derivative. This directory is such a derivative: it cites rule
+identifiers and links back to the source while reproducing neither its text
+nor its examples.
+
+- Do not publish this registry externally or fold it into shipped product
+  documentation; link readers to the Guidelines instead.
+- The attribution footer on every guide is part of the license bargain, not
+  decoration.
+- Any use outside internal business use means re-reading the license terms at
+  the source before copying anything further.

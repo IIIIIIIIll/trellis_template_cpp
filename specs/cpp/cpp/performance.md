@@ -25,7 +25,7 @@ Rules:
 
 1. Numbers quoted in reviews state machine, input, build configuration, and repetition count.
 2. Sanitizer builds answer correctness questions; their slowdowns make them useless for timing.
-3. The benchmark that justified a change stays in the tree so the next person can re-verify it (`Per.4`).
+3. The benchmark that justified a change stays in the tree so the next person can re-verify it.
 4. Effort concentrates on code the profiler indicts, not code that merely looks slow (`Per.3`): a 50% win on a component eating 4% of runtime moves the whole program less than a 5% win on one eating 40%. Optimizing anywhere else is churn paid in readability for an unmeasurable return.
 5. Keeping context switches off the critical path is threading work (`Per.30`) — lock hold times, shared-state minimization, and wakeup discipline live in [Concurrency](./concurrency.md); the measurement gate here still decides whether the path is critical at all.
 
@@ -123,7 +123,7 @@ Two obligations come with views:
 1. Inside the callee, slicing is free — `remove_prefix` and `substr` on views allocate nothing. Reach for them before any `.str()` or `std::string` round trip.
 2. Views borrow. The moment a value must outlive the call — stored, shipped across threads, put into a container — convert once to an owning type at the storage boundary. Lifetime rules live in [Memory and Ownership](./memory-and-ownership.md).
 
-Redundant temporaries are the same sin inside bodies (`Per.13`): each `format(a) + ", " + format(b)` materializes intermediates, while an append chain into one buffer does not.
+Redundant temporaries are the same sin inside bodies: each `format(a) + ", " + format(b)` materializes intermediates, while an append chain into one buffer does not.
 
 The static type system is doing performance work too (`Per.10`): `void*` erasures, weak types, and byte-level manipulation strip exactly the information the optimizer needs — strongly typed simple code compiles better than clever low-level code.
 

@@ -14,7 +14,7 @@ paths: [specs/**]
 ## Document Shape
 
 Every guide under `specs/cpp/cpp/` follows the same skeleton. Real reference:
-`specs/cpp/cpp/core-guidelines-alignment.md`, `specs/cpp/cpp/index.md`.
+`specs/cpp/cpp/index.md`, `specs/cpp/cpp/quality-guidelines.md`.
 
 1. `# Title` immediately followed by a one-paragraph `>` blockquote summary.
 2. `## Overview` stating the guide's stance and scope — what it decides, not a
@@ -22,8 +22,8 @@ Every guide under `specs/cpp/cpp/` follows the same skeleton. Real reference:
 3. Body organized by decision, using tables for mappings and **Wrong/Right**
    code pairs for rules.
 4. Footer, exactly two lines: the `**Language**` note and the Core Guidelines
-   attribution (see `specs/cpp/cpp/index.md` bottom). Every shipped doc
-   carries both.
+   attribution (see `specs/cpp/cpp/index.md` bottom). Every guide under
+   `specs/cpp/cpp/` carries both; the layer-overview README is exempt.
 
 Wrong/Right pairs are the house style for any rule that can be shown in code.
 The wrong example names what a reviewer would flag; the right example carries
@@ -34,8 +34,7 @@ the rule ID as a comment when one exists:
 // Deviates from F.21: ...     ← Right: deviation travels with the code
 ```
 
-Full examples: `specs/cpp/cpp/core-guidelines-alignment.md` ("Recording a
-Deviation").
+Full examples: `specs/cpp/cpp/index.md` ("Core Guidelines Disposition").
 
 ---
 
@@ -49,7 +48,7 @@ Deviation").
   examples are never copied into this repository — license footer exists
   because of this rule.
 - **Stance vocabulary is fixed**: *Adopt*, *Adapt*, *Covered elsewhere*
-  (defined in `core-guidelines-alignment.md`). *Adapt* obligates a written,
+  (defined in `specs/cpp/cpp/index.md`). *Adapt* obligates a written,
   reasoned difference in the companion guide — an adapted rule silently
   dropped is a broken contract with reviewers.
 - **One home per rule.** A rule lives in exactly one guide; other guides link
@@ -60,7 +59,7 @@ Deviation").
   enforcement named or deleted.
 - **Upkeep in place**: when an upstream rule ID moves, fix its citations
   during the next edit of the affected guide — no bulk sweeps
-  (`core-guidelines-alignment.md`, "Notes on upkeep").
+  (the layer index, "Core Guidelines Disposition").
 
 ---
 
