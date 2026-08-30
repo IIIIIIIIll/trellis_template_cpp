@@ -113,7 +113,9 @@ never renumbered; IDs are unique repo-wide.
 `core-guidelines-disposition.md` are exempt (disposition rows are stances,
 not rules). Any rule add, change, or delete re-runs `tools/extract_rules.py`
 in the same change to regenerate the `rules.json` digest — the digest is
-derived from the markdown and is never hand-edited.
+derived from the markdown and is never hand-edited. `rules.json` itself is
+footer-exempt and validator-exempt: it is generated output, not an authored
+document.
 
 ---
 

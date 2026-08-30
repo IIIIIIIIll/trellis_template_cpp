@@ -61,8 +61,9 @@ the manifest, install mapping, and registry docs.
 
 ## Quality Check
 
-No compiler or test suite exists here; verification is structural. Run before
-declaring any change complete:
+No compiler or test suite exists here; verification is structural, plus one
+compile gate: the snippet harness builds every guideline example against
+stubs. Run before declaring any change complete:
 
 ```bash
 # Manifest is valid JSON and every templates[].path exists in the tree
@@ -83,6 +84,20 @@ for root, _, files in os.walk('specs'):
                 bad.append(f"{p}: {m.group(1)}")
 print('\n'.join(bad)); sys.exit(bool(bad))
 EOF
+
+# Rule grammar binds: every rule lead-in, strength marker, and Caught-by
+# pairing is well-formed across the 10 topic guides
+python3 tools/validate_rules.py
+
+# Digest determinism: two consecutive extractions produce a byte-identical
+# rules.json
+python3 tools/extract_rules.py && cp specs/cpp/cpp/rules.json /tmp/rules-a.json \
+  && python3 tools/extract_rules.py && cmp specs/cpp/cpp/rules.json /tmp/rules-a.json
+
+# Snippet gate: every fenced ```cpp guideline example compiles under its
+# annotated contract (clean / compile-error / compiles-UB); the report carries
+# the compiles-UB inventory for manual sanitizer spot-checks
+python3 tools/check_snippets.py
 ```
 
 Also confirm by hand: any file added, removed, or renamed under `specs/cpp/`

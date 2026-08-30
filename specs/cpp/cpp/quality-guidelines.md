@@ -35,6 +35,7 @@ Caught by: review — no automated detector.
 **QUAL-10.** Do not use `m_` or plain names plus setter/getter gymnastics.
 
 ```cpp
+// compiles; UB at runtime
 // Wrong: four styles in ten lines
 class PacketReader {
 public:
@@ -137,6 +138,7 @@ Enable first — low noise, direct defect yield:
 Slicing deserves the example: the compiler stays happy while behavior vanishes:
 
 ```cpp
+// compiles; UB at runtime
 // Wrong: HttpHandler sliced into Base on the way in; dispatch and fields gone.
 void install(Base handler);
 install(HttpHandler{});
@@ -192,6 +194,7 @@ Caught by: review — no automated detector.
 **QUAL-30.** Every header must be **self-contained** (`SF.11`): it includes everything its own code names — include what you name (`SF.10`), never depending on what a transitively included header happens to drag in; deliberate aggregation headers remain acceptable.
 
 ```cpp
+// compiles; UB at runtime
 // Wrong: compiles today because <vector> happens to pull in <cstdint>
 // widget.h
 #include <vector>
@@ -228,8 +231,10 @@ Caught by: review — no automated detector.
 ```cpp
 // Right: incomplete types suffice for these declarations
 class Engine;
-Widget(const Engine& engine);
-Engine* engine() const;
+class Widget {
+    Widget(const Engine& engine);
+    Engine* engine() const;
+};
 
 // Wrong: member by value and inheritance need the complete type
 class Widget : public Engine { /*...*/ };   // compile-error: Engine is incomplete here — include, do not forward-declare
@@ -308,6 +313,7 @@ constexpr int kMaxDepth = 64;
 bool is_delim(char c) noexcept { return c == ',' || c == ';'; }
 }  // namespace
 
+// compiles; UB at runtime
 // Wrong (in a header): one copy per including TU
 namespace {
 int helper_count = 0;                   // N distinct variables after inclusion
@@ -333,6 +339,7 @@ Caught by: review — no automated detector.
 inline constexpr std::array<Mode, 3> kModes{Mode::kFast, Mode::kSafe, Mode::kRaw};
 inline constexpr int kMaxConnections = 128;
 
+// compiles; UB at runtime
 // Wrong (pre-C++17 habit): per-TU copies, ODR traps when addresses are compared
 static const int kMaxConnections = 128;
 ```
@@ -342,6 +349,7 @@ static const int kMaxConnections = 128;
 **QUAL-48.** Initialization order of namespace-scope objects across translation units is unspecified. Any global whose constructor reads another global is reading garbage on some platforms. Use `constexpr` initialization where possible, otherwise function-local statics (thread-safe since C++11).
 
 ```cpp
+// compiles; UB at runtime
 // Wrong: g_registry may initialize before g_logger exists
 Registry g_registry(&g_logger);
 
@@ -391,6 +399,7 @@ The destructor and move operations are defined in the `.cpp`, where `Impl` is co
 **QUAL-50.** `dynamic_cast` and `typeid` require identical RTTI representations on both sides of a module boundary. Independently built modules (different compiler versions or flags) cannot rely on them; use explicit interface virtuals, enum kind tags, or visitor patterns instead.
 
 ```cpp
+// compiles; UB at runtime
 // Wrong: works in unit tests, returns nullptr across mismatched modules
 if (auto* http = dynamic_cast<const HttpEvent*>(&ev)) { /*...*/ }
 
@@ -440,6 +449,7 @@ Caught by: review — no automated detector.
 **QUAL-57 (hard).** Scoped `enum class` everywhere (`Enum.3`): plain enums convert to `int` too readily, and unrelated enumerations collide on shared enumerator names.
 
 ```cpp
+// compiles; UB at runtime
 // Wrong: implicit conversion to int, shouting names, collision-prone
 enum Color { RED, GREEN };
 int x = RED;

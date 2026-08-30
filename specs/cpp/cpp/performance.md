@@ -71,6 +71,7 @@ Defaults:
 - **PERF-11.** Building text appends into one reserved buffer; chained `+` in a loop is forbidden.
 
 ```cpp
+// compiles; UB at runtime
 // Wrong: O(log n) reallocations, each copying everything accumulated so far
 std::string report;
 for (const Entry& e : entries) {
@@ -113,6 +114,7 @@ Three rules:
 - **PERF-16.** A moved-from object is destructible and assignable; everything else about its state is unspecified. Never read one expecting its old value.
 
 ```cpp
+// compiles; UB at runtime
 // Wrong: moving a const source silently falls back to a copy
 void store(const std::string& name) {
     const std::string local = canonical(name);
@@ -145,6 +147,7 @@ Signatures decide whether callers pay for copies.
 The signature policy itself is owned by [Functions and Interfaces](./functions-and-interfaces.md) — View Inputs Borrow, Never Store; what stays here is the cost rationale.
 
 ```cpp
+// compiles; UB at runtime
 // Wrong: every caller holding a literal or a slice pays for a std::string
 Host parse_host(const std::string& url);
 
@@ -176,6 +179,7 @@ Caught by: review — no automated detector.
 **PERF-23.** Anything computable at compile time should be (`Per.11`): lookup tables, polynomial coefficients, dispatch matrices. A runtime-built table costs an initialization pass on every cold start plus first-touch latency; a `constexpr` table costs binary size once.
 
 ```cpp
+// compiles; UB at runtime
 // Wrong when the table could be constexpr: the static is thread-safe and free
 // of init-order questions, but first use pays the build and every access pays a guard check
 const std::array<double, 256>& gain_table() {
@@ -208,6 +212,7 @@ Data layout decides whether the memory subsystem feeds the CPU or starves it:
   Caught by: `perf c2c` or cache-miss profiling — the program stays correct, so TSan reports nothing.
 
 ```cpp
+// compiles; UB at runtime
 // Wrong: flags interleaved between doubles widen the struct with padding
 struct Particle {
     bool active;

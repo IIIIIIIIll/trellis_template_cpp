@@ -43,6 +43,7 @@ Caught by: TSan reports the race when both accesses actually execute under a Thr
 Wrong:
 
 ```cpp
+// compiles; UB at runtime
 // A cache reachable from worker threads, synchronized by nobody — corrupted nodes in production.
 class SessionCache {
 public:
@@ -102,6 +103,7 @@ Caught by: review for `detach()` and unjoined `std::thread`; TSan flags races ca
 Wrong:
 
 ```cpp
+// compiles; UB at runtime
 void handle_request(Request req) {
     std::thread responder([req] { send_reply(req); });
     // If send_reply throws or handle_request returns early: std::terminate.
@@ -112,6 +114,7 @@ void handle_request(Request req) {
 Right:
 
 ```cpp
+// C++20: jthread + stop_token cancellation
 #include <thread>
 
 void poll_device(std::stop_token stop, Device& dev) {
@@ -163,6 +166,7 @@ Rules:
 Wrong:
 
 ```cpp
+// compiles; UB at runtime
 void broadcast(const Event& ev, const std::vector<Listener*>& listeners) {
     std::lock_guard<std::mutex> guard(listenersMutex_);
     for (Listener* l : listeners) {
@@ -216,6 +220,7 @@ Caught by: TSan for the racy cases; review for `volatile` used near threading an
 Wrong:
 
 ```cpp
+// compiles; UB at runtime
 volatile bool ready = false;            // volatile ≠ atomic; race is UB
 int shared_counter = 0;                 // guarded by... hope
 while (!ready) {}                       // spin the CPU at 100%
@@ -255,6 +260,7 @@ Wherever the design allows, replace shared state with data flowing between owner
 **CONC-32 (hard).** Think in tasks, not threads (`CP.4`): name *what* runs concurrently, and let infrastructure decide *where*. Ad-hoc `thread-per-request` scales poorly and hides its cost structure; a bounded pool makes both visible.
 
 ```cpp
+// C++20: stop_token parameter (C++17: atomic shutdown flag)
 // Producer/consumer through a bounded blocking queue: ownership moves, no locks leak.
 void ingest(ThreadSafeQueue<Job>& jobs, std::stop_token stop) {
     while (!stop.stop_requested()) {

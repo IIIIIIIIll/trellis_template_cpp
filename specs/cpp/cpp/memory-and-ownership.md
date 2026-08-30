@@ -21,6 +21,7 @@ Caught by: ASan's LeakSanitizer (leaks), static analyzer leak checkers for handl
 Wrong:
 
 ```cpp
+// compiles; UB at runtime
 bool read_config(const char* path) {
     FILE* f = std::fopen(path, "r");
     if (!f) return false;
@@ -104,6 +105,7 @@ Default strength: default.
 Wrong:
 
 ```cpp
+// compiles; UB at runtime
 class Parser {
 public:
     // Caller with a literal or substring pays a needless std::string copy;
@@ -178,6 +180,7 @@ Default strength: hard.
 Wrong:
 
 ```cpp
+// compiles; UB at runtime
 std::string_view host_of(std::string_view url) {
     std::string normalized = normalize(url);
     auto host = extract_host(normalized);   // view into `normalized`...
@@ -212,6 +215,7 @@ Caught by: GCC 13+ `-Wdangling-reference` flags simple cases but is prone to fal
 Wrong:
 
 ```cpp
+// compiles; UB at runtime
 auto& first = v.front();
 v.push_back(x);        // may reallocate
 use(first);            // dangling reference

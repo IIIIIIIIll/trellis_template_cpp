@@ -42,6 +42,7 @@ Two design-time corollaries keep this table honest.
 **ERR-7.** Exceptions carry failures, never ordinary control flow (`E.3`): loop termination and cache misses are normal outcomes, and implementations optimize on exactly that assumption.
 
 ```cpp
+// compiles; UB at runtime
 // Wrong: exceptions for ordinary control flow
 Item find(const Map& m, Key k) {
     try {
@@ -58,6 +59,7 @@ std::optional<Item> find(const Map& m, Key k) { return m.lookup(k); }
 **ERR-8.** Never validate external input with `assert`: under `NDEBUG` the check vanishes and malformed input walks straight into memory-unsafe code.
 
 ```cpp
+// compiles; UB at runtime
 // Wrong: error codes for genuine invariants
 int slot = table_index(key);        // returns -1 on "impossible" state
 if (slot < 0) return FAIL;          // hides a bug instead of surfacing it
@@ -89,6 +91,7 @@ Default strength: hard.
 **ERR-12.** A constructor either establishes the class invariant or throws (`E.5`); there are no half-built objects callers must remember to check. The class-design side of invariant discipline lives in [Classes and Hierarchies](./classes-and-hierarchies.md).
 
 ```cpp
+// compiles; UB at runtime
 // Wrong: a half-built object the caller must remember to check
 Session s;
 if (!s.init(cfg)) { /* hope every caller notices */ }
@@ -138,6 +141,8 @@ auto make_error(E&& e) {
 // Usage — inspection shape identical to std::expected; errors are built by
 // make_error in result.h, so the C++23 migration is a one-file change there
 // plus deleting the alias
+#include "result.h"
+
 Result<Config, std::error_code> load_config(std::string_view path);
 
 auto cfg = load_config(path);
@@ -168,6 +173,7 @@ Default strength: hard.
 **ERR-18.** Throw temporaries, catch by `const&` (`E.15`). Catching by value slices derived types down to the handler's static type; catching by pointer invites lifetime questions and leaks. Rethrow with bare `throw;` so the original dynamic type survives — `throw e;` slices.
 
 ```cpp
+// compiles; UB at runtime
 // Wrong: slicing — handler sees only ValidationError, loses SqlError fields
 try {
     run();
@@ -188,11 +194,16 @@ try {
 The pointer form:
 
 ```cpp
+// compiles; UB at runtime
 // Wrong: pointer ownership ambiguity
-catch (const std::exception* e) { delete e; }
+try {
+    run();
+} catch (const std::exception* e) { delete e; }
 
 // Right
-catch (const std::exception& e) {
+try {
+    run();
+} catch (const std::exception& e) {
     log(e.what());
 }
 ```
@@ -233,6 +244,7 @@ Caught by: clang-tidy `performance-noexcept-move` (moves and swap); review elsew
 **ERR-29.** Types stored in containers must have `noexcept` move operations. `std::vector` growth moves elements only when the move constructor is `noexcept`; otherwise it falls back to copying — a silent, per-type performance cliff.
 
 ```cpp
+// compiles; UB at runtime
 // Wrong: vector<Buffer> will COPY on reallocation
 class Buffer {
 public:
@@ -283,6 +295,7 @@ Default strength: hard.
 **ERR-38.** Before marking, walk the callee tree mentally: a `noexcept` function that calls one logging helper that allocates is a latent crash. If unsure, leave it off — correctness first, then measure.
 
 ```cpp
+// compiles; UB at runtime
 // Wrong: terminate() at runtime — push_back can throw bad_alloc
 std::vector<int> snapshot() noexcept {          // NO
     std::vector<int> v;
@@ -292,8 +305,13 @@ std::vector<int> snapshot() noexcept {          // NO
 }
 
 // Right: reserve the specifier for what holds
-bool empty() const noexcept { return count_ == 0; }
-void clear() noexcept;
+struct Stats {
+    bool empty() const noexcept { return count_ == 0; }
+    void clear() noexcept;
+
+private:
+    std::size_t count_ = 0;
+};
 ```
 
 ```cpp
@@ -385,12 +403,17 @@ try {
 **ERR-47 (hard).** Logging *and then* swallowing is forbidden: it reports failure to whoever reads logs while telling the caller (via return value) that everything succeeded.
 
 ```cpp
+// compiles; UB at runtime
 // Wrong: log-and-swallow — caller sees success, ops sees a scary line
+try {
+    save_document();
 } catch (const std::exception& e) {
     LOG(ERROR) << "save failed: " << e.what();
 }
 
 // Right: handle where the retry loop lives
+try {
+    save_document();
 } catch (const TransientError&) {
     schedule_retry(attempt_++);
 }
@@ -405,12 +428,17 @@ try {
 **ERR-51 (hard).** Use bare `throw;` to rethrow; `throw_with_nested` (not manual nested-type conventions) to wrap.
 
 ```cpp
+// compiles; UB at runtime
 // Wrong: rethrow by value — slices and loses the derived type
+try {
+    load();
 } catch (const std::exception& e) {
     throw e;
 }
 
 // Right: annotate with context, preserve the original via nesting
+try {
+    load();
 } catch (const std::exception& e) {
     std::throw_with_nested(std::runtime_error(
         std::string{"loading config '"} + path_ + "': " + e.what()));

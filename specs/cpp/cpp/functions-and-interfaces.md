@@ -29,6 +29,7 @@ Caught by: review — hidden `inout` behavior has no dependable static check; th
 | **FN-6 (hard)** forward | Template `TP&&` plus `std::forward` | Generic plumbing only — every static path forwards exactly once, piecewise per member if needed (`F.19`) |
 
 ```cpp
+// compiles; UB at runtime
 // Wrong: three behaviors behind one signature; every call site is a guess.
 void process(std::string text, std::vector<int>& items, Stats& stats);
 
@@ -70,6 +71,7 @@ These rows and the parameter-roles table above agree: by value is the default si
 Wrong:
 
 ```cpp
+// compiles; UB at runtime
 void add_user(const User& u) {
     users_.push_back(u);          // one copy: argument -> vector — const& cannot move, so rvalue callers copy too
 }
@@ -104,13 +106,18 @@ Caught by: ASan flags use-after-free when a stored view outlives its owner; revi
 **FN-23.** Read-only text and sequences enter as views so callers pay no conversion tax (`SL.str.12`, `F.24`). A view is a borrow: read it during the call; copy anything kept.
 
 ```cpp
-Result find_record(const std::string& key);   // Wrong: literal callers pay an allocation
-Result find_record(std::string_view key);     // Right: views flow inward
+#include "result.h"
+
+// compiles; UB at runtime
+Result<Record, Error> find_record(const std::string& key);   // Wrong: literal callers pay an allocation
+Result<Record, Error> find_record(std::string_view key);     // Right: views flow inward
 ```
 
 Arrays never arrive as a bare decayed pointer — size travels with the elements (`I.13`).
 
 ```cpp
+// C++20: std::span
+// compiles; UB at runtime
 void checksum(const uint8_t* data, size_t len);   // Wrong: pointer and length drift apart
 void checksum(std::span<const uint8_t> data); // Right: length travels with the bytes
 ```
@@ -118,6 +125,7 @@ void checksum(std::span<const uint8_t> data); // Right: length travels with the 
 **FN-24 (hard).** At untrusted-input boundaries (config load, IPC, deserialization), validate and re-own first. Lifetime traps for stored views are cataloged in [Memory and Ownership](./memory-and-ownership.md).
 
 ```cpp
+// compiles; UB at runtime
 class Cache {                                 // Wrong: stored view dangles when caller dies
 public:
     void put(std::string_view key, Entry e) { index_[key] = std::move(e); }
@@ -148,6 +156,7 @@ Caught by: GCC 13+ `-Wdangling-reference` for simple cases, ASan on first use ot
 - **FN-26.** Build the result locally, `return local;` — never `return std::move(local);`, which changes the expression type and defeats NRVO (`F.48`).
 
 ```cpp
+// compiles; UB at runtime
 std::vector<Token> tokenize(std::string_view src) {
     std::vector<Token> out;
     // ...
@@ -166,6 +175,7 @@ std::vector<Token> tokenize(std::string_view src) {
 - **FN-27.** Never return a pointer or reference to a local, including wrapped in a view (`F.43`). A `string_view`/`span` return promises memory that outlives the call — a callee-owned cache or static storage qualifies; who owns the backing bytes is a separate, documented question.
 
 ```cpp
+// compiles; UB at runtime
 std::string_view trim_prefix(std::string_view s) {
     std::string buf(s.substr(PREFIX_LEN));
     return buf;                   // Wrong: buf dies here; caller gets a dangling view
@@ -183,6 +193,7 @@ std::string_view trim_prefix(std::string_view s) {
 - **FN-29.** Multiple results travel as a named struct (`F.21`).
 
 ```cpp
+// compiles; UB at runtime
 void parse(std::string_view src, AST& ast, size_t& consumed);   // Wrong: results stacked as out-params
 
 struct ParseOutcome {             // Right: multiple results, self-documenting, grows safely
@@ -199,9 +210,10 @@ Amount& ledger_total(Ledger& l);  // Fine: referent is a member that outlives th
 - **FN-31.** Assignment operators assign and return non-`const` `*this`, as the ints do and the standard library does; the historical `const T&` advice solved a problem nobody had (`F.47`).
 
 ```cpp
+// compiles; UB at runtime
 class BufferBad {
 public:
-    const BufferBad& operator=(const BufferBad&) = default;   // Wrong: const *this suppresses move-assignment (F.47)
+    const BufferBad& operator=(const BufferBad& o) { return *this; }   // Wrong: const *this suppresses move-assignment (F.47)
 };
 
 class Buffer {
@@ -213,6 +225,7 @@ public:
 - **FN-32.** Do not return `const T`: the top-level qualifier blocks a rare accidental temporary write but suppresses move semantics on every extraction (`F.49`).
 
 ```cpp
+// compiles; UB at runtime
 const std::string render_name();   // Wrong: top-level const suppresses move-out (F.49)
 std::string render_title();        // Right: movable, writable result
 ```
@@ -244,13 +257,18 @@ Caught by: `-Wunused-result` via the attribute; review for categories the attrib
 | **FN-36** Effect-only procedures (logging, duplicate-tolerant inserts) | No |
 
 ```cpp
-Result<Config, Error> load_config(std::string_view path);
-load_config("app.conf");          // Wrong: compiles; failure swallowed
+#include "result.h"
 
+// compiles; UB at runtime
+// Wrong: compiles; failure swallowed
+Result<Config, Error> load_config(std::string_view path);
+load_config("app.conf");
+
+// Right: handled, not dropped
 [[nodiscard]] Result<Config, Error> load_config(std::string_view path);
 
 auto cfg = load_config("app.conf");
-if (!cfg) return cfg.error();     // Right: handled, not dropped
+if (!cfg) return cfg.error();
 ```
 
 **FN-37.** The attribute also applies at class level: mark a status/`Result` type `[[nodiscard]]` once, and every function returning it is covered — no per-function decoration to forget.
@@ -270,6 +288,8 @@ Caught by: review — no automated detector.
 **FN-38.** A function performs one logical operation (`F.2`), fits on one screen (`F.3`), and earns a name that says exactly that (`F.1`); nesting past three levels triggers extraction.
 
 ```cpp
+// C++20: std::span
+// compiles; UB at runtime
 // Wrong: one name, four jobs — decode, validate, mutate globals, emit.
 void handle_message(const uint8_t* data, size_t len) {
     auto msg = decode(data, len);
@@ -298,6 +318,8 @@ Guard clauses, early returns, and merged compound conditions are flow style owne
 **FN-40.** Collapse same-behavior overloads into default arguments (`F.51`). Separate overloads exist only where parameter types differ in behavior, not spelling.
 
 ```cpp
+// C++20: std::span
+// compiles; UB at runtime
 // Wrong: three spellings, one behavior.
 std::string join(const std::vector<std::string>& parts);
 std::string join(const std::vector<std::string>& parts, const std::string& sep);
@@ -309,6 +331,8 @@ std::string join(std::span<const std::string> parts, std::string_view sep = ", "
 **FN-41.** Keep argument lists short — aim under four (`I.23`): a long list usually means a missing abstraction or two jobs wearing one name. One knob takes a default argument; an options struct earns its place when knobs multiply, because fields added later extend the interface without breaking existing call sites.
 
 ```cpp
+// C++20: std::span
+// compiles; UB at runtime
 // Wrong: knobs multiplied onto one signature — every call site repeats them.
 std::string join(std::span<const std::string> parts, std::string_view sep = ", ", bool dedupe = false);
 
@@ -330,6 +354,9 @@ class Ring {
 public:
     [[nodiscard]] bool empty() const noexcept { return head_ == tail_; }  // narrow: holds
     void push(int value);                                                 // allocates: not noexcept
+private:
+    std::size_t head_ = 0;
+    std::size_t tail_ = 0;
 };
 ```
 
@@ -356,6 +383,7 @@ Caught by: review — no automated detector.
 **FN-47.** Reach for a lambda only where a plain function will not do — capturing locals, or definition genuinely at local scope (`F.50`); lambdas cannot overload, and generic lambdas are the one concise exception. A simple function object needed in exactly one place stays an unnamed lambda at the call site; identical or near-identical lambdas graduate into a named function, because an operation worth reusing earns a name (`F.10`, `F.11`).
 
 ```cpp
+// compiles; UB at runtime
 // Wrong: a comparison policy living inline — and duplicated at the next call site.
 auto cmp = [](const Entry& a, const Entry& b) {
     /* normalization, tie-breaks, twelve lines */
@@ -372,11 +400,12 @@ bool entry_less(const Entry& a, const Entry& b);
 **FN-50 (hard).** `[this]` stays a borrow: it is safe only where the lambda cannot outlive the owner — synchronous call sites, or a queue proven to join before the owner dies.
 
 ```cpp
+// compiles; UB at runtime
 class Poller {
 public:
     void schedule(TaskQueue& q) {
         q.push([this] { poll(); });   // Wrong here: queued — borrowed this dangles unless the queue joins before this Poller dies
-        q.push([*this] { poll(); });  // Right: queued — true snapshot; [this] is for synchronous call sites
+        q.push([*this] mutable { poll(); });  // Right: queued — true snapshot; [this] is for synchronous call sites
     }
 private:
     void poll();
@@ -386,11 +415,12 @@ private:
 **FN-51 (hard).** Never `[=]` inside a member function (`F.54`): it captures `this` by value, so members arrive by reference wearing a value-capture costume. Write `[this]` (or `[i, this]`) explicitly, or `[*this]` for a true snapshot.
 
 ```cpp
+// compiles; UB at runtime
 class Poller {
 public:
     void schedule(TaskQueue& q) {
         q.push([=] { poll(); });      // Wrong: [=] smuggles this; members arrive by reference
-        q.push([*this] { poll(); });  // Right: explicit capture — a true snapshot
+        q.push([*this] mutable { poll(); });  // Right: explicit capture — a true snapshot
     }
 private:
     void poll();
@@ -410,16 +440,21 @@ Caught by: review — no automated detector.
 **FN-52 (hard).** Single-argument constructors are `explicit` by default (`C.46`); implicit conversion is reserved for value types where it reads naturally, decided deliberately.
 
 ```cpp
+// compiles; UB at runtime
+// Wrong: any integer silently becomes a Port
 class Port {
 public:
-    Port(uint16_t n) : n_(n) {}    // Wrong: any integer silently becomes a Port
+    Port(uint16_t n) : n_(n) {}
+private:
+    uint16_t n_;
 };
 void bind(Port p);
 bind(port_count() * scale());      // binds a nonsense port without a peep
 
+// Right: intent at every call site
 class StrictPort {
 public:
-    explicit StrictPort(uint16_t n) : n_(n) {}   // Right: intent at every call site
+    explicit StrictPort(uint16_t n) : n_(n) {}
 private:
     uint16_t n_;
 };
@@ -430,6 +465,7 @@ private:
 **FN-53.** Meaningful literals get names (`Enum.2`): `constexpr` for single constants (`Con.5`), `enum class` for related sets (`Enum.1`). Loose booleans cluster into `enum class` parameters — `open(file, true, false)` is unreadable.
 
 ```cpp
+// compiles; UB at runtime
 if (attempts > 3) return false;                        // Wrong: what is 3?
 std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
@@ -473,9 +509,13 @@ Caught by: review — no automated detector.
 **FN-59.** Adjacent same-type parameters invocable with the same arguments in either order are defect bait — `copy_n(p, q, n)` reads three ways (`I.24`); mark the source `const`, pass spans, or bundle into named fields. Order-insensitive pairs like `max(a, b)` are exempt.
 
 ```cpp
+// C++20: std::span
+// compiles; UB at runtime
 void copy_n(char* p, char* q, size_t n);   // Wrong: which is source, which is sink?
+
+// Right: const answers the question
 void copy_n(std::span<const char> src,
-            std::span<char> dst);          // Right: const answers the question
+            std::span<char> dst);
 ```
 
 **FN-60.** Non-null parameters say so in the signature. Deviation from `I.12`: we do not adopt the GSL `not_null<T>` wrapper — `T&` or a documented non-null `T*` gives reviewers the same guarantee in native spelling, matching the `F.23` rationale above.

@@ -33,6 +33,7 @@ Caught by: review; over-design surfaces later as maintenance drag, not as warnin
 | **CLS-6** Trivial getters/setters around a bare field | Drop the facade — plain `struct` with public data (`C.131`) |
 
 ```cpp
+// compiles; UB at runtime
 // Wrong: a hierarchy for a closed set of two — vtables, heap copies, clone plumbing.
 class Shape { public: virtual ~Shape() = default; virtual double area() const = 0; };
 
@@ -83,6 +84,7 @@ Caught by: review — no automated detector.
 **CLS-22.** `using Rec::Rec;` imports constructors into a derived class adding no data of its own, instead of reimplementing tricky ones — but every derived member still needs an initializer, or the inherited constructor silently leaves it unconstructed (`C.52`).
 
 ```cpp
+// compiles; UB at runtime
 // Wrong: two-stage construction; users forget initialize(), and the object
 // spends its life half-built.
 Session s;
@@ -107,6 +109,7 @@ Caught by: clang-tidy `cppcoreguidelines-special-member-functions`; review for h
 **CLS-25.** A type managing no resources by hand declares **none** of the five special members (`C.21` — the stance its rationale calls the Rule of Zero). RAII members and in-class initializers supply correct copy, move, and destruction semantics for free.
 
 ```cpp
+// compiles; UB at runtime
 // Wrong: members written to do exactly what the compiler would have done.
 class Settings {
 public:
@@ -200,6 +203,7 @@ Caught by: clang-tidy `cppcoreguidelines-special-member-functions`; `-Wdeprecate
 **CLS-35.** Want behavior not to exist? `=delete` — on any function, not just special members (`C.81`).
 
 ```cpp
+// compiles; UB at runtime
 // Wrong: deleted copy silently suppresses move too — SessionBad is immovable,
 // and nothing in this header says so.
 class SessionBad {
@@ -291,10 +295,12 @@ Caught by: clang-tidy `cppcoreguidelines-virtual-class-destructor`; ASan reports
 | **CLS-58** Mixin, never deleted through base pointer | `protected`, non-virtual | `=delete` |
 
 ```cpp
+// compiles; UB at runtime
 struct Base {
     ~Base();                          // Wrong: public, non-virtual
     virtual void run();
 };
+struct Impl : Base { };               // derived with state
 Base* b = new Impl;
 delete b;                             // UB: ~Impl never runs; derived state leaks
 
@@ -332,6 +338,7 @@ Caught by: review — no automated detector.
 | **CLS-67** Callers hold base pointers they cannot spell | Genuine interface — keep |
 
 ```cpp
+// compiles; UB at runtime
 // Wrong: three layers whose only job is sharing format_timestamp().
 class Logger {
 protected:
@@ -407,6 +414,7 @@ Caught by: review — no automated detector.
 **CLS-79.** Protected data members give every subclass — present and future — a vote on the base invariant (`C.133`). Protected **hook functions** upholding invariants are fine; protected **fields** are not.
 
 ```cpp
+// compiles; UB at runtime
 class RingBuffer {
 protected:
     std::vector<int> buf_;                        // Wrong: SpyRing can bypass push()
@@ -441,6 +449,7 @@ Caught by: review — no automated detector.
 **CLS-80.** Seal classes whose hierarchy is deliberately closed (`C.128`): reviewers get warned before extending what was designed shut, and the compiler may de-virtualize hot calls.
 
 ```cpp
+// compiles; UB at runtime
 class HttpTransport : public Transport {};   // Wrong: open by omission — subclasses can
                                              // later bypass the timeout invariants
 class HttpTransport final : public Transport {};   // Right: sealed leaf
@@ -461,9 +470,13 @@ Caught by: review — no automated detector.
 **CLS-83.** Use an operator only for its conventional meaning: `operator<<` composes with stream machinery where `cout_my_class()` does not, and comparisons, arithmetic, access, and assignment all carry strong conventions — honor them or invent a named function (`C.167`).
 
 ```cpp
+// compiles; UB at runtime
 // Wrong: member == converts the right side only — p == "p" compiles,
 // "p" == p does not; symmetry silently depends on operand order.
-bool Point::operator==(const Point& other) const;
+struct Point {
+    int x, y;
+    bool operator==(const Point& other) const;   // member spelling
+};
 
 // Right: free function, matching parameter types, found by ADL beside the type.
 [[nodiscard]] bool operator==(const Point& a, const Point& b) noexcept;

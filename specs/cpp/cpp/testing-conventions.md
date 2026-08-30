@@ -50,13 +50,14 @@ A test that exists but is not registered does not exist — nothing ever execute
 **TEST-4.** Scope of the 1:1 mandate: every production translation unit with **observable behavior** gets a mirrored suite. `main.cpp` glue, generated code, and vendored code are excluded — they carry no project-owned behavior to pin, and a test file for them would violate What NOT to Test, not honor it.
 
 ```cpp
+// compiles; UB at runtime
 // Wrong: unregistered "temporary" test living in src/, still there two years later
 // src/net/http/manual_check.cpp
 int main() { assert(parse("") == nullopt); }
 
 // Right: registered suite next to its siblings
 // tests/net/http/parser.test.cpp
-TEST(HttpParser, Test_Parse_EmptyInput_ReturnsError) { ... }
+TEST(HttpParser, Test_Parse_EmptyInput_ReturnsError) { /* ... */ }
 ```
 
 ---
@@ -114,6 +115,7 @@ Determinism mechanics:
 - **TEST-15.** Never `sleep()` to wait for anything; wait on the synchronization primitive itself or fake the clock.
 
 ```cpp
+// compiles; UB at runtime
 // Wrong: flaky by construction
 TEST(Cache, Test_Expiry_EntriesVanish) {
     put("k", "v", std::chrono::seconds(1));
@@ -204,6 +206,7 @@ Caught by: review — no automated detector.
 - **TEST-28.** No cross-test data files with hidden coupling; each test constructs the inputs it needs.
 
 ```cpp
+// compiles; UB at runtime
 // Right: fresh state per test, deterministic seed
 class RingBufferTest : public ::testing::Test {
 protected:

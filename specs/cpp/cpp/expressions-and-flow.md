@@ -44,6 +44,7 @@ Caught by: review — no automated detector.
 **Wrong**
 
 ```cpp
+// compiles; UB at runtime
 Status process(const Request& req) {
     Result out;                     // default-constructed into an unknown state
     if (!authorize(req)) {
@@ -85,6 +86,7 @@ Caught by: review — no automated detector.
 Caught by: `-Wshadow`.
 
 ```cpp
+// compiles; UB at runtime
 // Wrong: the inner count hides the outer one -- which count reaches the log?
 std::size_t count = pending();
 if (streaming) {
@@ -122,7 +124,7 @@ double ratio = 3 / 4;               // integer division happens first: 0.0
 
 // Right: the compiler refuses
 int samples = collect();
-uint8_t quantized{samples};         // error: narrowing
+uint8_t quantized{samples};         // compile-error: narrowing
 double ratio = 3.0 / 4.0;           // intent stated in types, not hoped for in results
 ```
 
@@ -137,6 +139,7 @@ Caught by: review — no automated detector.
 Caught by: `-Wreorder`.
 
 ```cpp
+// compiles; UB at runtime
 // Wrong: list order lies -- width_ initializes AFTER area_ needs it
 class Window {
 public:
@@ -190,6 +193,7 @@ Caught by: review — no automated detector.
 | Lambda parameters and expression templates nobody could spell | Conversions you want checked — `auto` hides truncation |
 
 ```cpp
+// compiles; UB at runtime
 // Wrong: the reader must resolve the whole call chain to know what `r` is
 auto r = service.rate(id);
 
@@ -222,6 +226,7 @@ Caught by: review — no automated detector.
 Caught by: clang-tidy `cppcoreguidelines-pro-type-cstyle-cast`.
 
 ```cpp
+// compiles; UB at runtime
 // Wrong: what does this even do? (strips const AND mutates -- UB if the object is truly const)
 void tick(const Frame* frame) {
     auto* mutable_frame = (Frame*)frame;
@@ -267,6 +272,7 @@ Caught by: the sign-comparison and sign-conversion warnings enabled by default i
 **EXPR-27 (hard).** An expression commits to one signedness and keeps it (`ES.100`): signed types do arithmetic (`ES.102`), unsigned types do bit manipulation (`ES.101`). The classic failure is choosing unsigned "because counts are never negative" (`ES.106`):
 
 ```cpp
+// compiles; UB at runtime
 // Wrong: unsigned wraps instead of going negative
 std::vector<Item> pending = remaining();
 for (std::size_t i = pending.size() - 1; i >= 0; --i) {   // broken for every input: i >= 0 is a tautology; after i == 0, --i wraps to SIZE_MAX and indexes out of bounds -- immediately when empty
@@ -274,6 +280,7 @@ for (std::size_t i = pending.size() - 1; i >= 0; --i) {   // broken for every in
 }
 
 // Right: walk backwards with reverse iterators, or use signed indices
+std::vector<Item> pending = remaining();
 for (auto it = pending.rbegin(); it != pending.rend(); ++it) {
     ship(*it);
 }
@@ -321,6 +328,7 @@ Caught by: review — no automated detector.
 **EXPR-37.** Functions read top-down: guard clauses first, main path last. Early returns are the default; single-exit is not a goal — one extra `return` that removes three indent levels is a win. The real budget is nesting depth: past two levels of compound conditionals, extract named predicates and delete cleverness.
 
 ```cpp
+// compiles; UB at runtime
 // Wrong: the happy path is buried; every branch doubles the state space
 bool submit(const Order& order) {
     bool accepted = false;
@@ -367,6 +375,7 @@ Loop and branch rules:
 - **EXPR-45 (hard).** Range-for extends only the final range expression's temporary to the loop: a direct value-returning init such as `make_rows()` is safe, but in a chained init like `connection_pool().acquire().rows()` the intermediate temporaries die at the end of the full-expression, leaving the extended range viewing destroyed owners — own the outer object. (C++23 extends every temporary in the range-init and closes this trap; the C++17 baseline does not.) The invalidation table lives in [Memory and Ownership](./memory-and-ownership.md).
 
 ```cpp
+// compiles; UB at runtime
 // Wrong: only the final range expression is lifetime-extended -- the pool and
 // connection temporaries die at the end of the full-expression, so rows() views dead owners
 for (const Row& row : connection_pool().acquire().rows()) { consume(row); }

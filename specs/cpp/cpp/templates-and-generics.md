@@ -38,7 +38,7 @@ template <typename T>
 T median(std::vector<T>& values) {
     std::sort(values.begin(), values.end());
     const auto mid = values.size() / 2;
-    return (values[mid] + values[mid + 1]) / 2;   // arithmetic the element type may not support
+    return (values[mid] + values[mid + 1]) / 2;   // compile-error: string elements support no `/`
 }
 
 std::vector<std::string> words{"a", "bc", "d"};
@@ -112,6 +112,7 @@ Caught by: review — no automated detector.
 Wrong:
 
 ```cpp
+// compiles; UB at runtime
 // CachePolicy exists only so one method can pick eviction; every get()/put() user pays for knowing it.
 template <typename K, typename V, typename CachePolicy>
 class LruCache {
@@ -163,6 +164,7 @@ Caught by: review — no automated detector.
 - **TPL-23 (default).** Do not write unintentionally non-generic code (`T.143`): compare iterators with `!=` not `<`, test emptiness with `empty()`, accept the least-derived type providing what you use — or skip the ceremony entirely with range-`for` where it applies.
 
 ```cpp
+// compiles; UB at runtime
 // Wrong: `last - first` demands random-access iterators; unqualified helper invites ADL surprises.
 template <typename It>
 std::size_t count_passing(It first, It last) {
@@ -195,6 +197,7 @@ Caught by: review — no automated detector.
 | Algorithm over many numeric/container types | Template, constrained per the previous section |
 
 ```cpp
+// compiles; UB at runtime
 // Wrong: generic ceremony around exactly one type and one caller.
 template <typename T>
 std::string render_user(const T& user);
@@ -224,6 +227,7 @@ When a boundary must accept "anything drawable" or "anything loggable", there ar
 **TPL-25 (default).** Defaults (`T.49`): inside a module, on hot paths, with statically known types — templates. Across module boundaries, in plugin seams, in heterogeneous collections — erasure. The guideline's warning stands behind both columns: avoid type-erasure by default, since it buys flexibility at the price of an indirection hidden behind a compilation boundary; the sanctioned exceptions are exactly the cases named above. A hand-rolled erased wrapper (constructor template plus small virtual interior) beats reaching for `std::any` when operations matter:
 
 ```cpp
+// C++20: requires-clause example (C++17 spelling: static_assert, per the inline note)
 class Task {
 public:
     template <typename F>
@@ -264,6 +268,7 @@ Caught by: none reliably — reviewers watch for fresh `std::enable_if` and tag-
 Wrong:
 
 ```cpp
+// compiles; UB at runtime
 // Tag-dispatch overload pair, plus forwarding boilerplate not shown
 template <typename It>
 auto distance(It first, It last, std::random_access_iterator_tag)
@@ -297,6 +302,7 @@ Guidance:
 - **TPL-32 (default).** Deviation from `T.65`: tag dispatch — selecting function implementations from type properties at compile time — is a legitimate technique, but demoted here: `if constexpr` and constrained overloads express the same selection more readably, so tag machinery survives only where those cannot.
 
 ```cpp
+// compiles; UB at runtime
 // Wrong: function template specialization
 template <typename T>
 const char* name_of();                    // primary

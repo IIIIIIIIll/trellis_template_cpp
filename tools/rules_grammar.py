@@ -65,6 +65,9 @@ MARKER_WRONG_RE = re.compile(r"//\s*Wrong\b")
 MARKER_RIGHT_RE = re.compile(r"//\s*Right\b")
 MARKER_UB_RE = re.compile(r"//\s*compiles;\s*UB\b")
 MARKER_COMPILE_ERROR_RE = re.compile(r"//\s*compile-error\b")
+# Dialect annotation: a `// C++20` comment inside the fence tells the snippet
+# harness to compile that block with -std=c++20 (baseline dialect is C++17).
+MARKER_CXX20_RE = re.compile(r"//\s*C\+\+20\b")
 
 # Bold rule-ID token, anywhere on a line.
 BOLD_ID_RE = re.compile(r"\*\*(?P<id>[A-Z]{2,4}-\d+)(?P<tail>[^*]*)\*\*")
@@ -104,6 +107,7 @@ class Fence:
     wrong_count: int = 0
     right_count: int = 0
     ub: bool = False
+    cxx20: bool = False
     compile_error_lines: list = field(default_factory=list)  # 1-based doc lines
 
     @property
@@ -232,6 +236,8 @@ def parse(text: str, name: str, path: str) -> ParsedDoc:
                 f.right_count += 1
             if MARKER_UB_RE.search(cl):
                 f.ub = True
+            if MARKER_CXX20_RE.search(cl):
+                f.cxx20 = True
             if MARKER_COMPILE_ERROR_RE.search(cl):
                 f.compile_error_lines.append(i + 1 + 1 + k)
         fences.append(f)
