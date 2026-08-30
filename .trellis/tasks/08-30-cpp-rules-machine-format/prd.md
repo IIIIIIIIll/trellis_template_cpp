@@ -44,24 +44,24 @@ a routing-only index, and a compile gate that keeps code examples honest.
 
 ## Acceptance criteria
 
-- [ ] Every normative rule in the 11 docs carries a unique local `AREA-n` ID
+- [x] Every normative rule in the 11 docs carries a unique local `AREA-n` ID
       and a per-rule `(hard|default)` strength marker; local IDs unique,
       stable, append-only; Core Guidelines IDs remain in text as
       cross-reference anchors only.
-- [ ] Validator passes repo-wide: closed strength vocabulary; every rule has a
+- [x] Validator passes repo-wide: closed strength vocabulary; every rule has a
       detector or an explicit "no detector" statement; Wrong/Right pairs
       complete; footers intact; four-way file-set invariant holds including
       the new 12th file.
-- [ ] `index.md` is routing-only; disposition machinery lives in the new doc;
+- [x] `index.md` is routing-only; disposition machinery lives in the new doc;
       all sync points (guidelines index table, README table, README tree, top
       README tree) updated.
-- [ ] `rules.json` digest is generated from source by the extractor (never
+- [x] `rules.json` digest is generated from source by the extractor (never
       hand-edited) and regenerates byte-identical on a no-change rerun.
-- [ ] Snippet gate: every fenced ```cpp block compiles under
+- [x] Snippet gate: every fenced ```cpp block compiles under
       `g++ -std=c++17 -Wall -Wextra`; Right examples compile clean; Wrong
       examples either fail compilation exactly at their annotated construct or
       carry an explicit compiles-but-UB marker; gate wired into the registry
       Quality Check.
-- [ ] `guideline-authoring.md` documents the rule-block grammar, ID allocation,
+- [x] `guideline-authoring.md` documents the rule-block grammar, ID allocation,
       strength vocabulary, digest-regeneration obligation, and the new file's
       sync duties.
