@@ -19,7 +19,7 @@ work products are:
 | Path | Role |
 |------|------|
 | `index.json` | Registry manifest; makes this a marketplace-mode registry |
-| `specs/cpp/cpp/*.md` | The product: 11 C++ guideline documents installed into consumer projects |
+| `specs/cpp/cpp/*.md` | The product: 12 C++ guideline documents installed into consumer projects |
 | `specs/cpp/README.md` | Template overview shipped alongside the layer |
 | `README.md`, `USAGE.md`, `HOSTING.md` | Registry-level docs: publish, consume, host |
 
@@ -48,7 +48,7 @@ Before changing files, route through the matching guide:
 
 | Task involves | Read first |
 |---------------|------------|
-| Editing any file under `specs/cpp/**` (the 11 guideline docs or their README) | [Guideline Authoring](./guideline-authoring.md) |
+| Editing any file under `specs/cpp/**` (the 12 guideline docs or their README) | [Guideline Authoring](./guideline-authoring.md) |
 | Adding or renaming guideline documents, changing doc structure or tone | [Guideline Authoring](./guideline-authoring.md) |
 | `index.json`, adding/removing a template entry, moving directories | [Registry Contract](./registry-contract.md) |
 | `README.md`, `USAGE.md`, `HOSTING.md`, install/update behavior claims | [Registry Contract](./registry-contract.md) |

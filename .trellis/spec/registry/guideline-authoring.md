@@ -27,14 +27,93 @@ Every guide under `specs/cpp/cpp/` follows the same skeleton. Real reference:
 
 Wrong/Right pairs are the house style for any rule that can be shown in code.
 The wrong example names what a reviewer would flag; the right example carries
-the rule ID as a comment when one exists:
+the owning rule's local ID (`AREA-n`, see Rule Blocks below) as a comment when
+one exists:
 
 ```cpp
 // NOLINT                      ← Wrong: silenced with no trace of why
 // Deviates from F.21: ...     ← Right: deviation travels with the code
 ```
 
-Full examples: `specs/cpp/cpp/index.md` ("Core Guidelines Disposition").
+Full examples: `specs/cpp/cpp/core-guidelines-disposition.md`
+("Recording a Deviation").
+
+---
+
+## Rule Blocks
+
+Every normative rule in a topic guide is one discrete block — a rule never
+spans sections and never mingles with another rule's text. Prose rules use
+this grammar:
+
+````markdown
+**MEM-7 (hard).** Never call `new`/`delete` for owning a single object; take
+RAII ownership in one step.
+
+<optional rationale, 1-3 sentences>
+
+```cpp
+// Wrong: ...
+// Right: ...
+```
+
+Caught by: `cppcoreguidelines-pro-type-cstyle-cast`
+````
+
+- **Lead-in**: `**<AREA>-<n> (<strength>).**` — one greppable token serving
+  citation (the ID), triage (the strength), and extraction (the position).
+  Every rule — including rules whose substance is a Core Guidelines rule —
+  carries a local ID; Core Guidelines IDs stay in the text as cross-reference
+  anchors only (developer decision 2026-08-30).
+- **Strength vocabulary is closed**: `hard` — violating the rule requires a
+  deviation comment (rule ID + reason + what would change the answer, see
+  "Recording a Deviation" in the Core Guidelines disposition); `default` — a
+  measurement-backed local deviation is allowed without ceremony.
+- **Caught-by pairing**: a rule names its detector on a `Caught by:` line; a
+  rule nothing automated catches states
+  `Caught by: review — no automated detector.` explicitly. A rule without its
+  own line inherits the nearest preceding `Caught by:` line within the same
+  section; a section-level line covers every rule below it that lacks its
+  own.
+- **Wrong/Right encodings** — all three are valid; pairing is judged per rule
+  block, exactly one Wrong and one Right per example group:
+  1. one fence holding both, split by `// Wrong:` / `// Right:` comments;
+  2. two fences, each opening with its comment;
+  3. two fences under prose lead lines (`**Wrong**` / `**Right**`).
+
+  Wrong examples that compile but misbehave at runtime carry the
+  `// compiles; UB at runtime` marker; Wrong examples whose point is a failed
+  compilation carry `// compile-error` on the offending construct.
+- **List-item form**: a rule may be a bullet item
+  (`- **MEM-7 (hard).** ...`); the lead-in grammar is identical after the
+  `- `.
+- **Table rows**: a row carrying a normative claim puts `**<ID>**` in its
+  first cell, optionally appending `(hard)`/`(default)`; tables stay
+  matrices — the block grammar governs prose rules.
+- **Strength fallback**: strength comes from the cell or block marker, else
+  the enclosing section's stated default (a standalone
+  `Default strength: hard.` or `Default strength: default.` line in the
+  section); if neither exists, `tools/validate_rules.py` flags the rule —
+  there is no silent defaulting.
+
+### Rule IDs
+
+| Doc | Prefix | Doc | Prefix |
+|-----|--------|-----|--------|
+| memory-and-ownership | `MEM-` | classes-and-hierarchies | `CLS-` |
+| error-handling | `ERR-` | templates-and-generics | `TPL-` |
+| quality-guidelines | `QUAL-` | concurrency | `CONC-` |
+| testing-conventions | `TEST-` | expressions-and-flow | `EXPR-` |
+| functions-and-interfaces | `FN-` | performance | `PERF-` |
+
+Numbering is **stable and append-only**: retired rules leave gaps and are
+never renumbered; IDs are unique repo-wide.
+
+`tools/validate_rules.py` binds the 10 topic guides; `index.md` and
+`core-guidelines-disposition.md` are exempt (disposition rows are stances,
+not rules). Any rule add, change, or delete re-runs `tools/extract_rules.py`
+in the same change to regenerate the `rules.json` digest — the digest is
+derived from the markdown and is never hand-edited.
 
 ---
 
@@ -59,7 +138,8 @@ Full examples: `specs/cpp/cpp/index.md` ("Core Guidelines Disposition").
   enforcement named or deleted.
 - **Upkeep in place**: when an upstream rule ID moves, fix its citations
   during the next edit of the affected guide — no bulk sweeps
-  (the layer index, "Core Guidelines Disposition").
+  (the Core Guidelines disposition,
+  `specs/cpp/cpp/core-guidelines-disposition.md`).
 
 ---
 
@@ -73,6 +153,9 @@ the same change:
 2. `specs/cpp/README.md` — Guideline Files table and install-layout tree.
 3. Any guide whose relative links pointed at the old path/name — links are
    repo-relative within `specs/cpp/`.
+4. `specs/cpp/cpp/core-guidelines-disposition.md` — its disposition and
+   residual-ledger tables route rules to guides by link; retarget those
+   links when a guide is added, renamed, or re-titled.
 
 Anti-patterns seen in template-driven repos, all rejected here: empty
 headings kept "for later", aspirational rules the tooling cannot check,

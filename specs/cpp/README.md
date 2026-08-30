@@ -24,7 +24,8 @@ specs/cpp/            →  .trellis/spec/
     ├── templates-and-generics.md
     ├── concurrency.md
     ├── expressions-and-flow.md
-    └── performance.md
+    ├── performance.md
+    └── core-guidelines-disposition.md
 ```
 
 - The `cpp/` directory at the template root becomes a spec layer at
@@ -49,6 +50,7 @@ specs/cpp/            →  .trellis/spec/
 | [concurrency.md](./cpp/concurrency.md) | Threads and shared state, synchronization discipline, data-race prevention |
 | [expressions-and-flow.md](./cpp/expressions-and-flow.md) | Expression-level correctness, initialization, conversions, control flow |
 | [performance.md](./cpp/performance.md) | Optimization work guided by measurement: hot paths, allocation pressure |
+| [core-guidelines-disposition.md](./cpp/core-guidelines-disposition.md) | Project stance toward the ISO C++ Core Guidelines: per-section disposition, residual ledger, deviation recording, adoption process, safety profiles |
 
 Baseline is C++17; deviations available in C++20/23 are called out where they
 matter. The guidelines are opinionated defaults, not neutral surveys — adapt
