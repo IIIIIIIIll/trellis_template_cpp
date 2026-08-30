@@ -40,13 +40,14 @@ These documents ship with concrete defaults so a new repository starts consisten
 
 ## Core Guidelines Disposition
 
-The [ISO C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines) are advice rather than law; instead of re-litigating philosophy inside each topic guide, this section records the project's stance toward every major Guidelines section in one place and routes it to the guide that operationalizes it. Rule IDs such as `F.21` or `ES.20` appear throughout these guides as cross-reference anchors only — every explanation is our own paraphrase, and neither upstream prose nor examples are copied. A stance recorded here is a contract with reviewers: **adapt** means a written, reasoned local difference exists in the companion guide, not that the rule was quietly ignored. Questions about adopting or deviating from a specific rule resolve against the tables below.
+The [ISO C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines) are advice rather than law; instead of re-litigating philosophy inside each topic guide, this section records the project's stance toward every major Guidelines section in one place and routes it to the guide that operationalizes it. Rule IDs such as `F.21` or `ES.20` appear throughout these guides as cross-reference anchors only — every explanation is our own paraphrase, and neither upstream prose nor examples are copied. A stance recorded here is a contract with reviewers: **adapt** means a written, reasoned local difference exists — in the owning guide, or in the disposition itself when no guide owns the rule — not that the rule was quietly ignored. Questions about adopting or deviating from a specific rule resolve against the tables below.
 
 | Stance | Meaning |
 |--------|---------|
-| Adopt | Followed as written; the companion guide adds enforcement detail |
-| Adapt | Followed in intent, with a documented difference spelled out in the companion guide |
-| Covered elsewhere | The substance already lives in one of our guides under different organization |
+| Adopt | Followed as written; where a guide owns the rule, the guide adds enforcement detail |
+| Adapt | Followed in intent; where a guide owns the rule, the documented difference is spelled out there, otherwise the disposition itself records it |
+| Adopt selectively | Adopted for the rules named in the disposition; the rest of the section is not adopted |
+| Covered elsewhere | The substance already lives in one of our guides under different organization and is applied inline there |
 
 ### Disposition by Section
 
@@ -100,14 +101,11 @@ Nine Guidelines sections contain nothing a topic guide can operationalize as cod
 | `CPL.3` | Adopt | Call C through a C++ facade: `extern "C"` at the boundary, RAII and type safety for callers |
 | `FAQ.8` | Adopt | Modern-C++-only scope confirmed; matches this directory's C++17 baseline with noted C++20 refinements |
 | `FAQ.9` | Adopt | The Guidelines propose no new language features; every cited practice here uses shippable standard features |
-| `FAQ.50` | Adapt | Concept taken, dependency declined: standard library plus curated warnings replace any GSL requirement |
-| `FAQ.51` | Adapt | Microsoft's GSL is one implementation among several; nothing here vendors or assumes it |
-| `FAQ.52` | Adopt | Interfaces-not-implementations reasoning backs standard types over GSL aliases wherever equivalents exist |
-| `FAQ.54` | Adopt | GSL was never standardized — one more reason the `std` equivalent wins by default |
+| `FAQ.50`, `FAQ.51`, `FAQ.52`, `FAQ.54` | Adapt | GSL declined: `std` equivalents plus curated warnings replace it; nothing vendors or assumes GSL, which was never standardized |
 | `FAQ.55` | Adopt | View taxonomy adopted directly: `std::string_view` for read-only views (C++17), `std::span` for read-write (C++20) |
 | `FAQ.59` | Adopt | `Expects` is contract-syntax placeholder, not `assert`; precondition discipline lives in Error Handling pending language contracts |
 | `FAQ.60` | Adapt | Same story for `Ensures`: Error Handling owns the failure-contract vocabulary, not a GSL macro |
-| `GSL` | Adapt | GSL declined: standard-library equivalents and curated warnings replace GSL constructs; the `FAQ.50`–`FAQ.55` rows above record the reasoning |
+| `GSL` | Adapt | GSL declined: standard-library equivalents and curated warnings replace GSL constructs; the merged `FAQ.50`/`FAQ.51`/`FAQ.52`/`FAQ.54` row above records the reasoning |
 | `NR.1` | Adopt | Anti-rule acknowledged: declare at first use; declarations-on-top manufactures uninitialized variables |
 | `NR.2` | Adopt | Anti-rule acknowledged: early returns concentrate error handling; single-return gymnastics invent extra state |
 | `NR.3` | Adapt | Anti-rule acknowledged with carve-out: exceptions stay default, status returns at module and ABI edges |
@@ -115,9 +113,9 @@ Nine Guidelines sections contain nothing a topic guide can operationalize as cod
 | `NR.5` | Adopt | Anti-rule acknowledged: constructors deliver ready-to-use objects; two-phase `Init()` leaks semi-constructed objects |
 | `NR.6` | Adopt | Anti-rule acknowledged: RAII makes goto-exit cleanup ladders obsolete |
 | `NR.7` | Adopt | Anti-rule acknowledged: protected data is hierarchy-scoped global data; keep data private |
-| `Pro` | Adapt | The safety profiles map onto enforcement machinery already running — the Profiles table below records the mapping |
-| `SL.1` | Adopt | Use libraries wherever possible; reinvented wheels lack reviewers, tests, and fixes |
-| `SL.2` | Adopt | Standard library before third-party: most scrutinized, most portable, least supply-chain risk |
+| `Pro` | Adapt | The safety profiles map onto the enforcement machinery the Quality Check prescribes — the Profiles table below records the mapping |
+| `SL.1` | Adopt | Use libraries wherever possible; reinvented wheels lack reviewers, tests, and fixes — [Third-Party Dependencies](./quality-guidelines.md) in Quality Guidelines owns the vetting |
+| `SL.2` | Adopt | Standard library before third-party: most scrutinized, most portable, least supply-chain risk — the ordering rule lives in [Third-Party Dependencies](./quality-guidelines.md) |
 | `SL.3` | Adopt | Nothing user-defined enters namespace `std`; same reasoning as banning forward-declared `std::` types |
 | `SL.4` | Adopt | Umbrella rule: use standard components within their contracts; concrete catchers live in the profile mapping below |
 | `RF` | Adopt | Followed as written: a coding standard should be adapted per organization, and this registry is exactly such an adaptation — meta-commentary carrying no coding practice |
@@ -125,7 +123,7 @@ Nine Guidelines sections contain nothing a topic guide can operationalize as cod
 
 ### Adoption Process
 
-A rule moves from the Guidelines into daily practice through one coherent change: propose it with an ID (`F.21`, not a paraphrase of its mood), record the stance here — writing the documented difference into the companion guide when the answer is adapt — and land an enforcement catcher: a curated clang-tidy check, a compiler warning, a sanitizer run, or an explicit review item; if nothing can catch it, say so in the guide rather than pretending tooling has it covered. This index updates in the same change, so the registry never describes a directory that no longer exists. Demotion runs the same path in reverse: when an adopted rule stops earning its keep — findings all suppressed, pattern no longer occurring — remove the enforcement and drop the stance row together.
+A rule moves from the Guidelines into daily practice through one coherent change: propose it with an ID (`F.21`, not a paraphrase of its mood), record the stance here — writing the documented difference into the owning guide, or into the disposition itself when no guide owns the rule, when the answer is adapt — and land an enforcement catcher: a curated clang-tidy check, a compiler warning, a sanitizer run, or an explicit review item; if nothing can catch it, say so in the guide rather than pretending tooling has it covered. This index updates in the same change, so the registry never describes a directory that no longer exists. Demotion runs the same path in reverse: when an adopted rule stops earning its keep — findings all suppressed, pattern no longer occurring — remove the enforcement and amend the stance row together; drop the row outright only when it is a residual-ledger entry, since every one of the fourteen sections must keep its row.
 
 ### Upkeep
 
@@ -133,14 +131,14 @@ Rule numbering occasionally shifts upstream: fix moved IDs during the next edit 
 
 ### Profiles
 
-The Guidelines group their highest-value rules into safety profiles; we do not track conformance as such — each profile maps onto machinery that is already running:
+The Guidelines group their highest-value rules into safety profiles; we do not track conformance as such — each profile maps onto machinery the Quality Check below prescribes, and every row names the gate that runs it:
 
-| Guideline profile | Our equivalent enforcement |
-|-------------------|----------------------------|
-| Type safety | Warning set plus narrowing-conversion checks; `enum class` and explicit conversions per Expressions and Flow |
-| Bounds safety | An ASan+UBSan build for out-of-bounds access; the container-invalidation table in Memory and Ownership covers what ASan misses deterministically |
-| Lifetime safety | Ownership ladder plus dangling-view review rules; ASan catches the escapes that reach memory |
-| Concurrency safety | A ThreadSanitizer build for threading changes; lock discipline in Concurrency |
+| Guideline profile | Trigger (Quality Check) | Our equivalent enforcement |
+|-------------------|-------------------------|----------------------------|
+| Type safety | Tidy-clean: the curated clang-tidy checks, including narrowing-conversion checks, run on changed sources | `enum class` and explicit conversions per Expressions and Flow |
+| Bounds safety | Tests green: an ASan+UBSan build whenever the change touches allocation, containers, or object lifetime | Out-of-bounds access; the container-invalidation table in Memory and Ownership covers what ASan misses deterministically |
+| Lifetime safety | Tests green: the same ASan+UBSan condition on lifetime-touching changes | Ownership ladder plus dangling-view review rules; ASan catches the escapes that reach memory |
+| Concurrency safety | ThreadSanitizer: threading changes additionally pass a TSan build | Lock discipline in Concurrency |
 
 A profile claim nobody measures is a mood, not a gate.
 
@@ -155,6 +153,7 @@ Before writing code, route the task through the relevant guide:
 | Raw pointers, resource handles, container lifetime questions | [Memory and Ownership](./memory-and-ownership.md) |
 | Reporting failures, designing error paths across APIs | [Error Handling](./error-handling.md) |
 | New headers or files, public API surface, naming decisions | [Quality Guidelines](./quality-guidelines.md) |
+| Adding or vetting a third-party dependency | [Quality Guidelines](./quality-guidelines.md) |
 | Writing, changing, or removing tests | [Testing Conventions](./testing-conventions.md) |
 | Function signatures or API design at module boundaries | [Functions and Interfaces](./functions-and-interfaces.md) |
 | Class design, inheritance, or object lifecycle decisions | [Classes and Hierarchies](./classes-and-hierarchies.md) |
@@ -172,7 +171,7 @@ A change touching several rows above should skim every listed guide before start
 Run the full gate before declaring any change complete:
 
 - **Format-clean** — `clang-format --dry-run` reports no diffs on the sources you touched.
-- **Tidy-clean** — static analysis runs on changed sources; findings are fixed or silenced with an inline justification.
+- **Tidy-clean** — the curated clang-tidy checks run on changed sources; findings are fixed or silenced with an inline justification.
 - **Tests green** — the unit suite passes plain, then again under an ASan+UBSan build whenever the change touches allocation, containers, or object lifetime.
 - **ThreadSanitizer** — threading changes additionally pass a TSan build.
 

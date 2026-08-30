@@ -33,9 +33,15 @@ Wrong:
 ```cpp
 // Contract discoverable only by instantiating it wrongly.
 template <typename T>
-T median(std::vector<T>& values);
+T median(std::vector<T>& values) {
+    std::sort(values.begin(), values.end());
+    const auto mid = values.size() / 2;
+    return (values[mid] + values[mid + 1]) / 2;   // arithmetic the element type may not support
+}
 
-median("oops");   // 40 lines of errors ending somewhere useful, allegedly
+std::vector<std::string> words{"a", "bc", "d"};
+median(words);   // deduction succeeds (T = std::string); 40 lines of errors ending
+                 // somewhere useful, allegedly — inside the body's `/ 2`, not at the call
 ```
 
 Right (C++17):
@@ -131,6 +137,8 @@ Notes:
 - Keep templates independent of their surroundings: fewer includes, fewer global names visible at instantiation (`T.60`). A helper template that reaches for six headers slows every includer.
 - Name a template (or give it a stable home) only when reuse is real; an operation needed exactly once does not earn a header of its own (`T.140`, `T.141`).
 - Spell aliases with `using`, never `typedef` (`T.43`): the new name leads, the syntax parallels `auto`, and only `using` can form template aliases; expect enforcement to flag legacy `typedef`s widely.
+- CTAD (`T.44`) is authored, not lucky. Constructor CTAD fires when a constructor's parameters deduce the template arguments; write an explicit deduction guide — `template <typename Iter> Container(Iter b, Iter e) -> Container<typename std::iterator_traits<Iter>::value_type>;` — when no constructor exposes the intended mapping, or when the implicit one would deduce the wrong thing. Aggregate templates generate no constructor guides: on C++17, deducing one from brace-init requires a hand-written guide, with aggregate CTAD itself arriving in C++20. And guides generated from constructors inherited via `using Base::Base;` deduce against the base template, not the derived class — making a derived class template deducible from them only landed in C++23.
+- Header-heavy instantiation volume has a relief valve in explicit instantiation declarations: `extern template class LruCache<K, V>;` in the header tells every other translation unit the definition is instantiated elsewhere, while the matching explicit instantiation (`template class LruCache<K, V>;`) is compiled once in a single source file. Judging when that trade pays lives in [Quality Guidelines](./quality-guidelines.md)' Compile-Time Discipline section.
 
 ---
 
@@ -140,6 +148,7 @@ Constraints guard the boundary; these rules keep the body honest. Ordinary-looki
 
 1. Pass operations to algorithms as function objects (`T.40`) — lambdas included — which carry state through the interface and inline well, rather than function pointers; function-pointer template arguments get flagged by enforcement.
 2. Initialize with `{}` rather than `()` inside templates (`T.68`): the paren form invites both the parse where `T v1(T(u));` declares a function and silent casts like `f(1, "asdf")`. Braced form states variable-hood outright, and enforcement flags paren initializers and function-style casts.
+   Carve-out: where the type has an `initializer_list` constructor and paren semantics are intended — size or n-value construction (`std::vector<int> v(n)` sizes to `n`; `v{n}` makes a one-element vector), emplacement — use `()`; those cases are exempt from the paren flag.
 3. An unqualified call to a non-member with a dependent argument is an ADL customization point whether intended or not (`T.69`); private helpers live in a `detail` namespace and are called qualified. Unqualified calls remain only where callers are meant to hook in.
 4. Do not write unintentionally non-generic code (`T.143`): compare iterators with `!=` not `<`, test emptiness with `empty()`, accept the least-derived type providing what you use — or skip the ceremony entirely with range-`for` where it applies.
 
@@ -205,7 +214,10 @@ class Task {
 public:
     template <typename F>
         requires std::invocable<F&>          // C++17: constrain via static_assert instead
-    explicit Task(F&& fn) : impl_(std::make_unique<Model<F>>(std::forward<F>(fn))) {}
+    explicit Task(F&& fn) : impl_(std::make_unique<Model<std::decay_t<F>>>(std::forward<F>(fn))) {
+        static_assert(std::is_move_constructible_v<std::decay_t<F>>,
+                      "erased callable must be move-constructible");
+    }
     void run() { impl_->run(); }
 private:
     struct Concept {
@@ -222,6 +234,8 @@ private:
     std::unique_ptr<Concept> impl_;
 };
 ```
+
+The deduce-then-decay constructor (`Model<std::decay_t<F>>`) is load-bearing: with the plain `Model<F>`, an lvalue argument deduces `F` to `L&`, and `Model` stores a reference member bound to the caller's object — the first `run()` after the caller's scope exits reads dead memory. Decay forces the copy (or move) that erasure needs, and the `static_assert` names the price: the stored callable must be move-constructible.
 
 One such wrapper is a design; a forest of them is a sign the boundary should have been a plain virtual interface after all.
 
@@ -308,7 +322,7 @@ struct MeterReading : PrintableMixin<MeterReading> {
 };
 ```
 
-Costs to weigh honestly: error messages worsen, the inheritance reads backwards to newcomers, and refactoring from CRTP to a runtime hierarchy later touches every derived class. If the set of variants is small and stability of the vtable cost is irrelevant, a plain virtual interface is the boring, correct choice. CRTP is an optimization with a readability price — pay it only where the profiler or a hard binary-size budget says so.
+Costs to weigh honestly: error messages worsen, the inheritance reads backwards to newcomers, and refactoring from CRTP to a runtime hierarchy later touches every derived class. If the set of variants is small and stability of the vtable cost is irrelevant, a plain virtual interface is the boring, correct choice. CRTP is an optimization with a readability price — pay it when static dispatch is measured on a hot path, or when a mixin eliminates per-type virtual machinery without adding a vtable.
 
 Two adjacent rules keep templates and hierarchies out of each other's hair. Do not naively templatize a class hierarchy (`T.80`): parameterizing the base multiplies every virtual into per-instantiation code the compiler must emit whether called or not — keep the base unparameterized and stable, adding type variation in thin derived wrappers. This is what CRTP offers in reverse: linearizing a hierarchy — shared non-virtual base machinery with static dispatch to the leaf (`T.82`) — vtable-free polymorphism paid for with worse errors and backwards-looking inheritance, justified in the declaring header. And respect the hard compiler boundary: a member function template cannot be virtual (`T.83`) — vtables would need link-time generation — so route dynamic behavior through double dispatch, visitors, or computed dispatch instead.
 

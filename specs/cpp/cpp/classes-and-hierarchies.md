@@ -115,11 +115,15 @@ public:
     explicit FileDesc(int fd) : fd_(fd) {}
     ~FileDesc() { if (fd_ >= 0) ::close(fd_); }
 
-    FileDesc(const FileDesc& o) : fd_(::dup(o.fd_)) {}      // deep copy
-    FileDesc& operator=(const FileDesc& o) {              // deep, self-safe
+    FileDesc(const FileDesc& o) : fd_(::dup(o.fd_)) {       // deep copy; failure throws (C.42)
+        if (fd_ < 0) throw std::system_error(errno, std::generic_category(), "dup");
+    }
+    FileDesc& operator=(const FileDesc& o) {              // deep, self-safe; dup before close
         if (this != &o) {
+            int next = ::dup(o.fd_);
+            if (next < 0) throw std::system_error(errno, std::generic_category(), "dup");
             if (fd_ >= 0) ::close(fd_);
-            fd_ = ::dup(o.fd_);
+            fd_ = next;
         }
         return *this;
     }
@@ -134,6 +138,8 @@ private:
     int fd_ = -1;                                           // "empty" is representable
 };
 ```
+
+`::dup` failing returns -1, and a copy operation that swallows it silently fabricates an empty object — the half-built state `C.42` bans — so a failed `dup` throws `std::system_error`; assignment dups before closing so a failure leaves the target untouched.
 
 First re-check [Memory and Ownership](./memory-and-ownership.md): a `unique_ptr<T, Deleter>` deletes this entire class. Rule of Five is the fallback for resources standard wrappers cannot express, not the default.
 
@@ -188,6 +194,8 @@ Value-like types provide a member `noexcept` swap plus a free two-argument overl
 
 Comparisons behave like built-ins. `==` treats operands symmetrically — a free function with matching parameter types, `noexcept`; a member `operator==` accepts conversions for its right operand only. The same holds across the comparison operators, and failure states prefer comparing equal to themselves and false against valid values over throwing (`C.86`). Beware `==` on base classes: a virtual `operator==` sees derived state or not depending on the static operand type, and naive fixes do not scale — flag virtual comparison operators on sight (`C.87`). Hash specializations are `noexcept`, because hashed-container users never expect access to throw; xor-combining standard-library hashes beats cleverness for non-specialists (`C.89`).
 
+Ordering: C++17 has no defaulted comparisons (`<=>` arrives in C++20 and will replace this spelling) — a regular value type writes `operator<` memberwise, `std::tie(x_, y_) < std::tie(o.x_, o.y_)` giving lexicographic order, and derives `>`, `<=`, `>=` from `==` and `<`, ideally once in a CRTP ordering base.
+
 ---
 
 ## Containers and Handles Follow the Standard Library
@@ -211,7 +219,7 @@ Deleting a derived object through a base pointer whose destructor is non-virtual
 
 | Base role | Destructor | Copies |
 |-----------|------------|--------|
-| Interface, deleted polymorphically | `public virtual` | `=delete` (`C.67`) |
+| Interface, deleted polymorphically | `public virtual` | `=delete` (`C.67`); protected defaulted when serving a `clone()` hierarchy |
 | Mixin, never deleted through base pointer | `protected`, non-virtual | `=delete` |
 
 ```cpp
@@ -296,7 +304,7 @@ Edge rules:
 1. Hold and pass polymorphic objects by pointer or reference — by value slices (`C.145`; enforced by the signature tables in [Functions and Interfaces](./functions-and-interfaces.md)).
 2. Never point a base pointer into an array of derived objects; element stride differs (`C.152`).
 3. Prefer virtual dispatch; `dynamic_cast` only where navigation between siblings is genuinely unavoidable (`C.146`). Use `dynamic_cast<T&>` when absence of `T` is an error — a reference cast throws on failure, declaring the intent to end up with a valid object (`C.147`); use `dynamic_cast<T*>` when absence is a valid alternative — null enables branching, and the result is always tested before dereference. Across module boundaries, Quality Guidelines replaces RTTI with kind tags outright (`C.148`).
-4. Copying goes through a virtual `clone()` returning `std::unique_ptr<Codec>`, never through base-reference copy construction (`C.130`): covariant smart pointers are impossible, so return `unique_ptr<Base>` uniformly or use `gsl::owner`; copy/move demote to protected defaulted helpers serving clone implementations, while public copy construction and assignment stay suppressed.
+4. Copying goes through a virtual `clone()` returning `std::unique_ptr<Codec>`, never through base-reference copy construction (`C.130`): covariant smart pointers are impossible, so return `unique_ptr<Base>` uniformly; copy/move demote to protected defaulted helpers serving clone implementations, while public copy construction and assignment stay suppressed.
 5. Deviation from `C.153`: prefer the virtual call, which lands on the most-derived override where a cast may stop at an intermediate class and rot as the hierarchy evolves. Closed variation replaces both sides with kind-tag dispatch (Concrete Types First), reserving `dynamic_cast` for genuinely open navigation per rule 3.
 
 Caught by: clang-tidy `cppcoreguidelines-slicing`.

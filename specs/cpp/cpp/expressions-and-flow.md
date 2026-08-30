@@ -188,7 +188,7 @@ The classic failure is choosing unsigned "because counts are never negative" (`E
 ```cpp
 // Wrong: unsigned wraps instead of going negative
 std::vector<Item> pending = remaining();
-for (std::size_t i = pending.size() - 1; i >= 0; --i) {   // empty vector: wraps, UB
+for (std::size_t i = pending.size() - 1; i >= 0; --i) {   // broken for every input: i >= 0 is a tautology; after i == 0, --i wraps to SIZE_MAX and indexes out of bounds -- immediately when empty
     ship(pending[i]);
 }
 
@@ -205,6 +205,8 @@ Rules:
 3. Mixed-sign comparisons get fixed at the source: restructure the condition or convert the value with a genuinely bounded domain. Never sprinkle casts until the warning disappears.
 4. Buffer math and length fields near limits carry explicit precondition checks (`ES.103`, `ES.104`); wraparound is a bug, not a feature.
 5. Integer `/` and `%` by a possibly-zero divisor take an explicit precondition at the boundary (`ES.105`); the undefined crash is never left implicit. Precondition mechanics live in [Functions and Interfaces](./functions-and-interfaces.md); floating-point division by zero is a separate domain decision.
+
+Shifts need the same suspicion the arithmetic above gets: the count must be `>= 0` and strictly below the width of the promoted left operand, and a signed left shift that overflows is UB (`ES.103`). Small unsigned types promote first — `uint16_t` arithmetic happens in `int`, so `uint16_t{0xFFFF} << 17` overflows the promoted signed type and is UB, where the same shift on `uint32_t` would merely wrap. Keep shifted operands in their full `uint32_t`/`uint64_t` domain and treat non-constant shift counts as preconditions; UBSan's shift checks flag all of these in sanitizer builds.
 
 Caught by: the sign-comparison and sign-conversion warnings enabled by default in the build; suppressing one requires a comment naming the reason.
 
@@ -253,17 +255,18 @@ bool submit(const Order& order) {
 Loop and branch rules:
 
 1. No `goto` (`ES.76`). No `do/while` unless it removes worse duplication between the prologue and the tail (`ES.75`) — in practice, almost never.
-2. Every non-empty `case` ends with `break` or an obvious `return`; an intentional fallthrough is stated in a comment and reviewed (`ES.78`).
+2. Every non-empty `case` ends with `break` or an obvious `return`; an intentional fallthrough carries `[[fallthrough]]` (`ES.78`) — the annotation that satisfies `-Wimplicit-fallthrough` — with the adjacent comment stating why falling through is correct.
 3. Redundant boolean dressing is noise: `if (found)`, not `if (found == true)` (`ES.87`). Conditions contain no assignments and no hidden side effects.
-4. Range-based `for` is the default loop (`ES.71`): it cannot mis-index and states intent. Index-based `for` survives only when the body truly needs the index — neighbor elements, strides, deliberate counter work — and binds its variable by reference, never by value copy. Prefer constructs that cannot go out of range (`ES.55`) — range-`for`, position-returning algorithms — over indexed access wrapped in checks; an explicit bounds check is usually the tell that the wrong abstraction was picked. Never mutate a container's structure while iterating it — reallocation invalidates the iterator — and never bind a range-for directly to a temporary. The invalidation table lives in [Memory and Ownership](./memory-and-ownership.md).
+4. Range-based `for` is the default loop (`ES.71`): it cannot mis-index and states intent. Index-based `for` survives only when the body truly needs the index — neighbor elements, strides, deliberate counter work — and binds its variable by reference, never by value copy. Prefer constructs that cannot go out of range (`ES.55`) — range-`for`, position-returning algorithms — over indexed access wrapped in checks; an explicit bounds check is usually the tell that the wrong abstraction was picked. Never mutate a container's structure while iterating it — reallocation invalidates the iterator. Range-for extends only the final range expression's temporary to the loop: a direct value-returning init such as `make_rows()` is safe, but in a chained init like `connection_pool().acquire().rows()` the intermediate temporaries die at the end of the full-expression, leaving the extended range viewing destroyed owners — own the outer object. (C++23 extends every temporary in the range-init and closes this trap; the C++17 baseline does not.) The invalidation table lives in [Memory and Ownership](./memory-and-ownership.md).
 
 ```cpp
-// Wrong: the temporary dies before the first iteration completes
-for (const Row& row : make_rows()) { consume(row); }
+// Wrong: only the final range expression is lifetime-extended -- the pool and
+// connection temporaries die at the end of the full-expression, so rows() views dead owners
+for (const Row& row : connection_pool().acquire().rows()) { consume(row); }
 
-// Right: own the range for the duration of the iteration
-const std::vector<Row> rows = make_rows();
-for (const Row& row : rows) { consume(row); }
+// Right: own the outer object for the duration of the iteration
+auto conn = connection_pool().acquire();
+for (const Row& row : conn.rows()) { consume(row); }
 ```
 
 5. Variables live in the smallest scope that can hold them (`ES.5`); a loop variable is dead the moment its loop ends.
@@ -293,7 +296,7 @@ Review checklist:
 - [ ] Zero C-style casts; every `reinterpret_cast` carries its justification comment; no `const_cast` mutation
 - [ ] Signed arithmetic uses signed types; no unsigned sentinels guarding negatives
 - [ ] Nesting stays shallow; guards return early; repeated compound conditions became named predicates
-- [ ] No structural container mutation inside a range-for; no iteration over dying temporaries
+- [ ] No structural container mutation inside a range-for; chained range-inits own the outer object, never an intermediate temporary
 
 ---
 

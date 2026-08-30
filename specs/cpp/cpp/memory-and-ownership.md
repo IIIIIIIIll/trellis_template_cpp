@@ -70,6 +70,8 @@ Rules:
 3. A `shared_ptr` in a signature is a design decision, not convenience. Copying one costs an atomic operation and freezes object lifetime; justify it in a comment or downgrade to `unique_ptr`/references — `R.21`: `unique_ptr` outranks `shared_ptr` for deterministic destruction and zero refcount traffic.
 4. Observing a shared object without extending its life takes `std::weak_ptr` and locks — mandatory for back-edges in parent/child graphs, caches, and observer lists.
 5. Non-`std` smart pointers join the ladder through the `std` pattern (`R.31`): copyable counts as shared-like, move-only as unique-like — every smart-pointer signature rule below applies to them unchanged.
+6. Custom-deleter owners: `std::make_unique` has no deleter-taking form (`R.22` fixes only the default-deleter spelling), so an unwrapped resource with non-default cleanup writes its owner out in full at the acquisition site — `std::unique_ptr<Handle, Deleter>{acquire(...), release}` — and never parks the raw handle in between. A deleter that never runs is LeakSanitizer's classic leak signature.
+7. `make_shared` carve-outs (`R.23`): the fused allocation keeps the object's bytes alive while any `weak_ptr` exists — a mandated `weak_ptr` back-edge or cache entry over a large object pays full memory after the object is logically dead — and `make_shared` cannot take a custom deleter. When either bite lands, write the deliberate exception with a comment saying why: `std::shared_ptr<T>{new T{...}}` separates object from control block so weak observers stop pinning the bytes, and `std::shared_ptr<Handle>{acquire(...), release}` carries the deleter. No checker sees the retained bytes — the footprint is a review item — while the compiler rejects `make_shared` with a deleter outright.
 
 Caught by: ASan (use-after-free and double-free from broken ownership), LSan (leaked cycles that `weak_ptr` should have broken), review for shared-ptr sprawl.
 
@@ -87,7 +89,7 @@ The copy-cost side of these same decisions lives in [Functions and Interfaces](.
 | Read-only single object, maybe absent | `const T*`, documented as nullable |
 | Sink — the callee stores or moves the argument | By value, then `std::move` into storage |
 | Out-parameter | Return value; `T&` only when a second output genuinely exists |
-| Optional result | Return `std::optional<T>`, never a sentinel or `nullptr` |
+| Optional result (value) | Return `std::optional<T>`, never a sentinel or `nullptr` |
 
 Wrong:
 
@@ -123,6 +125,7 @@ Notes:
 - Do not maintain both a `const std::string&` and a `string_view` overload for the same parameter; one spelling wins.
 - Sinks take by value even when callers usually pass lvalues: the copy happens at the boundary where the compiler can prove the source is no longer needed.
 - Array parameters decay: `void f(int[])` *is* `f(int*)` after adjustment — the length is simply gone (`R.14`). Sequences take `std::span` (pointer-plus-size spelling until C++20), matching the table above.
+- The optional-result row covers *value* results only. A finder that locates an existing object inside storage the caller already owns returns its position as a nullable `T*` (`F.42`, [Functions and Interfaces](./functions-and-interfaces.md)) — not a sentinel, and not an `optional<T>` that copies the object out of place.
 
 Caught by: clang-tidy `performance-unnecessary-value-param` (missing moves in sinks); the `const std::string&`-that-should-be-a-view case has no reliable automatic check and is a review item.
 
@@ -207,6 +210,8 @@ A `std::vector<std::string_view>` sliced from a `std::vector<std::string>` dangl
 Parent owns children through `shared_ptr`; child stores a `shared_ptr` back to the parent; nothing is ever destroyed. All back-edges — parent links, observer registrations, cache entries — use `weak_ptr` and lock briefly (`R.24`: a cycle's use count never reaches zero).
 
 Caught by: LeakSanitizer reports the unreachable cycle cluster; the leak dump pointing at both ends of a mutual `shared_ptr` is the classic signature.
+
+The adjacent double-own trap is `this` itself. Inside a member function `this` is unowned — the object already lives under whichever `shared_ptr` brought the caller here — so `std::shared_ptr<T>{this}` mints a second, independent owner of the same object, and the two control blocks destroy it twice. Types reachable as shared objects inherit `std::enable_shared_from_this<T>` and return `shared_from_this()`, which joins the existing control block; the call is legal only once a `shared_ptr` already manages the object. ASan catches the resulting double-free; short of that, a `shared_ptr` constructed directly from `this` is a review item.
 
 ### Arenas and pools on hot paths
 

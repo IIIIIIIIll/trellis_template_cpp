@@ -18,6 +18,8 @@ Therefore the design order of preference is:
 
 Baseline: C++17 (`std::thread` plus explicit join discipline). C++20's `std::jthread`, `std::stop_token`, and counting semaphores are preferred where the toolchain provides them; differences are noted inline.
 
+Coroutines are C++20-only; on the C++17 baseline the coroutine section below does not apply.
+
 ---
 
 ## Shared Mutable State Is a Design Decision
@@ -136,9 +138,10 @@ Locking is RAII-only. Plain `lock()`/`unlock()` pairs are forbidden (`CP.20`) �
 Rules:
 
 1. Define each mutex next to the data it guards, with names that pair visibly (`state_` / `stateMutex_`) (`CP.50`). A mutex guarding three distant fields is a distributed invariant waiting to break.
-2. Name every guard (`CP.44`). An unnamed temporary destroys the lock at the end of the statement, and `std::unique_lock<std::mutex>(m1);` is worse still — a default-constructed local shadowing the mutex without locking it. Both compile, run, and protect nothing:
+2. Name every guard (`CP.44`). The brace spelling compiles, runs, and protects nothing — an unnamed temporary that destroys the lock at the end of the statement. The paren spelling of the same line is not the safer alternative: it is a most-vexing-parse declaration of a default-initialized guard, and `std::lock_guard` has no default constructor, so it fails to compile. The silent sibling is the paren spelling of `unique_lock`, which *is* default-constructible:
    ```cpp
-   std::lock_guard<std::mutex>(queueMutex_);   // WRONG: temporary, gone immediately
+   std::lock_guard<std::mutex>{queueMutex_};         // WRONG: unnamed temporary, destroyed at end of statement
+   std::unique_lock<std::mutex>(m1);                 // WRONG: vexing parse — default-constructed local named `m1`, never locks
    std::lock_guard<std::mutex> guard(queueMutex_);   // RIGHT: named, lives to scope end
    ```
 3. Hold locks for the shortest region that keeps the invariant (`CP.43`): copy what you need out under the lock, then work on the copy. I/O, allocation-heavy formatting, and logging stay outside critical sections.
@@ -181,7 +184,7 @@ Caught by: TSan for the resulting races; deadlock detection tools and code revie
 A coroutine is a threading change like any other and answers to the TSan gate below. Three rules keep suspensions from shredding memory:
 
 1. Never write a capturing lambda that is a coroutine (`CP.51`): the captures die with the closure scope while resumption after the first suspension reads them — use-after-free even for `shared_ptr` and copyable captures. Take values as parameters, or write a plain coroutine function.
-2. Never hold a lock across a suspension point (`CP.52`): resumption may want the held lock (self-deadlock), may land on a different thread (undefined behavior), and an exception skips the guard's destruction — all while serializing everyone else for the suspension's duration. Scope the guard, release, then suspend; the shortest-critical-region rule gains a coroutine clause.
+2. Never hold a lock across a suspension point (`CP.52`): resumption may want the held lock (self-deadlock), may land on a different thread (undefined behavior), and if the coroutine is destroyed while suspended, the frame's guard destructor runs on whichever thread does the destroying — cross-thread unlock again — all while the held lock serializes everyone else for the suspension's duration. Scope the guard, release, then suspend; the shortest-critical-region rule gains a coroutine clause.
 3. Coroutine parameters pass by value (`CP.53`): reference parameters dangle from the first suspension onward, and some coroutine shapes suspend before their first line runs. The copy lives in the coroutine frame; output parameters are forbidden outright, matching the return-don't-out discipline.
 
 ---
@@ -219,8 +222,9 @@ Rules:
 
 1. Default to sequential-consistency ordering. Relax/acquire/release require a comment naming the exact protocol they implement and why it suffices.
 2. Two variables whose relationship matters (a buffer pointer plus its length, a state plus a payload) need a mutex, a sequenced publication protocol, or a single larger atomic — never two independent atomic members.
-3. Do not write lock-free data structures by hand (`CP.100`). The standard containers, well-tested concurrent libraries, or a plain mutex cover nearly everything; a homemade queue is a research project with a bug quota. Beyond atomics and a handful of standard patterns, lock-free programming is expert-only (`CP.102`): a proposal arrives citing the literature (Williams, Herlihy & Shavit, Boehm) and survives design review, or it stays a mutex. Beware classic hazards such as A-B-A reuse of addresses if you ever must (`CP.101` territory).
-4. Lazy initialization is solved by magic statics (`static local` initialization is thread-safe since C++11) or `std::call_once`. Hand-rolled double-checked locking is forbidden (`CP.110`, `CP.111`).
+3. `shared_ptr`'s atomic refcounts are not atomic pointer access: concurrent reads and writes of a shared `shared_ptr` member race even when every pointee is immutable. On the C++17 baseline the spellings are `std::atomic_load(&ptr_)` / `std::atomic_store(&ptr_, value)` — deprecated in C++20 in favor of `std::atomic<std::shared_ptr<T>>` — or a plain mutex; the better default remains the immutable-snapshot hand-off (`shared_ptr<const T>`) from the design section above, which leaves readers nothing to synchronize.
+4. Do not write lock-free data structures by hand (`CP.100`). The standard containers, well-tested concurrent libraries, or a plain mutex cover nearly everything; a homemade queue is a research project with a bug quota. Beyond atomics and a handful of standard patterns, lock-free programming is expert-only (`CP.102`): a proposal arrives citing the literature (Williams, Herlihy & Shavit, Boehm) and survives design review, or it stays a mutex. Beware classic hazards such as A-B-A reuse of addresses if you ever must (`CP.101` territory).
+5. Lazy initialization is solved by magic statics (`static local` initialization is thread-safe since C++11) or `std::call_once`. Hand-rolled double-checked locking is forbidden (`CP.110`, `CP.111`).
 
 Caught by: TSan for the racy cases; review for `volatile` used near threading and for any new `memory_order_` spelling beyond relaxed-with-comment.
 
@@ -252,6 +256,7 @@ auto compressed = result.get();          // exactly once, transfers ownership
 
 Pitfalls:
 
+- The launch policy is spelled on every call: without `std::launch::async`, `std::async` may run the task deferred — inline at `.get()`, or not at all if the future is dropped — while an async launch blocks in the future's destructor. Omitting the policy is forbidden.
 - `std::async` returned-future destruction blocks until completion; dropping the future to "fire and forget" turns an async call into a synchronous surprise (`CP.61`). Fire-and-forget work goes to the project's job queue, not `std::async`.
 - `promise`/`future` pairs are single-use; a broken promise (destroyed without setting) surfaces as an exception on the waiting side — handle it where the `.get()` lives.
 - Channels and queues must have a bound and an overflow policy. Unbounded growth converts a producer/consumer bug into an OOM incident hours later.

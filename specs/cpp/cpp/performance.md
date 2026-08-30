@@ -26,18 +26,18 @@ Rules:
 1. Numbers quoted in reviews state machine, input, build configuration, and repetition count.
 2. Sanitizer builds answer correctness questions; their slowdowns make them useless for timing.
 3. The benchmark that justified a change stays in the tree so the next person can re-verify it.
-4. Effort concentrates on code the profiler indicts, not code that merely looks slow (`Per.3`): a 50% win on a component eating 4% of runtime moves the whole program less than a 5% win on one eating 40%. Optimizing anywhere else is churn paid in readability for an unmeasurable return.
-5. Keeping context switches off the critical path is threading work (`Per.30`) — lock hold times, shared-state minimization, and wakeup discipline live in [Concurrency](./concurrency.md); the measurement gate here still decides whether the path is critical at all.
+4. Effort concentrates on code the profiler indicts, not code that merely looks slow (`Per.3`): a 50% win on a component eating 2% of runtime (1 point of total time) moves the whole program less than a 5% win on one eating 40% (2 points). Optimizing anywhere else is churn paid in readability for an unmeasurable return.
+5. Keeping context switches off the critical path is threading work (`Per.30`) — lock hold times, shared-state minimization, and wakeup discipline live in [Concurrency](./concurrency.md), and the false sharing between threads that write adjacent data is the cache-layout half of that discipline, handled in Cache Layout Awareness below; the measurement gate here still decides whether the path is critical at all.
 
 ```cpp
 // Minimal harness: steady_clock, warm cache, results observed so nothing is optimized away
 using Clock = std::chrono::steady_clock;
 
-Clock::duration bench(std::span<const Input> cases) {
+Clock::duration bench(const Input* cases, std::size_t count) {   // pointer-plus-size pair until C++20 std::span
     std::uint64_t sink = 0;
     const auto start = Clock::now();
-    for (const Input& in : cases) {
-        sink ^= run_case(in).checksum();     // consume output; dead work gets deleted
+    for (std::size_t i = 0; i < count; ++i) {
+        sink ^= run_case(cases[i]).checksum();     // consume output; dead work gets deleted
     }
     const auto elapsed = Clock::now() - start;
     if (sink == 0xDEADBEEF) { std::puts(""); }   // keep the accumulator live
@@ -102,13 +102,13 @@ void store(const std::string& name) {
 }
 ```
 
-Return values need no help: `return local;` already moves or elides, and writing `return std::move(local);` pessimizes by suppressing elision.
+Return values need no help: `return local;` already moves or elides, and writing `return std::move(local);` pessimizes by suppressing elision. The exception is the move-out accessor — `return std::move(member_);` — where the source is a member rather than a local and elision never applies.
 
 ---
 
 ## Cheap-by-Default Boundaries
 
-Signatures decide whether callers pay for copies. Read-only text arrives as `std::string_view`; read-only sequences arrive as `std::span<const T>` (pointer-plus-size until C++20), so literals, substrings, and slices cross the boundary without allocating. The signature policy itself is owned by [Functions and Interfaces](./functions-and-interfaces.md) — View Inputs Borrow, Never Store; what stays here is the cost rationale.
+Signatures decide whether callers pay for copies. Read-only text arrives as `std::string_view`; read-only sequences arrive as a pointer-plus-size pair — `(const T* data, std::size_t size)`, or `gsl::span<const T>` where GSL is adopted — until C++20 `std::span` takes over the spelling, so literals, substrings, and slices cross the boundary without allocating. The signature policy itself is owned by [Functions and Interfaces](./functions-and-interfaces.md) — View Inputs Borrow, Never Store; what stays here is the cost rationale.
 
 ```cpp
 // Wrong: every caller holding a literal or a slice pays for a std::string
@@ -134,7 +134,8 @@ The static type system is doing performance work too (`Per.10`): `void*` erasure
 Anything computable at compile time should be (`Per.11`): lookup tables, polynomial coefficients, dispatch matrices. A runtime-built table costs an initialization pass on every cold start plus first-touch latency; a `constexpr` table costs binary size once.
 
 ```cpp
-// Wrong: global with init-order questions, built lazily on first use
+// Wrong when the table could be constexpr: the static is thread-safe and free
+// of init-order questions, but first use pays the build and every access pays a guard check
 const std::array<double, 256>& gain_table() {
     static const auto table = build_gain_table();
     return table;
@@ -156,6 +157,7 @@ Data layout decides whether the memory subsystem feeds the CPU or starves it:
 2. Space is time (`Per.18`): shaving a flag-swollen struct from 64 to 56 bytes cuts scan traffic by an eighth before anything else improves.
 3. Predictable access wins (`Per.19`): linear walks over contiguous memory beat pointer-chasing through node containers, and small sorted-array lookups often beat hash maps at low cardinality — measure, then choose.
 4. Hot data keeps one canonical access path (`Per.12`): redundant aliases — several names reaching the same storage — cost reader clarity and inhibit optimization.
+5. Threads writing adjacent data false-share a cache line: two hot per-thread counters inside one line turn independent updates into ping-pong between cores. Isolate hot per-thread counters to their own line — `alignas(std::hardware_destructive_interference_size)` (C++17) or explicit padding to 64 bytes. The program stays correct, so TSan reports nothing; the detector is `perf c2c` or cache-miss profiling, not a sanitizer.
 
 ```cpp
 // Wrong: flags interleaved between doubles widen the struct with padding
@@ -196,7 +198,7 @@ Review checklist:
 
 - [ ] Optimization claims carry before/after numbers: machine, input, optimized (`Release`) build, repetitions
 - [ ] Growth loops `reserve()` up front; hot-path buffers reused across iterations
-- [ ] Sinks take by value and move; no `std::move` on `const` sources or on returned values
+- [ ] Sinks take by value and move; no `std::move` on `const` sources or on returned locals (a move-out accessor's `return std::move(member_);` is the exception)
 - [ ] Read-only boundaries take `string_view`/`span`; stored data re-owned exactly once
 - [ ] Constant tables are `constexpr`; no lazy runtime construction of fixed data
 - [ ] Hot struct layouts audited for padding; sizes pinned by `static_assert` where layout matters

@@ -37,10 +37,11 @@ Rules:
 
 1. An `out` value returns as the return value (`F.20`); when two results genuinely exist, return a struct (`F.21`) instead of stacking a second `T&`.
 2. An `inout` parameter's name declares the transformation: `normalize_path(p)`, `merge_into(acc)` — never a generic `update` (`F.17`).
-3. Mutating through a `const T&` (casts, mutable caches keyed on the argument) turns an advertised `in` into a hidden `inout`. Forbidden.
-4. Unused parameters stay unnamed, or wear `[[maybe_unused]]` when conditionally dead — template dispatch especially (`F.9`). A named parameter claims a purpose it does not have.
+3. Mutating through a `const T&` — a `const_cast` or any write to the referent — turns an advertised `in` into a hidden `inout`. Forbidden.
+4. A mutable cache keyed on a `const T&` argument is not a hidden `inout`: the parameter itself is never written. This is accepted logical constness under two obligations — the cache is documented as such (`mutable` members carry the name), and its thread safety is settled: guarded access, or confinement to one thread.
+5. Unused parameters stay unnamed, or wear `[[maybe_unused]]` when conditionally dead — template dispatch especially (`F.9`). A named parameter claims a purpose it does not have.
 
-Caught by: review — hidden `inout` behavior has no dependable static check; the signature convention makes it catchable by humans.
+Caught by: review — hidden `inout` behavior has no dependable static check; the signature convention makes it catchable by humans. Unsynchronized argument-keyed cache mutation surfaces under TSan.
 
 ---
 
@@ -58,11 +59,13 @@ Copy cost decides, not habit (`F.16`). These tables are the project's spelling o
 | Consumed inside generic code | `T&&` plus `std::move` (`F.18`) | Consumption stated explicitly |
 | Presence varies | `const T*`, documented nullable (`F.22`) | Optionality encoded in the type |
 
+These rows and the parameter-roles table above agree: by value is the default sink spelling — the copy lands at the call boundary, the move at the provable last use — while `T&&` is reserved for sinks that must reject lvalue callers or forward into generic code.
+
 Wrong:
 
 ```cpp
 void add_user(const User& u) {
-    users_.push_back(u);          // copied twice: argument -> parameter -> vector
+    users_.push_back(u);          // one copy: argument -> vector — const& cannot move, so rvalue callers copy too
 }
 double apply(const double rate);  // reference-to-scalar: pure indirection
 ```
@@ -122,7 +125,7 @@ Caught by: ASan flags use-after-free when a stored view outlives its owner; revi
 Since C++17 a prvalue is constructed directly in the destination (guaranteed elision) and named locals usually get NRVO — returning by value is the cheapest correct spelling, and it composes.
 
 1. Build the result locally, `return local;` — never `return std::move(local);`, which changes the expression type and defeats NRVO (`F.48`).
-2. Never return a pointer or reference to a local, including wrapped in a view (`F.43`). A `string_view`/`span` return promises memory the caller owns that outlives the call.
+2. Never return a pointer or reference to a local, including wrapped in a view (`F.43`). A `string_view`/`span` return promises memory that outlives the call — a callee-owned cache or static storage qualifies; who owns the backing bytes is a separate, documented question.
 3. Never return `T&&` — it invites dangling temporaries and buys nothing over by-value (`F.45`).
 4. Multiple results travel as a named struct (`F.21`).
 5. A returned `T*` promises a position, possibly none — finders may return nullable positions, never ownership; deletion rights stay with the owner (`F.42`).
@@ -185,6 +188,8 @@ auto cfg = load_config("app.conf");
 if (!cfg) return cfg.error();     // Right: handled, not dropped
 ```
 
+The attribute also applies at class level: mark a status/`Result` type `[[nodiscard]]` once, and every function returning it is covered — no per-function decoration to forget.
+
 This extends `F.20`: once outputs travel as values, discarding them trips the attribute at every call site. Treat new violations as merge blockers.
 
 Caught by: `-Wunused-result` via the attribute; review for categories the attribute cannot see.
@@ -219,15 +224,18 @@ void handle_message(std::span<const uint8_t> bytes) {
 
 ### Default Arguments Beat Overload Pyramids
 
-Collapse same-behavior overloads into default arguments (`F.51`), and keep argument lists short — aim under four (`I.23`): a long list usually means a missing abstraction (bundle into an options struct, as below) or two jobs wearing one name. Separate overloads exist only where parameter types differ in behavior, not spelling.
+Collapse same-behavior overloads into default arguments (`F.51`), and keep argument lists short — aim under four (`I.23`): a long list usually means a missing abstraction or two jobs wearing one name. One knob takes a default argument; an options struct earns its place when knobs multiply, because fields added later extend the interface without breaking existing call sites. Separate overloads exist only where parameter types differ in behavior, not spelling. One cost to know: a default argument's value is baked into each call site, so changing a published default reaches only callers that recompile — already-built binaries keep passing the old value.
 
 ```cpp
 // Wrong: three spellings, one behavior.
 std::string join(const std::vector<std::string>& parts);
 std::string join(const std::vector<std::string>& parts, const std::string& sep);
 
-// Right: knobs live in an options struct; defaults carry the common case.
-struct JoinOptions { std::string_view sep = ", "; };
+// Right: one knob, one default argument.
+std::string join(std::span<const std::string> parts, std::string_view sep = ", ");
+
+// Right: knobs multiplied — options struct; a new field breaks no call site.
+struct JoinOptions { std::string_view sep = ", "; bool dedupe = false; };
 std::string join(std::span<const std::string> parts, JoinOptions opts = {});
 ```
 
@@ -271,13 +279,15 @@ Capturing states lifetime. Lambdas used locally — including passed to parallel
 
 Never `[=]` inside a member function (`F.54`): it captures `this` by value, so members arrive by reference wearing a value-capture costume. Write `[this]` (or `[i, this]`) explicitly, or `[*this]` for a true snapshot.
 
+`[this]` stays a borrow: it is safe only where the lambda cannot outlive the owner — synchronous call sites, or a queue proven to join before the owner dies.
+
 ```cpp
 class Poller {
 public:
     void schedule(TaskQueue& q) {
         q.push([=] { poll(); });      // Wrong: [=] smuggles this; members arrive by reference
-        q.push([this] { poll(); });   // Right: explicit about the borrowed this
-        q.push([*this] { poll(); });  // Right: true snapshot when the lambda escapes
+        q.push([this] { poll(); });   // Wrong here: queued — borrowed this dangles unless the queue joins before this Poller dies
+        q.push([*this] { poll(); });  // Right: queued — true snapshot; [this] is for synchronous call sites
     }
 private:
     void poll();

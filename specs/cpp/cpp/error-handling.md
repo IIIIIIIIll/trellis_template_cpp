@@ -10,10 +10,12 @@ Every failure path uses exactly one of four mechanisms, picked by the *kind* of 
 
 The core split:
 
-1. **Programmer errors** (violated invariants, impossible states) are bugs. Use `assert`; do not design error paths for them.
+1. **Programmer errors** (violated *internal* invariants, impossible states) are bugs. Use `assert`; do not design error paths for them.
 2. **Expected, recoverable failures** (parse errors, missing config, full queue) are part of the function's contract. Return a status or an expected-like result.
 3. **Rare failures the caller must react to** (allocation failure mid-operation, socket reset) throw exceptions.
 4. **Unrecoverable corruption** terminates. Do not catch it into a "graceful" path.
+
+One refinement keeps the rows honest: misuse by an in-process *public-API caller* throws a domain exception (see the worth-throwing table under Exceptions Policy) — catchable, not an assert, not a status. Asserts answer for the module's internal invariants only.
 
 ---
 
@@ -24,8 +26,10 @@ The core split:
 | Violated internal invariant ("cannot happen") | `assert` (active in debug; gone under `NDEBUG`) | internal lookup table index out of range |
 | Invalid input from *outside* the trust boundary | Status return or expected-style result | malformed user-supplied config value |
 | Anticipated failure the caller routinely handles | Status return or expected-style result | key not found in cache; end-of-input |
-| Rare failure, no local recovery possible, stack unwinding useful | Exception | `std::bad_alloc`, connection dropped mid-request |
+| Rare failure, no local recovery possible, stack unwinding useful | Exception | `std::bad_alloc`; a control-channel drop with no retry path |
 | Object/state corrupted beyond repair | Terminate (default: let it escape) | heap corruption detected by allocator |
+
+The exception row is for failures the caller cannot meaningfully branch on: allocation exhaustion, a control-channel drop with no retry path. Routine I/O failures — timeouts, transient resets on data paths callers already retry — are anticipated failures and default to the status row.
 
 ```cpp
 // Wrong: exceptions for ordinary control flow
@@ -51,7 +55,7 @@ void put(Table& t, Key key, Value v) {
 }
 ```
 
-Never validate external input with `assert`: under `NDEBUG` the check vanishes and malformed input walks straight into memory-unsafe code.
+Never validate external input with `assert`: under `NDEBUG` the check vanishes and malformed input walks straight into memory-unsafe code. Assert expressions must be side-effect free for the same reason — the whole expression vanishes under `NDEBUG`, so `assert(flush_cache())` silently stops flushing in release builds.
 
 Two design-time corollaries keep this table honest. An error-handling strategy cannot be retrofitted onto finished interfaces (`E.1`): fix the assert-versus-status-versus-throw split while signatures are still fluid, before callers hard-code a mechanism. And exceptions carry failures, never ordinary control flow (`E.3`): loop termination and cache misses are normal outcomes, and implementations optimize on exactly that assumption.
 
@@ -100,11 +104,19 @@ using Result = tl::expected<T, E>;
 // Enum-backed error codes need the standard traits hook before the line
 // above compiles: specialize std::is_error_code_enum<ParseErr> and provide
 // an error_category. Keep that wiring beside Result, never at call sites.
+
+// Error construction funnels through make_error: the C++23 swap re-points
+// this one body to std::unexpected, and no call site learns either spelling.
+template <typename E>
+auto make_error(E&& e) {
+    return tl::make_unexpected(std::forward<E>(e));
+}
 ```
 
 ```cpp
-// Usage — identical shape to std::expected, so the C++23 migration is a
-// one-line change in result.h plus deleting the alias
+// Usage — inspection shape identical to std::expected; errors are built by
+// make_error in result.h, so the C++23 migration is a one-file change there
+// plus deleting the alias
 Result<Config, std::error_code> load_config(std::string_view path);
 
 auto cfg = load_config(path);
@@ -114,7 +126,7 @@ if (!cfg) {
 use(cfg.value());
 ```
 
-Migration path: when the toolchain moves to C++23, replace `tl::expected` with `<expected>` and re-point the alias. Call sites do not change. Do **not** hand-roll monadic `.and_then()` chains in C++17 wrappers; keep the wrapper surface minimal so the future swap stays trivial.
+Migration path: when the toolchain moves to C++23, replace `tl::expected` with `<expected>` and re-point the alias. *Inspection* call sites (`has_value()`, `value()`, `error()`, `operator*`) do not change; *error-construction* call sites do — `tl::make_unexpected` becomes `std::unexpected`/`std::unexpect`, and the monadic combinators carry different names. That is exactly why every construction routes through `make_error` in result.h: the difference lives in one function body, and the swap stays a one-file change. Do **not** hand-roll monadic `.and_then()` chains in C++17 wrappers; keep the wrapper surface minimal so the future swap stays trivial.
 
 Deviation from `E.27`: the rule scopes systematic error codes to codebases that cannot throw exceptions; this project adopts them past that premise. Expected-style status results remain the standing mechanism for anticipated failures and the mandatory currency at ABI edges, centralized behind the `Result` alias above so handling stays uniform.
 
@@ -337,7 +349,7 @@ try {
 }
 ```
 
-Log a given failure **once**, at the layer that finally handles it (or at the top-level sink). Annotation layers add context via nested exceptions, not duplicate log lines. Use bare `throw;` to rethrow; `throw_with_nested` (not manual nested-type conventions) to wrap.
+Log a given failure **once**, at the layer that finally handles it (or at the top-level sink). Annotation layers add context via nested exceptions, not duplicate log lines. Use bare `throw;` to rethrow; `throw_with_nested` (not manual nested-type conventions) to wrap. The annotation path only delivers its context if the top-level sink unwinds it: walk the chain with `std::rethrow_if_nested` and print each layer's `what()` — an annotation nobody unwinds is context written and never read.
 
 ## Quality Check
 

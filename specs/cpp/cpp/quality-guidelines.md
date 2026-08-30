@@ -6,7 +6,7 @@
 
 ## Overview
 
-These rules are opinionated defaults chosen for one property above all: **uniformity with the standard library**, since every real-world C++ file interleaves project code with STL calls. The baseline is **C++17**; C++20/23 refinements are noted inline where they change the guidance.
+These rules are opinionated defaults whose sources are honestly mixed: functions and variables keep **std call-site rhythm** — `snake_case`, because every real-world C++ file interleaves project code with STL calls — while types and constants take **Google style** (`PascalCase`, `k` prefix), the vocabulary the standard library does not itself supply. The property that actually binds it together is **consistency beats taste**: one documented mix, applied without exception. The baseline is **C++17**; C++20/23 refinements are noted inline where they change the guidance.
 
 ---
 
@@ -63,7 +63,7 @@ Comments that narrate what the code already says are rot-prone noise (`NL.1`): c
 - Name length proportional to scope (`NL.7`): short conventional names (`i`, `p`) locally, descriptive names for anything visible across functions; a cryptic one-letter global is always wrong.
 - One house style for our code, imported libraries keep theirs (`NL.8`) — the table above is that house style. Reserved identifiers (`__`-prefixed or leading `_X`) stay banned along with everything else the standard reserves.
 - `ALL_CAPS` is reserved for macros (`NL.9`) so a shouting identifier always means text-substitution hazard; constants and scoped-enum values take `k` names per the table, never caps.
-- Deviation from `NL.10`: upstream prefers `underscore_style` names across the board; we adopt snake_case where the table says so (functions, variables) and PascalCase for types — same intent (standard-library rhythm, consistency beats taste) with the split documented here as the difference.
+- Deviation from `NL.10`: upstream prefers `underscore_style` names across the board; we keep snake_case where the table says so (functions, variables — std call-site rhythm) and take PascalCase types and `k` constants from Google style — the mixed lineage named in the Overview, with the split documented here as the difference.
 - Reject easily misread names (`NL.19`) — `oO01lL`, near-twin pairs like `splunk`/`splonk`: screens differ and humans skim. A standing naming-review duty alongside the table.
 - One name per declaration (`NL.21`): `int a, b;` invites declarator-syntax confusion, and splitting costs nothing while reading better.
 - Write `f()`, not `f(void)` (`NL.25`): in C++ the empty parameter list already means no parameters, and the C-compat ceremony adds nothing.
@@ -346,6 +346,20 @@ switch (ev.kind()) {
 
 The same caution applies to throwing custom exception types across module boundaries — see error-handling guidelines: exceptions stay inside one module world.
 
+### Cross-Module Standard Library ABI
+
+The RTTI caution above has a quieter sibling: the standard library itself must be binary-compatible on both sides of a module boundary. On GCC/libstdc++, the dual ABI decides what `std::string` means — `_GLIBCXX_USE_CXX11_ABI` selects between the classic and `__cxx11` layouts, and modules built with different settings will not link, because the mangled names do not match. The full independent-binary caveat lives in [Error Handling](./error-handling.md); this is the same threat model arriving through the standard library instead of your own types. On MSVC the runtime flavor cannot be mixed either: `/MD` vs `/MT` and debug vs release CRT must agree across every module in the process — `_ITERATOR_DEBUG_LEVEL` is what turns a mismatch into a link error.
+
+The detectors are the linker diagnostics themselves: unresolved `std::__cxx11::` symbols, `LNK2038`/`LNK4098` conflict errors — loud, but only at the final link of the combined binary. The review gate is earlier: ABI-relevant compiler flags and prebuilt dependencies (see Third-Party Dependencies below) are decided for the whole module graph, never per target.
+
+---
+
+## Third-Party Dependencies
+
+The standard library is the default supplier (`SL.2`): it ships with the toolchain, is tested as a unit, and keeps every module on one ABI (see the pitfalls above). A third-party dependency is a permanent design decision — vet it before adopting on four axes (`SL.1`): maintenance activity, portability across the supported compilers, license compatibility, and supply-chain provenance. Adopted components are used within their contracts (`SL.4`): no relying on growth schedules, SSO capacities, or other implementation details. Nothing user-defined enters namespace `std` (`SL.3`) — the sanctioned escapes are the few specializations the standard itself blesses; the ODR rules above explain why this one is absolute: a stray addition to `std` poisons every translation unit that includes you, and no tool tells you where.
+
+Review gate: a dependency proposal states what it beats in the standard library and its answers on the four axes; adopting without that note is rejected in review.
+
 ---
 
 ## Enumerations
@@ -365,7 +379,7 @@ Color c = Color::kRed;
 
 Define the operations enumeration users need (`Enum.4`) — a wrapping `operator++` for iteration-like sets, for instance. The required `static_cast` round-trip is accepted idiom, while expressions repeatedly casting back into the enum signal a missing operation. Unnamed enumerations are unrelated integer constants in costume: declare each value as `constexpr` instead (`Enum.6`), which also gives it the right individual type — the constexpr-discipline section below applied.
 
-Leave the underlying type at its default unless necessary (`Enum.7`); specifying it is required for forward-declarable enums and fixed bit width — precisely the ABI-sensitive-header situations flagged under ODR and ABI above. Give enumerators explicit values only when meaning demands it (`Enum.8`): conventional numbering such as months starting at 1, or bit-flag sets. Duplicate values are typos, and hand-written consecutive values are noise. Cross-module kind tags (see the RTTI caution above) follow exactly this shape: scoped enum, `k`-named enumerators.
+Leave the underlying type at its default unless necessary (`Enum.7`); specifying it is required for forward-declarable enums and fixed bit width — precisely the ABI-sensitive-header situations flagged under ODR and ABI above. Give enumerators explicit values only when meaning demands it (`Enum.8`): conventional numbering such as months starting at 1, or bit-flag sets. Duplicate values are typos, and hand-written consecutive values are noise — with one carve-out in the same spirit as those exceptions: enumerators whose integer values cross a module or storage boundary (published headers, serialized or logged forms) pin explicit values and grow only by appending. Inserting an enumerator mid-set silently renumbers the tail, and a stale module still dispatching on the old integers reads the wrong kind; no tool flags this, so it is a standing review gate on kind-tag enum changes. Cross-module kind tags (see the RTTI caution above) follow exactly this shape: scoped enum, `k`-named enumerators.
 
 ---
 

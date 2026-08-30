@@ -232,3 +232,42 @@ rescoped; layer restructured to 11 docs after two scope decisions.
 - Left as-is (developer decision): `P.7` paired with `P.5` for
   compile-vs-runtime checking — P.7 is the runtime half of the same
   discipline.
+
+## Editorial content review (2026-08-30, developer-approved full fix)
+
+- Second pass with a different lens: is the ADVICE sound, beneficial,
+  proportionate, coherent — not citations (those passed 08-25). Six parallel
+  reviewer agents over all 11 docs: 39 findings + 17 gaps; every doc verdict
+  "keep" — no structural rework needed anywhere.
+- Developer decisions: fix all 13 high+medium findings, all 24 low rewords,
+  fill all 17 gaps.
+- Applied via six parallel editors (MemErrFix, QualTestFix, FuncClassFix,
+  TmplConcFix, ExprPerfFix, IdxFix): 56/56 items landed. Six adjustments kept
+  intent under verified facts:
+  - error-handling: the assumed make_error helper did not exist (grep
+    verified) — seeded it in the result.h block so the qualified C++23
+    migration claim is actually true.
+  - templates: aggregate CTAD is C++20 (`__cpp_deduction_guides 201907L`),
+    not a C++17 mode — bullet states C++17 aggregates need hand-written
+    guides; inherited-constructor guides deduce against the base (P2582R1
+    landed C++23).
+  - expressions: shift-UB example tuned to a genuinely-UB shift (`<< 17`,
+    UBSan-confirmed) after the first draft's `<< 16` repro'd as only
+    implementation-defined.
+  - index: vocabulary closure extended to two more "companion guide" usages
+    of the same defect class; merged GSL row's range reference updated.
+  - classes: FileDesc fix extended to copy assignment (dup-before-close
+    ordering) per the same C.42 rule.
+  - performance: false-sharing hand-off names Cache Layout as owner after
+    confirming Concurrency has no coverage of it.
+- Editor compile/runtime verification (g++ -std=c++17): harness + lock_guard
+  forms + median wall compile as documented; ASan demo proves both halves of
+  the rewritten range-for rule (direct call clean, chained shape trips
+  use-after-destruction); UBSan fires on the doc's own shift example.
+- New rule home: quality-guidelines.md "Third-Party Dependencies" (owns
+  SL.1-4); index checklist routes dependency tasks there. Residual ledger
+  30→27 rows (GSL FAQ merge); checklist 11 rows; disposition table 14 rows.
+- Post-edit gates: manifest paths, relative links, footer contract (one
+  Language line + attribution per doc), four-way file-set invariant — ALL
+  PASS. Anchor fragments stripped from the two SL links because the
+  registry's own link checker does not resolve fragments.

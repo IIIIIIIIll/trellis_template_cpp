@@ -15,7 +15,7 @@ Tests exist to pin **observable behavior**. A test suite that is slow, order-dep
 | Framework | Status | Notes |
 |-----------|--------|-------|
 | GoogleTest | Default | Mature, universally known; death tests, value/type-parameterized tests, `gtest_discover_tests` |
-| Catch2 (v3+) | Acceptable | Preferred when a header-only / zero-install dependency model matters more than gmock |
+| Catch2 (v3+) | Acceptable | Preferred when a zero-install dependency model matters more than gmock: v3 is a compiled library — vendoring the amalgamated two-file release keeps installation trivial — while header-only is the v2 model, which trades per-TU compile time for zero build wiring |
 
 One framework per repository — never mix. Choose Catch2 only deliberately and document why in the repo README.
 
@@ -38,6 +38,8 @@ tests/
 Every new test file must be registered with the test runner so the suite discovers it automatically.
 
 A test that exists but is not registered does not exist — nothing ever executes it, and it rots.
+
+Scope of the 1:1 mandate: every production translation unit with **observable behavior** gets a mirrored suite. `main.cpp` glue, generated code, and vendored code are excluded — they carry no project-owned behavior to pin, and a test file for them would violate What NOT to Test, not honor it.
 
 ```cpp
 // Wrong: unregistered "temporary" test living in src/, still there two years later
@@ -62,6 +64,8 @@ Format: `TEST(<Suite>, Test_<Subject>_<Behavior>_<Expectation>)`.
 
 The name must read as a sentence describing the contract, so a red test communicates the bug without opening the file.
 
+Deviation-style caveat on underscores in the `TEST` arguments: GoogleTest documents that underscores there can generate colliding fixture classes — `TEST(Time, Flies_Like_An_Arrow)` and `TEST(Time_Flies, Like_An_Arrow)` both expand to a class named `Time_Flies_Like_An_Arrow` — and may break across gTest versions. The grammar above stays; the mitigation is structural: keep the `<Suite>` argument underscore-free, so an underscore can never blur the suite boundary.
+
 ```cpp
 // Good
 TEST(HttpParser, Test_Parse_TruncatedHeader_ReturnsTruncatedError);
@@ -79,11 +83,13 @@ TEST(HttpParser, HandlesErrors);        // which errors? from what?
 
 | Principle | Meaning here |
 |-----------|--------------|
-| Fast | Whole unit suite finishes in seconds; any test over ~100 ms belongs in an integration tier |
-| Isolated | No ordering dependence, no shared mutable globals; every test runs alone via `--gtest_filter` |
+| Fast | Whole unit suite finishes in seconds; any test over ~100 ms belongs in the integration tier — the budget is declared on the default **ASan + UBSan** run, so the ~2x sanitizer cost is inside it (the plain build is roughly half the cost, which only helps) |
+| Isolated | No ordering dependence, no shared mutable globals; every test runs alone via `--gtest_filter`, and the suite passes `--gtest_shuffle --gtest_repeat=2` (or the framework's equivalent shuffle mode) — passing alone verifies independence, only shuffling exposes order dependence |
 | Repeatable | Same verdict on every machine and run: no wall-clock reads, sleeps, network, or unseeded randomness |
 | Self-validating | Assertions decide pass/fail; a test requiring human inspection of output is not a test |
 | Timely | Written with the change it protects, not scheduled "later" |
+
+**Integration tier.** Anything over the 100 ms gate — process spawns, network or filesystem fixtures, end-to-end runs — goes to a separate integration suite: its own binary or tag, excluded from the fast default pass, so the everyday gate stays in seconds. Same FIRST rules apply; only the run schedule differs.
 
 Determinism mechanics:
 
@@ -144,6 +150,8 @@ EXPECT_EQ(parser.state_, State::kHeaderDone);     // private member poking
 ```
 
 White-box access to privates — `friend class ...Test`, `#define private public`, testing free functions that exist only to serve internals — is forbidden. If a private piece is complex enough to need direct tests, it wants to be extracted behind its own interface and tested through it.
+
+Internal-linkage helpers meet the same wall from the other side: a function in an anonymous namespace (`SF.22`) is invisible outside its translation unit, so it is untestable by construction — and the white-box ban above rules out peeling it open. The reachable path is promotion: logic worth direct testing moves to an internal header or a named-namespace translation unit with its own suite; what stays anonymous is what the public suite already exercises transitively. The linkage side of this trade is the quality guide's [internal-linkage rules](./quality-guidelines.md).
 
 ---
 
@@ -206,10 +214,10 @@ TEST(LibAdapter, Test_Open_MissingFile_MapsToNotFound) {
 
 Before merging test code, confirm:
 
-- [ ] New/changed translation units have a mirrored `<name>.test.cpp` registered in the build
+- [ ] New/changed translation units with observable behavior have a mirrored `<name>.test.cpp` registered in the build (`main.cpp`, generated, and vendored code excluded)
 - [ ] Names follow `Test_<Subject>_<Behavior>_<Expectation>` and read as sentences
 - [ ] Suite passes under ASan + UBSan with `-fno-sanitize-recover=all`
-- [ ] Every test passes alone under `--gtest_filter` (no ordering or shared-state dependence)
+- [ ] Every test passes alone under `--gtest_filter`, and the suite stays green under `--gtest_shuffle --gtest_repeat=2` (or the framework's equivalent shuffle mode)
 - [ ] Time injected, randomness seeded, zero sleeps
 - [ ] Assertions target observable public behavior; no private-member access
 - [ ] Error paths and boundaries covered, not just the happy path
