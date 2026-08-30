@@ -173,11 +173,6 @@ disk == top-level README tree (12 docs; README self-listing expected).
   file-set invariant (cpp README tree/table == index table == top README ==
   disk), zero stale references — ALL PASS. Commits: d8bf444, c31b9c3, 6c4ed5c.
 
-## Review queue remaining
-
-classes-and-hierarchies.md and templates-and-generics.md full passes;
-final read-through of the rebuilt index.
-
 ## classes-and-hierarchies.md verdicts (2026-08-25)
 
 - Citation audit: ~75 C-family anchors checked against upstream titles —
@@ -216,3 +211,24 @@ catalog snapshot (2026-06-14); 15 misattributions or stale anchors fixed
 T.26 x2, T.46-deleted); 2 non-compiling/self-contradictory examples repaired
 (error_code traits, Window ctor order); footer contract enforced then
 rescoped; layer restructured to 11 docs after two scope decisions.
+
+## index.md verdicts (2026-08-30) — post-rebuild read-through; queue empty
+
+- Citation audit against upstream master (2026-08-30 snapshot): all 49 cited
+  IDs exist (incl. `Enum.5`, the only 4-letter family cited); paraphrases
+  verified accurate across the 14 routed-section rows and the residual
+  ledger (A.1/A.2/A.4, CPL.1-3, FAQ.8/9/50/51/52/54/55/59/60, NR.1-7,
+  SL.1-4, Con.1, E.6, ES.20/46, F.16/20/21, I.11, C.21/48/49/67, CP.20,
+  T.1, P.1/5/7/12, R.1/11, SF.9, In.0).
+- The 12 excluded FAQ entries (FAQ.1-7, 10, 53, 56, 57, 58) all fit the
+  written pure-historical carve-out: announcement/authorship history,
+  Markdown trivia, GSL archaeology mooted by bans or std equivalents.
+- FIXED (developer decision, full-coverage option): section table `PER` →
+  `Per` (upstream section ID; guides cite `Per.x`); residual ledger six →
+  nine sections, adding `GSL` (declined; FAQ.50-55 hold the reasoning),
+  `Pro` (profiles → existing Profiles table), `RF` (meta-commentary, no
+  coding practice). "Every major Guidelines section" claim true again
+  against upstream's 23 sections.
+- Left as-is (developer decision): `P.7` paired with `P.5` for
+  compile-vs-runtime checking — P.7 is the runtime half of the same
+  discipline.

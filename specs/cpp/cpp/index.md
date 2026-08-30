@@ -66,7 +66,7 @@ All fourteen major Guidelines sections, each routed to the guide that owns it:
 | `CP` | Adopt | [Concurrency](./concurrency.md) | RAII locks over bare lock/unlock pairs (`CP.20`); shared state minimized; data races are defects |
 | `SF` | Adopt | [Quality Guidelines](./quality-guidelines.md) | Self-contained headers, `#pragma once`, anonymous namespaces confined to `.cpp` files |
 | `NL` | Adapt | [Quality Guidelines](./quality-guidelines.md) | Naming owned here; layout delegated entirely to the committed clang-format configuration |
-| `PER` | Adapt | [Performance](./performance.md) | Measurement first, hot paths only, allocation pressure priced explicitly |
+| `Per` | Adapt | [Performance](./performance.md) | Measurement first, hot paths only, allocation pressure priced explicitly |
 | `Con` | Adopt | [Functions and Interfaces](./functions-and-interfaces.md) | Immutable by default (`Con.1`): `const`/`constexpr` unless mutability justifies itself at review |
 
 ### Recording a Deviation
@@ -88,7 +88,7 @@ std::tuple<std::string_view, int> split_host_port(std::string_view line);
 
 ### Residual Sections Ledger
 
-Six Guidelines sections contain nothing a topic guide can operationalize as coding practice on its own: `A` (library architecture), `CPL` (C interop), `FAQ` (upstream background and GSL history), `NR` (deliberate anti-rules), `SL` (standard-library policy), and `In` (meta-advice). Pure-historical FAQ entries — announcement history, authorship credit, hosting and toolchain trivia, context for GSL-only constructs made moot by outright bans or standard equivalents — are provenance trivia carrying no practice and get no row. Every remaining entry records where its substance lands so no cited rule ID goes unaddressed:
+Nine Guidelines sections contain nothing a topic guide can operationalize as coding practice on its own: `A` (library architecture), `CPL` (C interop), `FAQ` (upstream background and GSL history), `GSL` (guidelines support library), `NR` (deliberate anti-rules), `Pro` (safety profiles), `RF` (meta-commentary on coding standards), `SL` (standard-library policy), and `In` (meta-advice). Pure-historical FAQ entries — announcement history, authorship credit, hosting and toolchain trivia, context for GSL-only constructs made moot by outright bans or standard equivalents — are provenance trivia carrying no practice and get no row. Every remaining entry records where its substance lands so no cited rule ID goes unaddressed:
 
 | Rule | Stance | Disposition |
 |------|--------|-------------|
@@ -107,6 +107,7 @@ Six Guidelines sections contain nothing a topic guide can operationalize as codi
 | `FAQ.55` | Adopt | View taxonomy adopted directly: `std::string_view` for read-only views (C++17), `std::span` for read-write (C++20) |
 | `FAQ.59` | Adopt | `Expects` is contract-syntax placeholder, not `assert`; precondition discipline lives in Error Handling pending language contracts |
 | `FAQ.60` | Adapt | Same story for `Ensures`: Error Handling owns the failure-contract vocabulary, not a GSL macro |
+| `GSL` | Adapt | GSL declined: standard-library equivalents and curated warnings replace GSL constructs; the `FAQ.50`–`FAQ.55` rows above record the reasoning |
 | `NR.1` | Adopt | Anti-rule acknowledged: declare at first use; declarations-on-top manufactures uninitialized variables |
 | `NR.2` | Adopt | Anti-rule acknowledged: early returns concentrate error handling; single-return gymnastics invent extra state |
 | `NR.3` | Adapt | Anti-rule acknowledged with carve-out: exceptions stay default, status returns at module and ABI edges |
@@ -114,10 +115,12 @@ Six Guidelines sections contain nothing a topic guide can operationalize as codi
 | `NR.5` | Adopt | Anti-rule acknowledged: constructors deliver ready-to-use objects; two-phase `Init()` leaks semi-constructed objects |
 | `NR.6` | Adopt | Anti-rule acknowledged: RAII makes goto-exit cleanup ladders obsolete |
 | `NR.7` | Adopt | Anti-rule acknowledged: protected data is hierarchy-scoped global data; keep data private |
+| `Pro` | Adapt | The safety profiles map onto enforcement machinery already running — the Profiles table below records the mapping |
 | `SL.1` | Adopt | Use libraries wherever possible; reinvented wheels lack reviewers, tests, and fixes |
 | `SL.2` | Adopt | Standard library before third-party: most scrutinized, most portable, least supply-chain risk |
 | `SL.3` | Adopt | Nothing user-defined enters namespace `std`; same reasoning as banning forward-declared `std::` types |
 | `SL.4` | Adopt | Umbrella rule: use standard components within their contracts; concrete catchers live in the profile mapping below |
+| `RF` | Adopt | Followed as written: a coding standard should be adapted per organization, and this registry is exactly such an adaptation — meta-commentary carrying no coding practice |
 | `In.0` | Adopt | Meta-entry: understand a rule's implications before applying it — reasoned stances, justified deviations |
 
 ### Adoption Process
