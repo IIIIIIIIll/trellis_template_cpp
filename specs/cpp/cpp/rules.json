@@ -1,0 +1,5078 @@
+[
+  {
+    "id": "CLS-1",
+    "strength": "default",
+    "statement": "Start as a concrete type: copyable, assignable, equality-comparable, no virtuals (C.10).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review; over-design surfaces later as maintenance drag, not as warnings",
+    "upstream": [
+      "C.10",
+      "C.11"
+    ]
+  },
+  {
+    "id": "CLS-2",
+    "strength": "default",
+    "statement": "Related data travels as one type rather than parallel loose parameters — draw(x, y, x2, y2) becomes two Points — and a simple class without virtuals adds no space or time overhead over the loose version (C.1).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review; over-design surfaces later as maintenance drag, not as warnings",
+    "upstream": [
+      "C.1"
+    ]
+  },
+  {
+    "id": "CLS-3",
+    "strength": "default",
+    "statement": "Whatever carries the operations — a class, a namespace of free functions, an abstract base, a concept-constrained template — the requirement is an explicit, stable seam between public interface and private representation, so the representation can change without touching users (C.3).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review; over-design surfaces later as maintenance drag, not as warnings",
+    "upstream": [
+      "C.3"
+    ]
+  },
+  {
+    "id": "CLS-4",
+    "strength": "default",
+    "statement": "struct, public members, in-class initializers (C.2)",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review; over-design surfaces later as maintenance drag, not as warnings",
+    "upstream": [
+      "C.2"
+    ]
+  },
+  {
+    "id": "CLS-5",
+    "strength": "hard",
+    "statement": "class; constructor establishes the invariant",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review; over-design surfaces later as maintenance drag, not as warnings",
+    "upstream": []
+  },
+  {
+    "id": "CLS-6",
+    "strength": "default",
+    "statement": "Drop the facade — plain struct with public data (C.131)",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review; over-design surfaces later as maintenance drag, not as warnings",
+    "upstream": [
+      "C.131"
+    ]
+  },
+  {
+    "id": "CLS-7",
+    "strength": "hard",
+    "statement": "Reach for a hierarchy only when implementations are added by code you never see, across module boundaries you do not compile together.",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review; over-design surfaces later as maintenance drag, not as warnings",
+    "upstream": []
+  },
+  {
+    "id": "CLS-8",
+    "strength": "hard",
+    "statement": "Never define a class or enum and declare a variable of it in the same statement — struct Data { /*...*/ } data{/*...*/}; is how the missing semicolon after the closing brace happens.",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review; over-design surfaces later as maintenance drag, not as warnings",
+    "upstream": [
+      "C.7"
+    ]
+  },
+  {
+    "id": "CLS-9",
+    "strength": "default",
+    "statement": "Any non-public member makes the spelling class, so the keyword itself announces that something is hidden, and the public interface comes first inside the body (C.8).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review; over-design surfaces later as maintenance drag, not as warnings",
+    "upstream": [
+      "C.8"
+    ]
+  },
+  {
+    "id": "CLS-10",
+    "strength": "hard",
+    "statement": "Minimize member exposure: data participating in an invariant is private, reachable only through checked operations; the checked-public / unchecked-protected hook pattern is acceptable.",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review; over-design surfaces later as maintenance drag, not as warnings",
+    "upstream": []
+  },
+  {
+    "id": "CLS-11",
+    "strength": "default",
+    "statement": "Order members public before protected before private (C.9), and keep all non-const data members at one access level — invariant-free members go public (the type is really a struct), invariant-bearing members go private or const; debug instrumentation is the acknowledged mixed case (C.134).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review; over-design surfaces later as maintenance drag, not as warnings",
+    "upstream": [
+      "C.9",
+      "C.134"
+    ]
+  },
+  {
+    "id": "CLS-12",
+    "strength": "default",
+    "statement": "Accessors earn membership by maintaining invariants or converting representations, never as syntax-only field wrappers.",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review; over-design surfaces later as maintenance drag, not as warnings",
+    "upstream": []
+  },
+  {
+    "id": "CLS-13",
+    "strength": "hard",
+    "statement": "A class with an invariant gets a constructor whose job is establishing it — Ensures() states the invariant cleanly.",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "CLS-14",
+    "strength": "default",
+    "statement": "Convenience constructors on invariant-free types remain fine, and brace-init lists retire many redundant ones (C.40).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.40"
+    ]
+  },
+  {
+    "id": "CLS-15",
+    "strength": "hard",
+    "statement": "Every constructor delivers a fully initialized, usable object: no init()-before-use protocol, because compilers do not read comments.",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "CLS-16",
+    "strength": "hard",
+    "statement": "Each member reaches initialized state explicitly, through delegation, or through a default member initializer — constructor-acquires/destructor-releases is RAII itself (C.41).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.41"
+    ]
+  },
+  {
+    "id": "CLS-17",
+    "strength": "hard",
+    "statement": "A constructor that cannot build a valid object throws; there is no half-built object waiting behind an is_valid() flag users will forget (C.42).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.42"
+    ]
+  },
+  {
+    "id": "CLS-18",
+    "strength": "default",
+    "statement": "Deviation from C.43: copyable types complete the semiregular set with a default constructor — vector<Date>(1000) needs one — but only where a meaningful empty state exists.",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.43"
+    ]
+  },
+  {
+    "id": "CLS-19",
+    "strength": "default",
+    "statement": "Prefer default constructors that neither throw nor allocate (C.44): an empty {nullptr, nullptr, nullptr} state is cheap to establish, trivial to restore after errors, and keeps arrays of the type inexpensive.",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.44"
+    ]
+  },
+  {
+    "id": "CLS-20",
+    "strength": "default",
+    "statement": "Do not write a default constructor that only assigns constants to members — put the constants in default member initializers and let the compiler generate the function (C.45).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.45"
+    ]
+  },
+  {
+    "id": "CLS-21",
+    "strength": "default",
+    "statement": "Common constructor actions — validation especially — live once in the most complete constructor, and the others delegate rather than retype it and drift (C.51).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.51"
+    ]
+  },
+  {
+    "id": "CLS-22",
+    "strength": "hard",
+    "statement": "using Rec::Rec; imports constructors into a derived class adding no data of its own, instead of reimplementing tricky ones — but every derived member still needs an initializer, or the inherited constructor silently leaves it unconstructed (C.52).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.52"
+    ]
+  },
+  {
+    "id": "CLS-23",
+    "strength": "default",
+    "statement": "Virtual behavior during construction moves behind a factory: a protected-token constructor keeps imperfectly built objects from escaping while a static create() runs post_initialize(), where virtual dispatch is safe.",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.50"
+    ]
+  },
+  {
+    "id": "CLS-24",
+    "strength": "hard",
+    "statement": "The same lifecycle logic bans virtual calls inside constructors and destructors: dispatch follows the type constructed so far, so the derived override never fires, and calling a pure virtual there is undefined behavior.",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.82"
+    ]
+  },
+  {
+    "id": "CLS-25",
+    "strength": "hard",
+    "statement": "A type managing no resources by hand declares none of the five special members (C.21 — the stance its rationale calls the Rule of Zero).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "clang-tidy `cppcoreguidelines-special-member-functions`; review for hand-written member-wise copies",
+    "upstream": [
+      "C.21"
+    ]
+  },
+  {
+    "id": "CLS-26",
+    "strength": "hard",
+    "statement": "If you can avoid defining the default operations, avoid them (C.20) — the analyzer-detectable smell is a hand-written (pointer, size) pair plus a deleting destructor begging to become a container.",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "clang-tidy `cppcoreguidelines-special-member-functions`; review for hand-written member-wise copies",
+    "upstream": [
+      "C.20"
+    ]
+  },
+  {
+    "id": "CLS-27",
+    "strength": "hard",
+    "statement": "When a special member must be written, remember they are a matched set: copy construction that deep-copies while assignment shallow-copies surprises every user (C.22).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "clang-tidy `cppcoreguidelines-special-member-functions`; review for hand-written member-wise copies",
+    "upstream": [
+      "C.22"
+    ]
+  },
+  {
+    "id": "CLS-28",
+    "strength": "hard",
+    "statement": "Two innocent-looking member declarations quietly break the generated set.",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "clang-tidy `cppcoreguidelines-special-member-functions`; review for hand-written member-wise copies",
+    "upstream": [
+      "C.12"
+    ]
+  },
+  {
+    "id": "CLS-29",
+    "strength": "hard",
+    "statement": "A member that uses another member is declared after it: initialization follows declaration order and destruction reverses it, so users would touch the dependency outside its lifetime; the same discipline joins asynchronous work before the data it accesses dies (C.13).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "clang-tidy `cppcoreguidelines-special-member-functions`; review for hand-written member-wise copies",
+    "upstream": [
+      "C.13"
+    ]
+  },
+  {
+    "id": "CLS-30",
+    "strength": "hard",
+    "statement": "Managing a raw resource directly — descriptor, handle, heap block outside a smart pointer — means defining all five or deleting them explicitly (C.21).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "ASan/LSan expose missing destructors and double closes; clang-tidy special-member checks flag partial fives",
+    "upstream": [
+      "C.21",
+      "C.42"
+    ]
+  },
+  {
+    "id": "CLS-31",
+    "strength": "hard",
+    "statement": "Once resources arrive, the destructor releases everything acquired, error paths included (C.31).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "ASan/LSan expose missing destructors and double closes; clang-tidy special-member checks flag partial fives",
+    "upstream": [
+      "C.31"
+    ]
+  },
+  {
+    "id": "CLS-32",
+    "strength": "hard",
+    "statement": "A member owning through a raw pointer forces that destructor — and defining one obligates deciding all five operations, or the generated copy double-deletes (C.33).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "ASan/LSan expose missing destructors and double closes; clang-tidy special-member checks flag partial fives",
+    "upstream": [
+      "C.33"
+    ]
+  },
+  {
+    "id": "CLS-33",
+    "strength": "default",
+    "statement": "Destructors are implicitly noexcept only when every member's destructor is, so one throwing member poisons the whole chain — declare noexcept explicitly to freeze the contract against future members.",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "ASan/LSan expose missing destructors and double closes; clang-tidy special-member checks flag partial fives",
+    "upstream": [
+      "C.37",
+      "C.32",
+      "C.149",
+      "C.150",
+      "C.151"
+    ]
+  },
+  {
+    "id": "CLS-34",
+    "strength": "default",
+    "statement": "Want generated behavior but must state it (out-of-line destructor, restored moves)?",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "clang-tidy `cppcoreguidelines-special-member-functions`; `-Wdeprecated-copy` for half-defined cases",
+    "upstream": [
+      "C.80"
+    ]
+  },
+  {
+    "id": "CLS-35",
+    "strength": "default",
+    "statement": "Want behavior not to exist?",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "clang-tidy `cppcoreguidelines-special-member-functions`; `-Wdeprecated-copy` for half-defined cases",
+    "upstream": [
+      "C.81"
+    ]
+  },
+  {
+    "id": "CLS-36",
+    "strength": "hard",
+    "statement": "The rule is symmetric (C.21): touching any special member means deciding all five.",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "clang-tidy `cppcoreguidelines-special-member-functions`; `-Wdeprecated-copy` for half-defined cases",
+    "upstream": [
+      "C.21"
+    ]
+  },
+  {
+    "id": "CLS-37",
+    "strength": "default",
+    "statement": "Copy assignment is non-virtual, takes const&, returns T& for chaining; the copy-and-swap shape provides the strong guarantee and ignores self-assignment for free.",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "CLS-38",
+    "strength": "hard",
+    "statement": "If hierarchy assignment truly beckons, name it assign() — a virtual operator= is dragons (C.60).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.60"
+    ]
+  },
+  {
+    "id": "CLS-39",
+    "strength": "hard",
+    "statement": "A copy operation should copy: after x = y, x == y.",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.61"
+    ]
+  },
+  {
+    "id": "CLS-40",
+    "strength": "hard",
+    "statement": "Self-assignment must not change the value — member-wise assignment of well-behaved members makes the this == &a guard unnecessary, and the branch-predictor economics favor handling the million-to-one case correctly by construction (C.62).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.62"
+    ]
+  },
+  {
+    "id": "CLS-41",
+    "strength": "default",
+    "statement": "Move assignment mirrors copy assignment: non-virtual, parameter by &&, return T&; base and member move assignments run implicitly or explicitly (C.63).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.63"
+    ]
+  },
+  {
+    "id": "CLS-42",
+    "strength": "hard",
+    "statement": "Self-move is rare but reachable (std::swap(a, a)), so move assignment must leave the object valid; guaranteeing the value is literally unchanged takes the guard test, while null-out-then-delete-then-restore achieves safety without one.",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.65"
+    ]
+  },
+  {
+    "id": "CLS-43",
+    "strength": "hard",
+    "statement": "Initialization and copying happen through constructors and assignment operators, never memset or memcpy: both overwrite vtables, and memcpy of a non-trivially-copyable type is undefined behavior (C.90).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.90"
+    ]
+  },
+  {
+    "id": "CLS-44",
+    "strength": "default",
+    "statement": "Value-like types provide a member noexcept swap plus a free two-argument overload in the same namespace — the machinery behind copy-assign-via-swap and guaranteed commit points (C.83).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.83"
+    ]
+  },
+  {
+    "id": "CLS-45",
+    "strength": "hard",
+    "statement": "Swap must not fail: element-copying implementations both crawl and break standard-library algorithms that assume element swap succeeds (C.84), so swap is declared noexcept — unwinding out of a swap is a design error the program should not survive quietly (C.85).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.84",
+      "C.85"
+    ]
+  },
+  {
+    "id": "CLS-46",
+    "strength": "default",
+    "statement": "Comparisons behave like built-ins.",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.86"
+    ]
+  },
+  {
+    "id": "CLS-47",
+    "strength": "hard",
+    "statement": "Beware == on base classes: a virtual operator== sees derived state or not depending on the static operand type, and naive fixes do not scale — flag virtual comparison operators on sight (C.87).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.87"
+    ]
+  },
+  {
+    "id": "CLS-48",
+    "strength": "default",
+    "statement": "Hash specializations are noexcept, because hashed-container users never expect access to throw; xor-combining standard-library hashes beats cleverness for non-specialists (C.89).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.89"
+    ]
+  },
+  {
+    "id": "CLS-49",
+    "strength": "default",
+    "statement": "Ordering: C++17 has no defaulted comparisons (<=> arrives in C++20 and will replace this spelling) — a regular value type writes operator< memberwise, std::tie(x_, y_) < std::tie(o.x_, o.y_) giving lexicographic order, and derives >, <=, >= from == and <, ideally once in a CRTP ordering base.",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "CLS-50",
+    "strength": "default",
+    "statement": "Deviation from C.100: custom containers follow STL conventions — conventional constructors, assignments, iterators, semantics — though partial conformance is respectable.",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.100"
+    ]
+  },
+  {
+    "id": "CLS-51",
+    "strength": "default",
+    "statement": "Value semantics — Regular in the concept sense, a copy comparing equal to its original — so containers reason like int (C.101).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.101"
+    ]
+  },
+  {
+    "id": "CLS-52",
+    "strength": "default",
+    "statement": "Move operations, because large immovable types tempt pointer-passing and its resource bugs, and callers reasonably assume returning a container by value is cheap (C.102).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.102"
+    ]
+  },
+  {
+    "id": "CLS-53",
+    "strength": "default",
+    "statement": "An initializer-list constructor, so {1, 3, -1, 7} builds element sets as expected (C.103).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.103"
+    ]
+  },
+  {
+    "id": "CLS-54",
+    "strength": "default",
+    "statement": "A default constructor yielding empty, completing Regularity — vector<Sorted_seq<string>> vs(100) produces a hundred usable elements (C.104).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.104"
+    ]
+  },
+  {
+    "id": "CLS-55",
+    "strength": "default",
+    "statement": "A resource handle with pointer semantics provides * and ->; familiarity is the entire argument (C.109).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.109"
+    ]
+  },
+  {
+    "id": "CLS-56",
+    "strength": "hard",
+    "statement": "Deleting a derived object through a base pointer whose destructor is non-virtual is undefined behavior — the derived destructor never runs (C.35, C.127).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "clang-tidy `cppcoreguidelines-virtual-class-destructor`; ASan reports leaked derived subobjects",
+    "upstream": [
+      "C.35",
+      "C.127"
+    ]
+  },
+  {
+    "id": "CLS-57",
+    "strength": "hard",
+    "statement": "public virtual; =delete (C.67); protected defaulted when serving a clone() hierarchy",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "clang-tidy `cppcoreguidelines-virtual-class-destructor`; ASan reports leaked derived subobjects",
+    "upstream": [
+      "C.67"
+    ]
+  },
+  {
+    "id": "CLS-58",
+    "strength": "hard",
+    "statement": "protected, non-virtual; =delete",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "clang-tidy `cppcoreguidelines-virtual-class-destructor`; ASan reports leaked derived subobjects",
+    "upstream": []
+  },
+  {
+    "id": "CLS-59",
+    "strength": "default",
+    "statement": "Spelling: overrides say override; leaves sealing the hierarchy say final; a declaration carries exactly one of virtual/override/final, never two (C.128).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "clang-tidy `cppcoreguidelines-virtual-class-destructor`; ASan reports leaked derived subobjects",
+    "upstream": [
+      "C.128"
+    ]
+  },
+  {
+    "id": "CLS-60",
+    "strength": "hard",
+    "statement": "Virtual functions never declare default arguments — defaults bind statically while dispatch is dynamic, so callers disagree depending on static type (C.140).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "clang-tidy `cppcoreguidelines-virtual-class-destructor`; ASan reports leaked derived subobjects",
+    "upstream": [
+      "C.140"
+    ]
+  },
+  {
+    "id": "CLS-61",
+    "strength": "hard",
+    "statement": "Name lookup hides too: a derived member hides its bases' entire same-named overload sets — d.f(2.3) quietly calls f(int) — so using B::f; restores them, for virtual and non-virtual alike; C++17's variadic using Ts::operator()...",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "clang-tidy `cppcoreguidelines-virtual-class-destructor`; ASan reports leaked derived subobjects",
+    "upstream": [
+      "C.138"
+    ]
+  },
+  {
+    "id": "CLS-62",
+    "strength": "hard",
+    "statement": "Inheritance models is-a over an open set (C.120).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.120"
+    ]
+  },
+  {
+    "id": "CLS-63",
+    "strength": "default",
+    "statement": "Implementation reuse is composition's job: a member function earns membership only through direct access to the representation (C.4), and helpers live beside the type in its namespace (C.5).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.4",
+      "C.5"
+    ]
+  },
+  {
+    "id": "CLS-64",
+    "strength": "default",
+    "statement": "Flatten into free functions",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "CLS-65",
+    "strength": "default",
+    "statement": "Delete it",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "CLS-66",
+    "strength": "default",
+    "statement": "De-virtualize (C.132)",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.132"
+    ]
+  },
+  {
+    "id": "CLS-67",
+    "strength": "default",
+    "statement": "Genuine interface — keep",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "CLS-68",
+    "strength": "default",
+    "statement": "Chains beyond roughly three levels without interface users at the top are refactoring backlog, not architecture.",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "CLS-69",
+    "strength": "hard",
+    "statement": "Multiple inheritance enters only as multiple distinct interfaces — breaking a monolithic API into aspects, the way iostream unions istream and ostream — typically with abstract bases (C.135).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.135"
+    ]
+  },
+  {
+    "id": "CLS-70",
+    "strength": "default",
+    "statement": "Deviation from C.136: state-carrying implementation mixins (enable_shared_from_this, intrusive hooks) pass review only where the mixin injects customization points or erases forwarding boilerplate; otherwise Composition Before Inheritance governs.",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.136"
+    ]
+  },
+  {
+    "id": "CLS-71",
+    "strength": "default",
+    "statement": "Deviation from C.137: a virtual base separating shared implementation data (virtual protected Utility) from an interface root does keep shared state out of an overly general god-base — but upstream concedes hierarchy linearization is often better, and locally, reaching for a virtual base at all starts the flattening conversation.",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.137"
+    ]
+  },
+  {
+    "id": "CLS-72",
+    "strength": "hard",
+    "statement": "An interface is pure protocol: no data members, no constructor logic, virtual destructor, deleted copies (C.122).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.122",
+      "C.121"
+    ]
+  },
+  {
+    "id": "CLS-73",
+    "strength": "default",
+    "statement": "Abstract classes typically skip user-written constructors — no data exists to initialize.",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.126"
+    ]
+  },
+  {
+    "id": "CLS-74",
+    "strength": "hard",
+    "statement": "Hold and pass polymorphic objects by pointer or reference — by value slices (C.145; enforced by the signature tables in Functions and Interfaces).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "clang-tidy `cppcoreguidelines-slicing`",
+    "upstream": [
+      "C.145"
+    ]
+  },
+  {
+    "id": "CLS-75",
+    "strength": "hard",
+    "statement": "Never point a base pointer into an array of derived objects; element stride differs (C.152).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.152"
+    ]
+  },
+  {
+    "id": "CLS-76",
+    "strength": "hard",
+    "statement": "Prefer virtual dispatch; dynamic_cast only where navigation between siblings is genuinely unavoidable (C.146).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.146",
+      "C.147",
+      "C.148"
+    ]
+  },
+  {
+    "id": "CLS-77",
+    "strength": "hard",
+    "statement": "Copying goes through a virtual clone() returning std::unique_ptr<Codec>, never through base-reference copy construction (C.130): covariant smart pointers are impossible, so return unique_ptr<Base> uniformly; copy/move demote to protected defaulted helpers serving clone implementations, while public copy construction and assignment stay suppressed.",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.130"
+    ]
+  },
+  {
+    "id": "CLS-78",
+    "strength": "default",
+    "statement": "Deviation from C.153: prefer the virtual call, which lands on the most-derived override where a cast may stop at an intermediate class and rot as the hierarchy evolves.",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.153"
+    ]
+  },
+  {
+    "id": "CLS-79",
+    "strength": "hard",
+    "statement": "Protected data members give every subclass — present and future — a vote on the base invariant (C.133).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.133"
+    ]
+  },
+  {
+    "id": "CLS-80",
+    "strength": "default",
+    "statement": "Seal classes whose hierarchy is deliberately closed (C.128): reviewers get warned before extending what was designed shut, and the compiler may de-virtualize hot calls.",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.128"
+    ]
+  },
+  {
+    "id": "CLS-81",
+    "strength": "default",
+    "statement": "Do not sprinkle final on documented extension points — seal what would break invariants, leave open contracts open (C.139).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.139"
+    ]
+  },
+  {
+    "id": "CLS-82",
+    "strength": "default",
+    "statement": "Define operators primarily to mimic conventional usage — + adds, copies compare equal — because invented semantics tax every reader; non-member operators are friends or live with their operands (C.160).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.160"
+    ]
+  },
+  {
+    "id": "CLS-83",
+    "strength": "default",
+    "statement": "Use an operator only for its conventional meaning: operator<< composes with stream machinery where cout_my_class() does not, and comparisons, arithmetic, access, and assignment all carry strong conventions — honor them or invent a named function (C.167).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.167"
+    ]
+  },
+  {
+    "id": "CLS-84",
+    "strength": "hard",
+    "statement": "Symmetric operators are therefore non-members: a member operator== converts arguments on one side only, making a == b and b == a subtly differ (C.161) — the same symmetry and noexcept requirements as C.86 above.",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.161",
+      "C.86"
+    ]
+  },
+  {
+    "id": "CLS-85",
+    "strength": "default",
+    "statement": "Overload for roughly equivalent operations — one print name across argument types instead of print_int/print_string, since encoded type names add verbosity and inhibit generic code (C.162).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.162"
+    ]
+  },
+  {
+    "id": "CLS-86",
+    "strength": "default",
+    "statement": "Overload *only* for roughly equivalent operations: open(Gate&) and open(const char*, const char*) collide confusingly despite the type system's partial rescue; watch popular names such as open, move, +, == (C.163).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.163"
+    ]
+  },
+  {
+    "id": "CLS-87",
+    "strength": "hard",
+    "statement": "Avoid implicit conversion operators: surprises range from unintended calls to dangling pointers into destroyed temporaries.",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.164"
+    ]
+  },
+  {
+    "id": "CLS-88",
+    "strength": "default",
+    "statement": "Find customization points through using: using std::swap; before an unqualified call picks up N::swap when present and falls back to std::swap — precisely how generic code discovers the free swap overloads above (C.165).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.165"
+    ]
+  },
+  {
+    "id": "CLS-89",
+    "strength": "default",
+    "statement": "Define overloaded operators in the namespace of their operands so ADL finds them and no divergent second meaning appears elsewhere; binary operators spanning two namespaces are best avoided entirely — the same principle as helpers living beside their class (C.168).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.168"
+    ]
+  },
+  {
+    "id": "CLS-90",
+    "strength": "hard",
+    "statement": "Overload unary & only inside a coherent smart-pointer/reference system whose ->, *, and [] agree — .",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.166"
+    ]
+  },
+  {
+    "id": "CLS-91",
+    "strength": "default",
+    "statement": "Lambdas cannot be overloaded — two same-named variables are an error — so a callable needing overload-style dispatch is written as a generic (auto) lambda; the compiler polices this one (C.170).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.170"
+    ]
+  },
+  {
+    "id": "CLS-92",
+    "strength": "default",
+    "statement": "Deviation from C.180: unions save memory when several members are never live simultaneously — short-string optimizations are the classic use.",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.180"
+    ]
+  },
+  {
+    "id": "CLS-93",
+    "strength": "hard",
+    "statement": "Avoid naked unions: without a tag tracking which member is live, reading the wrong member is undefined behavior printing plausible garbage — an invisible type error.",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.181"
+    ]
+  },
+  {
+    "id": "CLS-94",
+    "strength": "default",
+    "statement": "Implement tagged unions as tag-plus-anonymous-union pairs; the explicit destroy/placement-new choreography for non-trivial members is elaborate enough that std::variant exists to spare you writing it (C.182).",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.182"
+    ]
+  },
+  {
+    "id": "CLS-95",
+    "strength": "hard",
+    "statement": "Unions never serve type punning: reading a member other than the stored one is undefined behavior.",
+    "doc": "classes-and-hierarchies.md",
+    "detector": "review",
+    "upstream": [
+      "C.183"
+    ]
+  },
+  {
+    "id": "CONC-1",
+    "strength": "hard",
+    "statement": "Do not share mutable state across threads at all (CP.3).",
+    "doc": "concurrency.md",
+    "detector": "review",
+    "upstream": [
+      "CP.3"
+    ]
+  },
+  {
+    "id": "CONC-2",
+    "strength": "hard",
+    "statement": "Share immutable data freely — immutability needs no synchronization.",
+    "doc": "concurrency.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "CONC-3",
+    "strength": "hard",
+    "statement": "Communicate instead of sharing: move ownership through channels, queues, futures.",
+    "doc": "concurrency.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "CONC-4",
+    "strength": "hard",
+    "statement": "Where sharing survives, guard every access with a mutex co-designed with its data (CP.50).",
+    "doc": "concurrency.md",
+    "detector": "review",
+    "upstream": [
+      "CP.50"
+    ]
+  },
+  {
+    "id": "CONC-5",
+    "strength": "hard",
+    "statement": "Atomics for narrow, single-variable cases only.",
+    "doc": "concurrency.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "CONC-6",
+    "strength": "hard",
+    "statement": "Mutable data reachable from two threads without a synchronization mechanism is a defect regardless of observed behavior.",
+    "doc": "concurrency.md",
+    "detector": "TSan reports the race when both accesses actually execute under a ThreadSanitizer build — see the gate below. Nothing catches a race whose interleaving the test run happens never to trigger, which is why the design rule comes first",
+    "upstream": []
+  },
+  {
+    "id": "CONC-7",
+    "strength": "default",
+    "statement": "Prefer making objects immutable over making them synchronized: const-first APIs keep the concurrency story out of most types entirely (constants-and-immutability defaults: immutable by default, const members by default, const& parameters by default — Con.1, Con.2, Con.3; recompute-at-compile-time where possible, Con.5).",
+    "doc": "concurrency.md",
+    "detector": "TSan reports the race when both accesses actually execute under a ThreadSanitizer build — see the gate below. Nothing catches a race whose interleaving the test run happens never to trigger, which is why the design rule comes first",
+    "upstream": [
+      "Con.1",
+      "Con.2",
+      "Con.3",
+      "Con.5"
+    ]
+  },
+  {
+    "id": "CONC-8",
+    "strength": "default",
+    "statement": "Refactoring to remove sharing beats refactoring to protect it.",
+    "doc": "concurrency.md",
+    "detector": "TSan reports the race when both accesses actually execute under a ThreadSanitizer build — see the gate below. Nothing catches a race whose interleaving the test run happens never to trigger, which is why the design rule comes first",
+    "upstream": []
+  },
+  {
+    "id": "CONC-9",
+    "strength": "hard",
+    "statement": "Ownership crossing unrelated thread lifetimes goes through shared_ptr (CP.32) — the only safe deletion story; static objects, never-freed objects, and owner-outlives-sharer arrangements are exempt.",
+    "doc": "concurrency.md",
+    "detector": "TSan reports the race when both accesses actually execute under a ThreadSanitizer build — see the gate below. Nothing catches a race whose interleaving the test run happens never to trigger, which is why the design rule comes first",
+    "upstream": [
+      "CP.32"
+    ]
+  },
+  {
+    "id": "CONC-10",
+    "strength": "hard",
+    "statement": "A running thread is a resource like a file descriptor: someone must own it and wait for its completion exactly once.",
+    "doc": "concurrency.md",
+    "detector": "review for `detach()` and unjoined `std::thread`; TSan flags races caused by threads outliving their data",
+    "upstream": []
+  },
+  {
+    "id": "CONC-11",
+    "strength": "hard",
+    "statement": "Quarantined; Wrap immediately in an owning RAII adapter",
+    "doc": "concurrency.md",
+    "detector": "review for `detach()` and unjoined `std::thread`; TSan flags races caused by threads outliving their data",
+    "upstream": []
+  },
+  {
+    "id": "CONC-12",
+    "strength": "hard",
+    "statement": "The guideline phrasing that joins should behave like destructors — automatic, unconditional, exception-safe (CP.23) — and the preference for a joining thread abstraction over bare std::thread (CP.25) land on std::jthread in C++20 code.",
+    "doc": "concurrency.md",
+    "detector": "review for `detach()` and unjoined `std::thread`; TSan flags races caused by threads outliving their data",
+    "upstream": [
+      "CP.23",
+      "CP.25"
+    ]
+  },
+  {
+    "id": "CONC-13",
+    "strength": "hard",
+    "statement": "Never detach (CP.26).",
+    "doc": "concurrency.md",
+    "detector": "review for `detach()` and unjoined `std::thread`; TSan flags races caused by threads outliving their data",
+    "upstream": [
+      "CP.26"
+    ]
+  },
+  {
+    "id": "CONC-14",
+    "strength": "hard",
+    "statement": "Think of a thread as a global container (CP.24): anything reachable from it must provably outlive every possible use, and a thread that might detach is assumed to outlive its constructing scope — including racing static-object teardown at program exit.",
+    "doc": "concurrency.md",
+    "detector": "review for `detach()` and unjoined `std::thread`; TSan flags races caused by threads outliving their data",
+    "upstream": [
+      "CP.24"
+    ]
+  },
+  {
+    "id": "CONC-15",
+    "strength": "hard",
+    "statement": "On C++17, wrap std::thread in a small joining-thread class whose destructor calls join() unless already joined; do not sprinkle join() calls through control flow — the early-return branch is how terminates happen.",
+    "doc": "concurrency.md",
+    "detector": "review for `detach()` and unjoined `std::thread`; TSan flags races caused by threads outliving their data",
+    "upstream": []
+  },
+  {
+    "id": "CONC-16",
+    "strength": "hard",
+    "statement": "Waiting for a thread's result means join() (or a future), not polling a flag.",
+    "doc": "concurrency.md",
+    "detector": "review for `detach()` and unjoined `std::thread`; TSan flags races caused by threads outliving their data",
+    "upstream": []
+  },
+  {
+    "id": "CONC-17",
+    "strength": "hard",
+    "statement": "Locking is RAII-only.",
+    "doc": "concurrency.md",
+    "detector": "TSan for the resulting races; deadlock detection tools and code review for lock-order issues. clang-tidy's concurrency checks catch some unnamed-guard cases; the rest are review items",
+    "upstream": [
+      "CP.20"
+    ]
+  },
+  {
+    "id": "CONC-18",
+    "strength": "hard",
+    "statement": "Define each mutex next to the data it guards, with names that pair visibly (state_ / stateMutex_) (CP.50).",
+    "doc": "concurrency.md",
+    "detector": "TSan for the resulting races; deadlock detection tools and code review for lock-order issues. clang-tidy's concurrency checks catch some unnamed-guard cases; the rest are review items",
+    "upstream": [
+      "CP.50"
+    ]
+  },
+  {
+    "id": "CONC-19",
+    "strength": "hard",
+    "statement": "Name every guard (CP.44).",
+    "doc": "concurrency.md",
+    "detector": "TSan for the resulting races; deadlock detection tools and code review for lock-order issues. clang-tidy's concurrency checks catch some unnamed-guard cases; the rest are review items",
+    "upstream": [
+      "CP.44"
+    ]
+  },
+  {
+    "id": "CONC-20",
+    "strength": "default",
+    "statement": "Hold locks for the shortest region that keeps the invariant (CP.43): copy what you need out under the lock, then work on the copy.",
+    "doc": "concurrency.md",
+    "detector": "TSan for the resulting races; deadlock detection tools and code review for lock-order issues. clang-tidy's concurrency checks catch some unnamed-guard cases; the rest are review items",
+    "upstream": [
+      "CP.43"
+    ]
+  },
+  {
+    "id": "CONC-21",
+    "strength": "hard",
+    "statement": "Never call unknown code while holding a lock (CP.22) — callbacks, virtual functions on overridable interfaces, std::function parameters, anything that can re-enter.",
+    "doc": "concurrency.md",
+    "detector": "TSan for the resulting races; deadlock detection tools and code review for lock-order issues. clang-tidy's concurrency checks catch some unnamed-guard cases; the rest are review items",
+    "upstream": [
+      "CP.22"
+    ]
+  },
+  {
+    "id": "CONC-22",
+    "strength": "hard",
+    "statement": "Wait on a condition variable only inside a predicate loop (CP.42); spurious wakeups are guaranteed, not theoretical.",
+    "doc": "concurrency.md",
+    "detector": "TSan for the resulting races; deadlock detection tools and code review for lock-order issues. clang-tidy's concurrency checks catch some unnamed-guard cases; the rest are review items",
+    "upstream": [
+      "CP.42"
+    ]
+  },
+  {
+    "id": "CONC-23",
+    "strength": "hard",
+    "statement": "Never write a capturing lambda that is a coroutine (CP.51): the captures die with the closure scope while resumption after the first suspension reads them — use-after-free even for shared_ptr and copyable captures.",
+    "doc": "concurrency.md",
+    "detector": "review — no automated detector for the constructs themselves; TSan catches the resulting races when the path executes under the gate",
+    "upstream": [
+      "CP.51"
+    ]
+  },
+  {
+    "id": "CONC-24",
+    "strength": "hard",
+    "statement": "Never hold a lock across a suspension point (CP.52): resumption may want the held lock (self-deadlock), may land on a different thread (undefined behavior), and if the coroutine is destroyed while suspended, the frame's guard destructor runs on whichever thread does the destroying — cross-thread unlock again — all while the held lock serializes everyone else for the suspension's duration.",
+    "doc": "concurrency.md",
+    "detector": "review — no automated detector for the constructs themselves; TSan catches the resulting races when the path executes under the gate",
+    "upstream": [
+      "CP.52"
+    ]
+  },
+  {
+    "id": "CONC-25",
+    "strength": "hard",
+    "statement": "Coroutine parameters pass by value (CP.53): reference parameters dangle from the first suspension onward, and some coroutine shapes suspend before their first line runs.",
+    "doc": "concurrency.md",
+    "detector": "review — no automated detector for the constructs themselves; TSan catches the resulting races when the path executes under the gate",
+    "upstream": [
+      "CP.53"
+    ]
+  },
+  {
+    "id": "CONC-26",
+    "strength": "hard",
+    "statement": "volatile is not synchronization (CP.8).",
+    "doc": "concurrency.md",
+    "detector": "TSan for the racy cases; review for `volatile` used near threading and for any new `memory_order_` spelling beyond relaxed-with-comment",
+    "upstream": [
+      "CP.8",
+      "CP.200"
+    ]
+  },
+  {
+    "id": "CONC-27",
+    "strength": "hard",
+    "statement": "Default to sequential-consistency ordering.",
+    "doc": "concurrency.md",
+    "detector": "TSan for the racy cases; review for `volatile` used near threading and for any new `memory_order_` spelling beyond relaxed-with-comment",
+    "upstream": []
+  },
+  {
+    "id": "CONC-28",
+    "strength": "hard",
+    "statement": "Two variables whose relationship matters (a buffer pointer plus its length, a state plus a payload) need a mutex, a sequenced publication protocol, or a single larger atomic — never two independent atomic members.",
+    "doc": "concurrency.md",
+    "detector": "TSan for the racy cases; review for `volatile` used near threading and for any new `memory_order_` spelling beyond relaxed-with-comment",
+    "upstream": []
+  },
+  {
+    "id": "CONC-29",
+    "strength": "hard",
+    "statement": "shared_ptr's atomic refcounts are not atomic pointer access: concurrent reads and writes of a shared shared_ptr member race even when every pointee is immutable.",
+    "doc": "concurrency.md",
+    "detector": "TSan for the racy cases; review for `volatile` used near threading and for any new `memory_order_` spelling beyond relaxed-with-comment",
+    "upstream": []
+  },
+  {
+    "id": "CONC-30",
+    "strength": "hard",
+    "statement": "Do not write lock-free data structures by hand (CP.100).",
+    "doc": "concurrency.md",
+    "detector": "TSan for the racy cases; review for `volatile` used near threading and for any new `memory_order_` spelling beyond relaxed-with-comment",
+    "upstream": [
+      "CP.100",
+      "CP.102",
+      "CP.101"
+    ]
+  },
+  {
+    "id": "CONC-31",
+    "strength": "hard",
+    "statement": "Lazy initialization is solved by magic statics (static local initialization is thread-safe since C++11) or std::call_once.",
+    "doc": "concurrency.md",
+    "detector": "TSan for the racy cases; review for `volatile` used near threading and for any new `memory_order_` spelling beyond relaxed-with-comment",
+    "upstream": [
+      "CP.110",
+      "CP.111"
+    ]
+  },
+  {
+    "id": "CONC-32",
+    "strength": "hard",
+    "statement": "Think in tasks, not threads (CP.4): name *what* runs concurrently, and let infrastructure decide *where*.",
+    "doc": "concurrency.md",
+    "detector": "review",
+    "upstream": [
+      "CP.4",
+      "CP.60"
+    ]
+  },
+  {
+    "id": "CONC-33",
+    "strength": "hard",
+    "statement": "The launch policy is spelled on every call: without std::launch::async, std::async may run the task deferred — inline at .get(), or not at all if the future is dropped — while an async launch blocks in the future's destructor.",
+    "doc": "concurrency.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "CONC-34",
+    "strength": "hard",
+    "statement": "std::async returned-future destruction blocks until completion; dropping the future to \"fire and forget\" turns an async call into a synchronous surprise (CP.61).",
+    "doc": "concurrency.md",
+    "detector": "review",
+    "upstream": [
+      "CP.61"
+    ]
+  },
+  {
+    "id": "CONC-35",
+    "strength": "default",
+    "statement": "promise/future pairs are single-use; a broken promise (destroyed without setting) surfaces as an exception on the waiting side — handle it where the .get() lives.",
+    "doc": "concurrency.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "CONC-36",
+    "strength": "hard",
+    "statement": "Channels and queues must have a bound and an overflow policy.",
+    "doc": "concurrency.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "CONC-37",
+    "strength": "hard",
+    "statement": "Bounded queue depth with an explicit policy on overflow (block, reject, or shed — documented per entry point).",
+    "doc": "concurrency.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "CONC-38",
+    "strength": "default",
+    "statement": "Pool size derived from workload class: CPU-bound ≈ hardware cores; I/O-bound sized against measured latency targets, not folklore.",
+    "doc": "concurrency.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "CONC-39",
+    "strength": "hard",
+    "statement": "Cooperative cancellation: jobs accept std::stop_token (C++20) or check an atomic shutdown flag between units, so drain time is bounded.",
+    "doc": "concurrency.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "CONC-40",
+    "strength": "hard",
+    "statement": "Ordered shutdown: stop accepting, drain or cancel queued work, join workers — in that order, exercised by a test, because shutdown races are the ones nobody debugs calmly.",
+    "doc": "concurrency.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "CONC-41",
+    "strength": "hard",
+    "statement": "Library code never spawns unbounded threads per call and never assumes a pool exists around it; accept an executor/pool reference where scheduling matters.",
+    "doc": "concurrency.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "CONC-42",
+    "strength": "hard",
+    "statement": "Any change touching threads, atomics, locks, or signal handlers runs a ThreadSanitizer build (-fsanitize=thread) of the full test suite before merge:",
+    "doc": "concurrency.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "CONC-43",
+    "strength": "hard",
+    "statement": "TSan detects data races, lock-order inversions, and destruction-of-locked-mutex hazards *when executed*.",
+    "doc": "concurrency.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "CONC-44",
+    "strength": "hard",
+    "statement": "TSan and ASan never share one binary — the separate builds exist precisely for that reason.",
+    "doc": "concurrency.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "CONC-45",
+    "strength": "hard",
+    "statement": "A flaky sanitizer finding is still a finding.",
+    "doc": "concurrency.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "CONC-46",
+    "strength": "hard",
+    "statement": "Signal handlers sit inside this gate too.",
+    "doc": "concurrency.md",
+    "detector": "review",
+    "upstream": [
+      "CP.201"
+    ]
+  },
+  {
+    "id": "ERR-1",
+    "strength": "hard",
+    "statement": "assert (active in debug; gone under NDEBUG); internal lookup table index out of range",
+    "doc": "error-handling.md",
+    "detector": "review — no automated detector for mechanism choice",
+    "upstream": []
+  },
+  {
+    "id": "ERR-2",
+    "strength": "hard",
+    "statement": "Status return or expected-style result; malformed user-supplied config value",
+    "doc": "error-handling.md",
+    "detector": "review — no automated detector for mechanism choice",
+    "upstream": []
+  },
+  {
+    "id": "ERR-3",
+    "strength": "hard",
+    "statement": "Status return or expected-style result; key not found in cache; end-of-input",
+    "doc": "error-handling.md",
+    "detector": "review — no automated detector for mechanism choice",
+    "upstream": []
+  },
+  {
+    "id": "ERR-4",
+    "strength": "hard",
+    "statement": "Exception; std::bad_alloc; a control-channel drop with no retry path",
+    "doc": "error-handling.md",
+    "detector": "review — no automated detector for mechanism choice",
+    "upstream": []
+  },
+  {
+    "id": "ERR-5",
+    "strength": "hard",
+    "statement": "Terminate (default: let it escape); heap corruption detected by allocator",
+    "doc": "error-handling.md",
+    "detector": "review — no automated detector for mechanism choice",
+    "upstream": []
+  },
+  {
+    "id": "ERR-6",
+    "strength": "hard",
+    "statement": "An error-handling strategy cannot be retrofitted onto finished interfaces (E.1): fix the assert-versus-status-versus-throw split while signatures are still fluid, before callers hard-code a mechanism.",
+    "doc": "error-handling.md",
+    "detector": "review — no automated detector for mechanism choice",
+    "upstream": [
+      "E.1"
+    ]
+  },
+  {
+    "id": "ERR-7",
+    "strength": "hard",
+    "statement": "Exceptions carry failures, never ordinary control flow (E.3): loop termination and cache misses are normal outcomes, and implementations optimize on exactly that assumption.",
+    "doc": "error-handling.md",
+    "detector": "review — no automated detector for mechanism choice",
+    "upstream": [
+      "E.3"
+    ]
+  },
+  {
+    "id": "ERR-8",
+    "strength": "hard",
+    "statement": "Never validate external input with assert: under NDEBUG the check vanishes and malformed input walks straight into memory-unsafe code.",
+    "doc": "error-handling.md",
+    "detector": "review — no automated detector for mechanism choice",
+    "upstream": []
+  },
+  {
+    "id": "ERR-9",
+    "strength": "hard",
+    "statement": "Assert expressions must be side-effect free for the same reason — the whole expression vanishes under NDEBUG, so assert(flush_cache()) silently stops flushing in release builds.",
+    "doc": "error-handling.md",
+    "detector": "review — no automated detector for mechanism choice",
+    "upstream": [
+      "E.2"
+    ]
+  },
+  {
+    "id": "ERR-10",
+    "strength": "hard",
+    "statement": "Failing fast belongs to the last row only (E.26; upstream frames it for builds without exceptions — the principle transfers verbatim): corruption beyond repair terminates immediately — inside module-edge shims, abort rather than translate.",
+    "doc": "error-handling.md",
+    "detector": "review — no automated detector for mechanism choice",
+    "upstream": [
+      "E.26"
+    ]
+  },
+  {
+    "id": "ERR-11",
+    "strength": "hard",
+    "statement": "The decision table classifies failures; contracts decide what counts as one (E.4).",
+    "doc": "error-handling.md",
+    "detector": "review",
+    "upstream": [
+      "E.4"
+    ]
+  },
+  {
+    "id": "ERR-12",
+    "strength": "hard",
+    "statement": "A constructor either establishes the class invariant or throws (E.5); there are no half-built objects callers must remember to check.",
+    "doc": "error-handling.md",
+    "detector": "review",
+    "upstream": [
+      "E.5"
+    ]
+  },
+  {
+    "id": "ERR-13",
+    "strength": "hard",
+    "statement": "State preconditions at the boundary so interface misuse is visible (E.7).",
+    "doc": "error-handling.md",
+    "detector": "review",
+    "upstream": [
+      "E.7"
+    ]
+  },
+  {
+    "id": "ERR-14",
+    "strength": "default",
+    "statement": "State postconditions with equal care (E.8): callers need no defensive re-checks, the guarantee travels in the signature and documentation, and verifying it follows the same trust-boundary logic as preconditions.",
+    "doc": "error-handling.md",
+    "detector": "review",
+    "upstream": [
+      "E.8"
+    ]
+  },
+  {
+    "id": "ERR-15",
+    "strength": "hard",
+    "statement": "On a C++17 codebase, pick one of, in order of preference — centralized behind one alias so migration is mechanical:",
+    "doc": "error-handling.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "ERR-16",
+    "strength": "hard",
+    "statement": "Every error construction routes through make_error in result.h — the C++23 migration stays a one-file change.",
+    "doc": "error-handling.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "ERR-17",
+    "strength": "default",
+    "statement": "Do not hand-roll monadic .and_then() chains in C++17 wrappers; keep the wrapper surface minimal so the future swap stays trivial.",
+    "doc": "error-handling.md",
+    "detector": "review",
+    "upstream": [
+      "E.27"
+    ]
+  },
+  {
+    "id": "ERR-18",
+    "strength": "hard",
+    "statement": "Throw temporaries, catch by const& (E.15).",
+    "doc": "error-handling.md",
+    "detector": "review",
+    "upstream": [
+      "E.15"
+    ]
+  },
+  {
+    "id": "ERR-19",
+    "strength": "hard",
+    "statement": "Handler order is part of the contract (E.31): clauses match in source order, so catch most-derived first and put catch (...) last — the snippets above follow exactly that shape, since an earlier hidden handler is dead code that quietly changes behavior.",
+    "doc": "error-handling.md",
+    "detector": "review",
+    "upstream": [
+      "E.31"
+    ]
+  },
+  {
+    "id": "ERR-20",
+    "strength": "hard",
+    "statement": "All thrown types derive from a single project base deriving from std::exception.",
+    "doc": "error-handling.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "ERR-21",
+    "strength": "default",
+    "statement": "Throw the most specific type; catch the most general type you can actually act on.",
+    "doc": "error-handling.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "ERR-22",
+    "strength": "hard",
+    "statement": "Never throw non-std::exception types (ints, pointers, strings) — they bypass every catch (const std::exception&) safety net.",
+    "doc": "error-handling.md",
+    "detector": "review",
+    "upstream": [
+      "E.14"
+    ]
+  },
+  {
+    "id": "ERR-23",
+    "strength": "hard",
+    "statement": "Never throw while being the direct owner of a bare resource (E.13): the handle leaks unless unwinding can reach its manager.",
+    "doc": "error-handling.md",
+    "detector": "ASan's LeakSanitizer — the handle leaks during unwinding",
+    "upstream": [
+      "E.13"
+    ]
+  },
+  {
+    "id": "ERR-24",
+    "strength": "default",
+    "statement": "Where no suitable resource handle exists, wrap the cleanup in a small scoped guard (E.19 — covered in Memory and Ownership): a last resort beneath real RAII types, never a replacement for them.",
+    "doc": "error-handling.md",
+    "detector": "review",
+    "upstream": [
+      "E.19"
+    ]
+  },
+  {
+    "id": "ERR-25",
+    "strength": "hard",
+    "statement": "Throw (std::invalid_argument or domain type); Caller error is runtime reality; must be catchable",
+    "doc": "error-handling.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "ERR-26",
+    "strength": "hard",
+    "statement": "assert; It is a bug; unwinding cannot fix it, reporting should be loud and cheap",
+    "doc": "error-handling.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "ERR-27",
+    "strength": "hard",
+    "statement": "Let it propagate; Usually fatal; only unwind if a top level genuinely frees memory and retries",
+    "doc": "error-handling.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "ERR-28",
+    "strength": "default",
+    "statement": "Domain exception or status; Depends on whether callers routinely branch on it (see decision table)",
+    "doc": "error-handling.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "ERR-29",
+    "strength": "hard",
+    "statement": "Types stored in containers must have noexcept move operations.",
+    "doc": "error-handling.md",
+    "detector": "clang-tidy `performance-noexcept-move` (moves and swap); review elsewhere",
+    "upstream": []
+  },
+  {
+    "id": "ERR-30",
+    "strength": "hard",
+    "statement": "A moved-from object must be destructible and assignable; its other state is valid-but-unspecified.",
+    "doc": "error-handling.md",
+    "detector": "clang-tidy `performance-noexcept-move` (moves and swap); review elsewhere",
+    "upstream": []
+  },
+  {
+    "id": "ERR-31",
+    "strength": "hard",
+    "statement": "E.16 extends the same demand across the machinery: destructors, deallocation functions, swap, and the copy/move constructors of thrown types must never exit by an exception — standard-library basic guarantees assume it.",
+    "doc": "error-handling.md",
+    "detector": "clang-tidy `performance-noexcept-move` (moves and swap); review elsewhere",
+    "upstream": [
+      "E.16"
+    ]
+  },
+  {
+    "id": "ERR-32",
+    "strength": "hard",
+    "statement": "Reserve noexcept for functions where exiting by a throw is impossible or unacceptable (E.12) — the specifier is a contract, and violating it calls std::terminate().",
+    "doc": "error-handling.md",
+    "detector": "clang-tidy `performance-noexcept-move` (moves, swap); `bugprone-exception-escape` (noexcept bodies and destructors)",
+    "upstream": [
+      "E.12"
+    ]
+  },
+  {
+    "id": "ERR-33",
+    "strength": "hard",
+    "statement": "Yes (when no allocation); Container growth depends on it",
+    "doc": "error-handling.md",
+    "detector": "clang-tidy `performance-noexcept-move` (moves, swap); `bugprone-exception-escape` (noexcept bodies and destructors)",
+    "upstream": []
+  },
+  {
+    "id": "ERR-34",
+    "strength": "hard",
+    "statement": "Yes; Same; enables the move-assign idiom",
+    "doc": "error-handling.md",
+    "detector": "clang-tidy `performance-noexcept-move` (moves, swap); `bugprone-exception-escape` (noexcept bodies and destructors)",
+    "upstream": []
+  },
+  {
+    "id": "ERR-35",
+    "strength": "hard",
+    "statement": "Implicitly yes; Never allow an exception to leave a destructor",
+    "doc": "error-handling.md",
+    "detector": "clang-tidy `performance-noexcept-move` (moves, swap); `bugprone-exception-escape` (noexcept bodies and destructors)",
+    "upstream": []
+  },
+  {
+    "id": "ERR-36",
+    "strength": "default",
+    "statement": "Yes, optionally; Documents intent; enables optimizations",
+    "doc": "error-handling.md",
+    "detector": "clang-tidy `performance-noexcept-move` (moves, swap); `bugprone-exception-escape` (noexcept bodies and destructors)",
+    "upstream": []
+  },
+  {
+    "id": "ERR-37",
+    "strength": "hard",
+    "statement": "No; std::bad_alloc and friends would terminate",
+    "doc": "error-handling.md",
+    "detector": "clang-tidy `performance-noexcept-move` (moves, swap); `bugprone-exception-escape` (noexcept bodies and destructors)",
+    "upstream": []
+  },
+  {
+    "id": "ERR-38",
+    "strength": "hard",
+    "statement": "Before marking, walk the callee tree mentally: a noexcept function that calls one logging helper that allocates is a latent crash.",
+    "doc": "error-handling.md",
+    "detector": "clang-tidy `performance-noexcept-move` (moves, swap); `bugprone-exception-escape` (noexcept bodies and destructors)",
+    "upstream": []
+  },
+  {
+    "id": "ERR-39",
+    "strength": "hard",
+    "statement": "Express \"this cannot throw\" with noexcept (or conditional noexcept(expr)), never with a throw(...) list.",
+    "doc": "error-handling.md",
+    "detector": "the compiler — dynamic exception specifications are ill-formed in C++17",
+    "upstream": [
+      "E.30"
+    ]
+  },
+  {
+    "id": "ERR-40",
+    "strength": "hard",
+    "statement": "C++ exceptions never cross ABI boundaries: not out of a shared library, not into it from a callback, not across an extern \"C\" edge.",
+    "doc": "error-handling.md",
+    "detector": "review — no automated detector at module edges",
+    "upstream": []
+  },
+  {
+    "id": "ERR-41",
+    "strength": "hard",
+    "statement": "Public entry points catch everything and translate to status codes or POD error structs.",
+    "doc": "error-handling.md",
+    "detector": "review — no automated detector at module edges",
+    "upstream": []
+  },
+  {
+    "id": "ERR-42",
+    "strength": "hard",
+    "statement": "Callbacks invoked *by* the foreign side wrap their body in a total catch before returning.",
+    "doc": "error-handling.md",
+    "detector": "review — no automated detector at module edges",
+    "upstream": []
+  },
+  {
+    "id": "ERR-43",
+    "strength": "hard",
+    "statement": "Do not pass live STL objects (strings, vectors, exceptions) across the edge; pass buffers and plain structs.",
+    "doc": "error-handling.md",
+    "detector": "review — no automated detector at module edges",
+    "upstream": []
+  },
+  {
+    "id": "ERR-44",
+    "strength": "hard",
+    "statement": "The same rule applies between modules built with the *same* compiler when flags differ (e.g., _GLIBCXX_USE_CXX11_ABI mismatches): treat any independently deployed binary as a foreign world.",
+    "doc": "error-handling.md",
+    "detector": "review — no automated detector at module edges",
+    "upstream": [
+      "E.25"
+    ]
+  },
+  {
+    "id": "ERR-45",
+    "strength": "hard",
+    "statement": "Failures travel with the return value everywhere, never in errno-style global flags (E.28).",
+    "doc": "error-handling.md",
+    "detector": "review — no automated detector at module edges",
+    "upstream": [
+      "E.28"
+    ]
+  },
+  {
+    "id": "ERR-46",
+    "strength": "hard",
+    "statement": "A catch block does exactly one of three things:",
+    "doc": "error-handling.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "ERR-47",
+    "strength": "hard",
+    "statement": "Logging *and then* swallowing is forbidden: it reports failure to whoever reads logs while telling the caller (via return value) that everything succeeded.",
+    "doc": "error-handling.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "ERR-48",
+    "strength": "hard",
+    "statement": "Catch only where meaningful recovery exists (E.17); everywhere else let the exception propagate while RAII unwinds cleanup.",
+    "doc": "error-handling.md",
+    "detector": "review",
+    "upstream": [
+      "E.17"
+    ]
+  },
+  {
+    "id": "ERR-49",
+    "strength": "default",
+    "statement": "Minimize explicit try/catch (E.18): resource cleanup belongs in RAII objects, and the sanctioned dense-catch zone is the total catch at module edges.",
+    "doc": "error-handling.md",
+    "detector": "review",
+    "upstream": [
+      "E.18"
+    ]
+  },
+  {
+    "id": "ERR-50",
+    "strength": "default",
+    "statement": "Log a given failure once, at the layer that finally handles it (or at the top-level sink).",
+    "doc": "error-handling.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "ERR-51",
+    "strength": "hard",
+    "statement": "Use bare throw; to rethrow; throw_with_nested (not manual nested-type conventions) to wrap.",
+    "doc": "error-handling.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "ERR-52",
+    "strength": "default",
+    "statement": "The annotation path only delivers its context if the top-level sink unwinds it: walk the chain with std::rethrow_if_nested and print each layer's what() — an annotation nobody unwinds is context written and never read.",
+    "doc": "error-handling.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "EXPR-1",
+    "strength": "default",
+    "statement": "Reach for suitable abstractions (ES.2) — library types and classes sit closer to the problem than bare language features and give shorter, clearer, better-tested code — and reach for the standard library before any third-party library or hand-written loop (ES.1); allocation-restricted contexts are the sole carve-out, escalating to the arena and pool patterns in Memory and Ownership.",
+    "doc": "expressions-and-flow.md",
+    "detector": "review",
+    "upstream": [
+      "ES.2",
+      "ES.1"
+    ]
+  },
+  {
+    "id": "EXPR-2",
+    "strength": "default",
+    "statement": "Repeated expressions hoist into one function or collapse into a standard algorithm (ES.3) — duplicated logic obscures intent and diverges silently under maintenance; review plus static analysis catch what slips through.",
+    "doc": "expressions-and-flow.md",
+    "detector": "review",
+    "upstream": [
+      "ES.3"
+    ]
+  },
+  {
+    "id": "EXPR-3",
+    "strength": "hard",
+    "statement": "Every object holds a value from the moment it is created (ES.20).",
+    "doc": "expressions-and-flow.md",
+    "detector": "`-Wuninitialized` / `-Wmaybe-uninitialized` when the gap produces an actual uninitialized read; review for the declaration-to-assignment gap itself",
+    "upstream": [
+      "ES.20"
+    ]
+  },
+  {
+    "id": "EXPR-4",
+    "strength": "default",
+    "statement": "Declare at that point, initialized (ES.22)",
+    "doc": "expressions-and-flow.md",
+    "detector": "review",
+    "upstream": [
+      "ES.22"
+    ]
+  },
+  {
+    "id": "EXPR-5",
+    "strength": "default",
+    "statement": "Mark it const; compile-time-known values are constexpr (ES.25)",
+    "doc": "expressions-and-flow.md",
+    "detector": "review",
+    "upstream": [
+      "ES.25"
+    ]
+  },
+  {
+    "id": "EXPR-6",
+    "strength": "default",
+    "statement": "Class members follow the same rule twice: in-class initializers for every member with a sensible default, and a constructor member-initializer list for everything else.",
+    "doc": "expressions-and-flow.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "EXPR-7",
+    "strength": "default",
+    "statement": "A name lives in the smallest scope that can hold it (ES.5) and appears no earlier than its first use (ES.21); short scopes release resources early and shrink the state a reader tracks, and long stretches between a handle's last use and its scope end are the flagged smell.",
+    "doc": "expressions-and-flow.md",
+    "detector": "review",
+    "upstream": [
+      "ES.5",
+      "ES.21"
+    ]
+  },
+  {
+    "id": "EXPR-8",
+    "strength": "default",
+    "statement": "One declarator per statement (ES.10): comma lists hide an uninitialized variable among initialized ones and blur pointer decoration — function parameters and structured bindings are the sanctioned exceptions.",
+    "doc": "expressions-and-flow.md",
+    "detector": "clang-tidy `readability-isolate-declaration`",
+    "upstream": [
+      "ES.10"
+    ]
+  },
+  {
+    "id": "EXPR-9",
+    "strength": "default",
+    "statement": "Loop counters declare in the for initializer, and C++17 if/switch initializer statements confine selection variables to their block (ES.6) — nothing outlives the construct that needed it.",
+    "doc": "expressions-and-flow.md",
+    "detector": "review",
+    "upstream": [
+      "ES.6"
+    ]
+  },
+  {
+    "id": "EXPR-10",
+    "strength": "hard",
+    "statement": "Shadowing is forbidden (ES.12): an inner scope introduces a new name rather than reusing an outer one, members included; restating a base-class function name alongside a using declaration remains the exception.",
+    "doc": "expressions-and-flow.md",
+    "detector": "`-Wshadow`",
+    "upstream": [
+      "ES.12"
+    ]
+  },
+  {
+    "id": "EXPR-11",
+    "strength": "default",
+    "statement": "One variable serves one purpose (ES.26).",
+    "doc": "expressions-and-flow.md",
+    "detector": "review",
+    "upstream": [
+      "ES.26",
+      "ES.7",
+      "ES.8",
+      "ES.9"
+    ]
+  },
+  {
+    "id": "EXPR-12",
+    "strength": "hard",
+    "statement": "Prefer brace initialization (ES.23): the {} form turns a lossy conversion into a compile error instead of a silent truncation (ES.46).",
+    "doc": "expressions-and-flow.md",
+    "detector": "the narrowing error the `{}` form raises at compile time; `-Wconversion` for `=`-initialized conversions the discipline misses",
+    "upstream": [
+      "ES.23",
+      "ES.46"
+    ]
+  },
+  {
+    "id": "EXPR-13",
+    "strength": "default",
+    "statement": "Use = where the type is spelled out and no conversion risk exists (std::string name = req.user();); use {} wherever a conversion could bite — integral-to-smaller-integral and floating-to-integral above all.",
+    "doc": "expressions-and-flow.md",
+    "detector": "review",
+    "upstream": [
+      "ES.64"
+    ]
+  },
+  {
+    "id": "EXPR-14",
+    "strength": "hard",
+    "statement": "Members initialize in declaration order, not list order (C.47): reordering the list to look tidy initializes members in an order their dependencies do not expect, and -Wreorder flags it.",
+    "doc": "expressions-and-flow.md",
+    "detector": "`-Wreorder`",
+    "upstream": [
+      "C.47"
+    ]
+  },
+  {
+    "id": "EXPR-15",
+    "strength": "default",
+    "statement": "Unnamed literals beyond the trivial set — 0, 1, nullptr, '\\n', \"\" — become named constexpr constants (ES.45); a number needing a comment deserves a name.",
+    "doc": "expressions-and-flow.md",
+    "detector": "review",
+    "upstream": [
+      "ES.45"
+    ]
+  },
+  {
+    "id": "EXPR-16",
+    "strength": "default",
+    "statement": "auto removes redundancy, not information (ES.11).",
+    "doc": "expressions-and-flow.md",
+    "detector": "review",
+    "upstream": [
+      "ES.11"
+    ]
+  },
+  {
+    "id": "EXPR-17",
+    "strength": "default",
+    "statement": "Public function signatures spell their return types; a signature is documentation, and auto deletes the relevant line.",
+    "doc": "expressions-and-flow.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "EXPR-18",
+    "strength": "default",
+    "statement": "static_cast",
+    "doc": "expressions-and-flow.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "EXPR-19",
+    "strength": "default",
+    "statement": "dynamic_cast, result checked",
+    "doc": "expressions-and-flow.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "EXPR-20",
+    "strength": "default",
+    "statement": "memcpy (C++17), std::bit_cast (C++20)",
+    "doc": "expressions-and-flow.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "EXPR-21",
+    "strength": "hard",
+    "statement": "Forbidden (ES.50); Caught by: clang-tidy cppcoreguidelines-pro-type-const-cast",
+    "doc": "expressions-and-flow.md",
+    "detector": "clang-tidy `cppcoreguidelines-pro-type-const-cast`",
+    "upstream": [
+      "ES.50"
+    ]
+  },
+  {
+    "id": "EXPR-22",
+    "strength": "hard",
+    "statement": "reinterpret_cast plus a review comment justifying alignment and lifetime",
+    "doc": "expressions-and-flow.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "EXPR-23",
+    "strength": "hard",
+    "statement": "Forbidden outright: C-style casts (T)x.",
+    "doc": "expressions-and-flow.md",
+    "detector": "clang-tidy `cppcoreguidelines-pro-type-cstyle-cast`",
+    "upstream": [
+      "ES.49"
+    ]
+  },
+  {
+    "id": "EXPR-24",
+    "strength": "hard",
+    "statement": "Fixed-size stack arrays are std::array (ES.27): the bound travels in the type and nothing decays to a pointer — built-in arrays with non-local bounds and VLA-style runtime bounds are rejected outright as the security risks they are.",
+    "doc": "expressions-and-flow.md",
+    "detector": "`-Wvla` for runtime bounds; review for built-in arrays with non-local bounds",
+    "upstream": [
+      "ES.27"
+    ]
+  },
+  {
+    "id": "EXPR-25",
+    "strength": "hard",
+    "statement": "Null pointers are nullptr, never 0 or NULL (ES.47): literal zero quietly resolves f(0) onto the integer overload, and deduction misfires around NULL.",
+    "doc": "expressions-and-flow.md",
+    "detector": "clang-tidy `modernize-use-nullptr`",
+    "upstream": [
+      "ES.47"
+    ]
+  },
+  {
+    "id": "EXPR-26",
+    "strength": "hard",
+    "statement": "Relational comparison or subtraction of pointers into different arrays is undefined (ES.62); ordering and differences mean something only within one array.",
+    "doc": "expressions-and-flow.md",
+    "detector": "clang-tidy `modernize-use-nullptr`",
+    "upstream": [
+      "ES.62",
+      "ES.24",
+      "ES.60",
+      "ES.61",
+      "ES.65",
+      "ES.42",
+      "ES.63"
+    ]
+  },
+  {
+    "id": "EXPR-27",
+    "strength": "hard",
+    "statement": "An expression commits to one signedness and keeps it (ES.100): signed types do arithmetic (ES.102), unsigned types do bit manipulation (ES.101).",
+    "doc": "expressions-and-flow.md",
+    "detector": "the sign-comparison and sign-conversion warnings enabled by default in the build; suppressing one requires a comment naming the reason",
+    "upstream": [
+      "ES.100",
+      "ES.102",
+      "ES.101",
+      "ES.106"
+    ]
+  },
+  {
+    "id": "EXPR-28",
+    "strength": "default",
+    "statement": "Indices, counts, offsets, and differences are signed — int64_t unless profiling says narrower.",
+    "doc": "expressions-and-flow.md",
+    "detector": "the sign-comparison and sign-conversion warnings enabled by default in the build; suppressing one requires a comment naming the reason",
+    "upstream": [
+      "ES.107"
+    ]
+  },
+  {
+    "id": "EXPR-29",
+    "strength": "default",
+    "statement": "Bit masks, flags, and hashes are uint32_t/uint64_t (ES.101).",
+    "doc": "expressions-and-flow.md",
+    "detector": "the sign-comparison and sign-conversion warnings enabled by default in the build; suppressing one requires a comment naming the reason",
+    "upstream": [
+      "ES.101"
+    ]
+  },
+  {
+    "id": "EXPR-30",
+    "strength": "default",
+    "statement": "Mixed-sign comparisons get fixed at the source: restructure the condition or convert the value with a genuinely bounded domain.",
+    "doc": "expressions-and-flow.md",
+    "detector": "the sign-comparison and sign-conversion warnings enabled by default in the build; suppressing one requires a comment naming the reason",
+    "upstream": []
+  },
+  {
+    "id": "EXPR-31",
+    "strength": "hard",
+    "statement": "Buffer math and length fields near limits carry explicit precondition checks (ES.103, ES.104); wraparound is a bug, not a feature.",
+    "doc": "expressions-and-flow.md",
+    "detector": "review",
+    "upstream": [
+      "ES.103",
+      "ES.104"
+    ]
+  },
+  {
+    "id": "EXPR-32",
+    "strength": "hard",
+    "statement": "Integer / and % by a possibly-zero divisor take an explicit precondition at the boundary (ES.105); the undefined crash is never left implicit.",
+    "doc": "expressions-and-flow.md",
+    "detector": "review",
+    "upstream": [
+      "ES.105"
+    ]
+  },
+  {
+    "id": "EXPR-33",
+    "strength": "hard",
+    "statement": "Shifts need the same suspicion the arithmetic above gets: the count must be >= 0 and strictly below the width of the promoted left operand, and a signed left shift that overflows is UB (ES.103).",
+    "doc": "expressions-and-flow.md",
+    "detector": "UBSan's shift checks in sanitizer builds",
+    "upstream": [
+      "ES.103"
+    ]
+  },
+  {
+    "id": "EXPR-34",
+    "strength": "default",
+    "statement": "Expressions read in one pass (ES.40): no assignments or multi-object side effects buried in subexpressions, no reliance on subtle precedence or undefined behavior.",
+    "doc": "expressions-and-flow.md",
+    "detector": "review",
+    "upstream": [
+      "ES.40",
+      "ES.41"
+    ]
+  },
+  {
+    "id": "EXPR-35",
+    "strength": "hard",
+    "statement": "A value written in an expression is not read elsewhere in the same expression (ES.43): the v[i] = ++i shape does not exist here.",
+    "doc": "expressions-and-flow.md",
+    "detector": "review",
+    "upstream": [
+      "ES.43"
+    ]
+  },
+  {
+    "id": "EXPR-36",
+    "strength": "default",
+    "statement": "Function-argument evaluation order is unspecified even after C++17 (ES.44), so interdependent arguments sequence into separate statements instead of f(++i, ++i) shapes.",
+    "doc": "expressions-and-flow.md",
+    "detector": "review",
+    "upstream": [
+      "ES.44"
+    ]
+  },
+  {
+    "id": "EXPR-37",
+    "strength": "default",
+    "statement": "Functions read top-down: guard clauses first, main path last.",
+    "doc": "expressions-and-flow.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "EXPR-38",
+    "strength": "hard",
+    "statement": "No goto (ES.76).",
+    "doc": "expressions-and-flow.md",
+    "detector": "review",
+    "upstream": [
+      "ES.76"
+    ]
+  },
+  {
+    "id": "EXPR-39",
+    "strength": "default",
+    "statement": "No do/while unless it removes worse duplication between the prologue and the tail (ES.75) — in practice, almost never.",
+    "doc": "expressions-and-flow.md",
+    "detector": "review",
+    "upstream": [
+      "ES.75"
+    ]
+  },
+  {
+    "id": "EXPR-40",
+    "strength": "hard",
+    "statement": "Every non-empty case ends with break or an obvious return; an intentional fallthrough carries [[fallthrough]] (ES.78) — the annotation that satisfies -Wimplicit-fallthrough — with the adjacent comment stating why falling through is correct.",
+    "doc": "expressions-and-flow.md",
+    "detector": "`-Wimplicit-fallthrough`",
+    "upstream": [
+      "ES.78"
+    ]
+  },
+  {
+    "id": "EXPR-41",
+    "strength": "default",
+    "statement": "Redundant boolean dressing is noise: if (found), not if (found == true) (ES.87).",
+    "doc": "expressions-and-flow.md",
+    "detector": "review",
+    "upstream": [
+      "ES.87"
+    ]
+  },
+  {
+    "id": "EXPR-42",
+    "strength": "default",
+    "statement": "Range-based for is the default loop (ES.71): it cannot mis-index and states intent.",
+    "doc": "expressions-and-flow.md",
+    "detector": "review",
+    "upstream": [
+      "ES.71"
+    ]
+  },
+  {
+    "id": "EXPR-43",
+    "strength": "default",
+    "statement": "Prefer constructs that cannot go out of range (ES.55) — range-for, position-returning algorithms — over indexed access wrapped in checks; an explicit bounds check is usually the tell that the wrong abstraction was picked.",
+    "doc": "expressions-and-flow.md",
+    "detector": "review",
+    "upstream": [
+      "ES.55"
+    ]
+  },
+  {
+    "id": "EXPR-44",
+    "strength": "hard",
+    "statement": "Never mutate a container's structure while iterating it — reallocation invalidates the iterator.",
+    "doc": "expressions-and-flow.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "EXPR-45",
+    "strength": "hard",
+    "statement": "Range-for extends only the final range expression's temporary to the loop: a direct value-returning init such as make_rows() is safe, but in a chained init like connection_pool().acquire().rows() the intermediate temporaries die at the end of the full-expression, leaving the extended range viewing destroyed owners — own the outer object.",
+    "doc": "expressions-and-flow.md",
+    "detector": "review",
+    "upstream": [
+      "ES.5"
+    ]
+  },
+  {
+    "id": "EXPR-46",
+    "strength": "default",
+    "statement": "With an obvious loop variable, a classic for beats while (ES.72): the whole mechanism sits up front and the counter's scope ends with the loop.",
+    "doc": "expressions-and-flow.md",
+    "detector": "review",
+    "upstream": [
+      "ES.72",
+      "ES.73"
+    ]
+  },
+  {
+    "id": "EXPR-47",
+    "strength": "default",
+    "statement": "break and continue stay rare (ES.77): a loop needing break usually wants extraction into a function where it becomes return; continue chains collapse into one positive if.",
+    "doc": "expressions-and-flow.md",
+    "detector": "review",
+    "upstream": [
+      "ES.77"
+    ]
+  },
+  {
+    "id": "EXPR-48",
+    "strength": "default",
+    "statement": "The for header alone steers the counter (ES.86); mutating it inside the body destroys top-down reasoning about iterations.",
+    "doc": "expressions-and-flow.md",
+    "detector": "review",
+    "upstream": [
+      "ES.86"
+    ]
+  },
+  {
+    "id": "EXPR-49",
+    "strength": "hard",
+    "statement": "Unnamed locals do not exist (ES.84): lock_guard<mutex>{mx}; builds a temporary that unlocks immediately — a silent race.",
+    "doc": "expressions-and-flow.md",
+    "detector": "review",
+    "upstream": [
+      "ES.84"
+    ]
+  },
+  {
+    "id": "EXPR-50",
+    "strength": "hard",
+    "statement": "A deliberate no-op body is an empty block carrying a comment (ES.85); a stray semicolon behind a loop head is invisible and flips the meaning of the program.",
+    "doc": "expressions-and-flow.md",
+    "detector": "`-Wempty-body`",
+    "upstream": [
+      "ES.85"
+    ]
+  },
+  {
+    "id": "EXPR-51",
+    "strength": "default",
+    "statement": "default handles the genuinely common case (ES.79); when only specific cases matter, an explicit empty default records that decision so neither maintainer nor compiler assumes a missed enumerator.",
+    "doc": "expressions-and-flow.md",
+    "detector": "review",
+    "upstream": [
+      "ES.79"
+    ]
+  },
+  {
+    "id": "EXPR-52",
+    "strength": "hard",
+    "statement": "No macro rewrites program text (ES.30): macros ignore scope and type, show the reader something different from what the compiler sees, and break tooling — configuration-control #ifdef blocks remain acceptable, stringification and token pasting do not.",
+    "doc": "expressions-and-flow.md",
+    "detector": "review",
+    "upstream": [
+      "ES.30"
+    ]
+  },
+  {
+    "id": "EXPR-53",
+    "strength": "hard",
+    "statement": "Constants are constexpr variables and pseudo-functions are templates or overloads, never object-like or function-like macros (ES.31).",
+    "doc": "expressions-and-flow.md",
+    "detector": "review",
+    "upstream": [
+      "ES.31"
+    ]
+  },
+  {
+    "id": "EXPR-54",
+    "strength": "hard",
+    "statement": "Any macro surviving review is spelled ALL_CAPS so readers see the preprocessor at work (ES.32) — a lowercase macro is treated as a defect — and carries a long, prefix-qualified name unique enough to survive contact with third-party headers (ES.33).",
+    "doc": "expressions-and-flow.md",
+    "detector": "review",
+    "upstream": [
+      "ES.32",
+      "ES.33"
+    ]
+  },
+  {
+    "id": "EXPR-55",
+    "strength": "hard",
+    "statement": "C-style variadic functions are not definable here (ES.34): va_arg trusts unchecked casts, and a miscounted call crashes.",
+    "doc": "expressions-and-flow.md",
+    "detector": "review",
+    "upstream": [
+      "ES.34"
+    ]
+  },
+  {
+    "id": "FN-1",
+    "strength": "default",
+    "statement": "Every parameter plays exactly one role, readable off the declaration — through type and qualifiers — not off the body.",
+    "doc": "functions-and-interfaces.md",
+    "detector": "review — hidden `inout` behavior has no dependable static check; the signature convention makes it catchable by humans. Unsynchronized argument-keyed cache mutation surfaces under TSan",
+    "upstream": []
+  },
+  {
+    "id": "FN-2",
+    "strength": "default",
+    "statement": "T (cheap copy), const T&, std::string_view, std::span<const T>; Callee reads; copies anything it stores",
+    "doc": "functions-and-interfaces.md",
+    "detector": "review — hidden `inout` behavior has no dependable static check; the signature convention makes it catchable by humans. Unsynchronized argument-keyed cache mutation surfaces under TSan",
+    "upstream": []
+  },
+  {
+    "id": "FN-3",
+    "strength": "default",
+    "statement": "Return value; T& reserved for a genuine second output",
+    "doc": "functions-and-interfaces.md",
+    "detector": "review — hidden `inout` behavior has no dependable static check; the signature convention makes it catchable by humans. Unsynchronized argument-keyed cache mutation surfaces under TSan",
+    "upstream": []
+  },
+  {
+    "id": "FN-4",
+    "strength": "default",
+    "statement": "T&; Reads and overwrites; the name states the transformation",
+    "doc": "functions-and-interfaces.md",
+    "detector": "review — hidden `inout` behavior has no dependable static check; the signature convention makes it catchable by humans. Unsynchronized argument-keyed cache mutation surfaces under TSan",
+    "upstream": []
+  },
+  {
+    "id": "FN-5",
+    "strength": "default",
+    "statement": "T&& plus std::move; Consuming sinks only",
+    "doc": "functions-and-interfaces.md",
+    "detector": "review — hidden `inout` behavior has no dependable static check; the signature convention makes it catchable by humans. Unsynchronized argument-keyed cache mutation surfaces under TSan",
+    "upstream": []
+  },
+  {
+    "id": "FN-6",
+    "strength": "hard",
+    "statement": "Template TP&& plus std::forward; Generic plumbing only — every static path forwards exactly once, piecewise per member if needed (F.19)",
+    "doc": "functions-and-interfaces.md",
+    "detector": "review — hidden `inout` behavior has no dependable static check; the signature convention makes it catchable by humans. Unsynchronized argument-keyed cache mutation surfaces under TSan",
+    "upstream": [
+      "F.19"
+    ]
+  },
+  {
+    "id": "FN-7",
+    "strength": "default",
+    "statement": "An out value returns as the return value (F.20); when two results genuinely exist, return a struct (F.21) instead of stacking a second T&.",
+    "doc": "functions-and-interfaces.md",
+    "detector": "review — hidden `inout` behavior has no dependable static check; the signature convention makes it catchable by humans. Unsynchronized argument-keyed cache mutation surfaces under TSan",
+    "upstream": [
+      "F.20",
+      "F.21"
+    ]
+  },
+  {
+    "id": "FN-8",
+    "strength": "default",
+    "statement": "An inout parameter's name declares the transformation: normalize_path(p), merge_into(acc) — never a generic update (F.17).",
+    "doc": "functions-and-interfaces.md",
+    "detector": "review — hidden `inout` behavior has no dependable static check; the signature convention makes it catchable by humans. Unsynchronized argument-keyed cache mutation surfaces under TSan",
+    "upstream": [
+      "F.17"
+    ]
+  },
+  {
+    "id": "FN-9",
+    "strength": "hard",
+    "statement": "Mutating through a const T& — a const_cast or any write to the referent — turns an advertised in into a hidden inout.",
+    "doc": "functions-and-interfaces.md",
+    "detector": "review — hidden `inout` behavior has no dependable static check; the signature convention makes it catchable by humans. Unsynchronized argument-keyed cache mutation surfaces under TSan",
+    "upstream": []
+  },
+  {
+    "id": "FN-10",
+    "strength": "hard",
+    "statement": "A mutable cache keyed on a const T& argument is not a hidden inout: the parameter itself is never written.",
+    "doc": "functions-and-interfaces.md",
+    "detector": "review — hidden `inout` behavior has no dependable static check; the signature convention makes it catchable by humans. Unsynchronized argument-keyed cache mutation surfaces under TSan",
+    "upstream": []
+  },
+  {
+    "id": "FN-11",
+    "strength": "default",
+    "statement": "Unused parameters stay unnamed, or wear [[maybe_unused]] when conditionally dead — template dispatch especially (F.9).",
+    "doc": "functions-and-interfaces.md",
+    "detector": "review — hidden `inout` behavior has no dependable static check; the signature convention makes it catchable by humans. Unsynchronized argument-keyed cache mutation surfaces under TSan",
+    "upstream": [
+      "F.9"
+    ]
+  },
+  {
+    "id": "FN-12",
+    "strength": "default",
+    "statement": "Copy cost decides, not habit (F.16).",
+    "doc": "functions-and-interfaces.md",
+    "detector": "clang-tidy `performance-unnecessary-value-param` catches sinks missing their move; needless `const T&` on scalars is a review item",
+    "upstream": [
+      "F.16",
+      "F.15"
+    ]
+  },
+  {
+    "id": "FN-13",
+    "strength": "default",
+    "statement": "By value; Copy beats aliasing machinery",
+    "doc": "functions-and-interfaces.md",
+    "detector": "clang-tidy `performance-unnecessary-value-param` catches sinks missing their move; needless `const T&` on scalars is a review item",
+    "upstream": []
+  },
+  {
+    "id": "FN-14",
+    "strength": "default",
+    "statement": "const T&; Skips an expensive copy",
+    "doc": "functions-and-interfaces.md",
+    "detector": "clang-tidy `performance-unnecessary-value-param` catches sinks missing their move; needless `const T&` on scalars is a review item",
+    "upstream": []
+  },
+  {
+    "id": "FN-15",
+    "strength": "default",
+    "statement": "std::string_view by value (SL.str.12); Literals and substrings arrive without conversion",
+    "doc": "functions-and-interfaces.md",
+    "detector": "clang-tidy `performance-unnecessary-value-param` catches sinks missing their move; needless `const T&` on scalars is a review item",
+    "upstream": []
+  },
+  {
+    "id": "FN-16",
+    "strength": "default",
+    "statement": "std::span<const T> (F.24; pointer + size before C++20); One spelling for arrays, vectors, slices",
+    "doc": "functions-and-interfaces.md",
+    "detector": "clang-tidy `performance-unnecessary-value-param` catches sinks missing their move; needless `const T&` on scalars is a review item",
+    "upstream": [
+      "F.24"
+    ]
+  },
+  {
+    "id": "FN-17",
+    "strength": "default",
+    "statement": "By value, then std::move; One copy at the provable last use",
+    "doc": "functions-and-interfaces.md",
+    "detector": "clang-tidy `performance-unnecessary-value-param` catches sinks missing their move; needless `const T&` on scalars is a review item",
+    "upstream": []
+  },
+  {
+    "id": "FN-18",
+    "strength": "default",
+    "statement": "T&& plus std::move (F.18); Consumption stated explicitly",
+    "doc": "functions-and-interfaces.md",
+    "detector": "clang-tidy `performance-unnecessary-value-param` catches sinks missing their move; needless `const T&` on scalars is a review item",
+    "upstream": [
+      "F.18"
+    ]
+  },
+  {
+    "id": "FN-19",
+    "strength": "default",
+    "statement": "const T*, documented nullable (F.22); Optionality encoded in the type",
+    "doc": "functions-and-interfaces.md",
+    "detector": "clang-tidy `performance-unnecessary-value-param` catches sinks missing their move; needless `const T&` on scalars is a review item",
+    "upstream": [
+      "F.22"
+    ]
+  },
+  {
+    "id": "FN-20",
+    "strength": "default",
+    "statement": "Ownership and absence change the calculus.",
+    "doc": "functions-and-interfaces.md",
+    "detector": "clang-tidy `performance-unnecessary-value-param` catches sinks missing their move; needless `const T&` on scalars is a review item",
+    "upstream": [
+      "F.7"
+    ]
+  },
+  {
+    "id": "FN-21",
+    "strength": "default",
+    "statement": "When \"no object\" is a valid input, say so with T*; when absence is impossible, T& is simpler and often faster (F.60).",
+    "doc": "functions-and-interfaces.md",
+    "detector": "clang-tidy `performance-unnecessary-value-param` catches sinks missing their move; needless `const T&` on scalars is a review item",
+    "upstream": [
+      "F.60"
+    ]
+  },
+  {
+    "id": "FN-22",
+    "strength": "default",
+    "statement": "Deviation from F.23: the Guidelines spell non-null parameters with GSL not_null<T>; we keep native forms — documented const T* for may-be-null, T& for cannot-be-null — because GSL vocabulary does not cross project APIs.",
+    "doc": "functions-and-interfaces.md",
+    "detector": "clang-tidy `performance-unnecessary-value-param` catches sinks missing their move; needless `const T&` on scalars is a review item",
+    "upstream": [
+      "F.23"
+    ]
+  },
+  {
+    "id": "FN-23",
+    "strength": "default",
+    "statement": "Read-only text and sequences enter as views so callers pay no conversion tax (SL.str.12, F.24).",
+    "doc": "functions-and-interfaces.md",
+    "detector": "ASan flags use-after-free when a stored view outlives its owner; review catches the boundary case earlier",
+    "upstream": [
+      "F.24",
+      "I.13"
+    ]
+  },
+  {
+    "id": "FN-24",
+    "strength": "hard",
+    "statement": "At untrusted-input boundaries (config load, IPC, deserialization), validate and re-own first.",
+    "doc": "functions-and-interfaces.md",
+    "detector": "ASan flags use-after-free when a stored view outlives its owner; review catches the boundary case earlier",
+    "upstream": []
+  },
+  {
+    "id": "FN-25",
+    "strength": "default",
+    "statement": "Zero-terminated spellings survive at C interop seams only, where null termination is part of the wire contract — and even there they imply no ownership.",
+    "doc": "functions-and-interfaces.md",
+    "detector": "ASan flags use-after-free when a stored view outlives its owner; review catches the boundary case earlier",
+    "upstream": [
+      "F.25"
+    ]
+  },
+  {
+    "id": "FN-26",
+    "strength": "hard",
+    "statement": "Build the result locally, return local; — never return std::move(local);, which changes the expression type and defeats NRVO (F.48).",
+    "doc": "functions-and-interfaces.md",
+    "detector": "GCC 13+ `-Wdangling-reference` for simple cases, ASan on first use otherwise; clang-tidy flags `std::move` in return statements",
+    "upstream": [
+      "F.48"
+    ]
+  },
+  {
+    "id": "FN-27",
+    "strength": "hard",
+    "statement": "Never return a pointer or reference to a local, including wrapped in a view (F.43).",
+    "doc": "functions-and-interfaces.md",
+    "detector": "GCC 13+ `-Wdangling-reference` for simple cases, ASan on first use otherwise; clang-tidy flags `std::move` in return statements",
+    "upstream": [
+      "F.43"
+    ]
+  },
+  {
+    "id": "FN-28",
+    "strength": "hard",
+    "statement": "Never return T&& — it invites dangling temporaries and buys nothing over by-value (F.45).",
+    "doc": "functions-and-interfaces.md",
+    "detector": "GCC 13+ `-Wdangling-reference` for simple cases, ASan on first use otherwise; clang-tidy flags `std::move` in return statements",
+    "upstream": [
+      "F.45"
+    ]
+  },
+  {
+    "id": "FN-29",
+    "strength": "hard",
+    "statement": "Multiple results travel as a named struct (F.21).",
+    "doc": "functions-and-interfaces.md",
+    "detector": "GCC 13+ `-Wdangling-reference` for simple cases, ASan on first use otherwise; clang-tidy flags `std::move` in return statements",
+    "upstream": [
+      "F.21",
+      "F.44"
+    ]
+  },
+  {
+    "id": "FN-30",
+    "strength": "hard",
+    "statement": "A returned T* promises a position, possibly none — finders may return nullable positions, never ownership; deletion rights stay with the owner (F.42).",
+    "doc": "functions-and-interfaces.md",
+    "detector": "GCC 13+ `-Wdangling-reference` for simple cases, ASan on first use otherwise; clang-tidy flags `std::move` in return statements",
+    "upstream": [
+      "F.42"
+    ]
+  },
+  {
+    "id": "FN-31",
+    "strength": "hard",
+    "statement": "Assignment operators assign and return non-const *this, as the ints do and the standard library does; the historical const T& advice solved a problem nobody had (F.47).",
+    "doc": "functions-and-interfaces.md",
+    "detector": "GCC 13+ `-Wdangling-reference` for simple cases, ASan on first use otherwise; clang-tidy flags `std::move` in return statements",
+    "upstream": [
+      "F.47"
+    ]
+  },
+  {
+    "id": "FN-32",
+    "strength": "hard",
+    "statement": "Do not return const T: the top-level qualifier blocks a rare accidental temporary write but suppresses move semantics on every extraction (F.49).",
+    "doc": "functions-and-interfaces.md",
+    "detector": "GCC 13+ `-Wdangling-reference` for simple cases, ASan on first use otherwise; clang-tidy flags `std::move` in return statements",
+    "upstream": [
+      "F.49"
+    ]
+  },
+  {
+    "id": "FN-33",
+    "strength": "hard",
+    "statement": "main returns int and may omit the return; void main() is a compiler extension, not C++, and costs portability (F.46).",
+    "doc": "functions-and-interfaces.md",
+    "detector": "GCC 13+ `-Wdangling-reference` for simple cases, ASan on first use otherwise; clang-tidy flags `std::move` in return statements",
+    "upstream": [
+      "F.46",
+      "F.26",
+      "F.27",
+      "F.44"
+    ]
+  },
+  {
+    "id": "FN-34",
+    "strength": "hard",
+    "statement": "Always",
+    "doc": "functions-and-interfaces.md",
+    "detector": "`-Wunused-result` via the attribute; review for categories the attribute cannot see",
+    "upstream": []
+  },
+  {
+    "id": "FN-35",
+    "strength": "hard",
+    "statement": "Yes",
+    "doc": "functions-and-interfaces.md",
+    "detector": "`-Wunused-result` via the attribute; review for categories the attribute cannot see",
+    "upstream": []
+  },
+  {
+    "id": "FN-36",
+    "strength": "hard",
+    "statement": "No",
+    "doc": "functions-and-interfaces.md",
+    "detector": "`-Wunused-result` via the attribute; review for categories the attribute cannot see",
+    "upstream": []
+  },
+  {
+    "id": "FN-37",
+    "strength": "hard",
+    "statement": "The attribute also applies at class level: mark a status/Result type [[nodiscard]] once, and every function returning it is covered — no per-function decoration to forget.",
+    "doc": "functions-and-interfaces.md",
+    "detector": "`-Wunused-result` via the attribute; review for categories the attribute cannot see",
+    "upstream": [
+      "F.20"
+    ]
+  },
+  {
+    "id": "FN-38",
+    "strength": "default",
+    "statement": "A function performs one logical operation (F.2), fits on one screen (F.3), and earns a name that says exactly that (F.1); nesting past three levels triggers extraction.",
+    "doc": "functions-and-interfaces.md",
+    "detector": "review",
+    "upstream": [
+      "F.2",
+      "F.3",
+      "F.1"
+    ]
+  },
+  {
+    "id": "FN-39",
+    "strength": "default",
+    "statement": "Prefer pure functions — same input, same output, no hidden state (F.8); push I/O, locking, and globals to the edges.",
+    "doc": "functions-and-interfaces.md",
+    "detector": "review",
+    "upstream": [
+      "F.8",
+      "F.56"
+    ]
+  },
+  {
+    "id": "FN-40",
+    "strength": "default",
+    "statement": "Collapse same-behavior overloads into default arguments (F.51).",
+    "doc": "functions-and-interfaces.md",
+    "detector": "review",
+    "upstream": [
+      "F.51"
+    ]
+  },
+  {
+    "id": "FN-41",
+    "strength": "default",
+    "statement": "Keep argument lists short — aim under four (I.23): a long list usually means a missing abstraction or two jobs wearing one name.",
+    "doc": "functions-and-interfaces.md",
+    "detector": "review",
+    "upstream": [
+      "I.23"
+    ]
+  },
+  {
+    "id": "FN-42",
+    "strength": "default",
+    "statement": "Leaf accessors and swaps that provably cannot throw carry noexcept (F.6).",
+    "doc": "functions-and-interfaces.md",
+    "detector": "review",
+    "upstream": [
+      "F.6"
+    ]
+  },
+  {
+    "id": "FN-43",
+    "strength": "hard",
+    "statement": "Anything allocating, formatting, logging, or calling unknown code must not be noexcept.",
+    "doc": "functions-and-interfaces.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "FN-44",
+    "strength": "default",
+    "statement": "inline manages duplicate definitions; as a speed tool it is a measured hint for very small, time-critical functions (F.5).",
+    "doc": "functions-and-interfaces.md",
+    "detector": "review",
+    "upstream": [
+      "F.5"
+    ]
+  },
+  {
+    "id": "FN-45",
+    "strength": "hard",
+    "statement": "Anything meant as a stable binary surface stays out-of-line — an inline body is part of the ABI.",
+    "doc": "functions-and-interfaces.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "FN-46",
+    "strength": "hard",
+    "statement": "Reading varargs trusts caller discipline the type system cannot verify, so mismatches are undefined behavior (F.55).",
+    "doc": "functions-and-interfaces.md",
+    "detector": "review",
+    "upstream": [
+      "F.55"
+    ]
+  },
+  {
+    "id": "FN-47",
+    "strength": "default",
+    "statement": "Reach for a lambda only where a plain function will not do — capturing locals, or definition genuinely at local scope (F.50); lambdas cannot overload, and generic lambdas are the one concise exception.",
+    "doc": "functions-and-interfaces.md",
+    "detector": "review",
+    "upstream": [
+      "F.50",
+      "F.10",
+      "F.11"
+    ]
+  },
+  {
+    "id": "FN-48",
+    "strength": "default",
+    "statement": "Lambdas used locally — including passed to parallel algorithms that join before returning — capture by reference (F.52): cheaper than copies and preserving intended side effects on the caller's objects.",
+    "doc": "functions-and-interfaces.md",
+    "detector": "review",
+    "upstream": [
+      "F.52"
+    ]
+  },
+  {
+    "id": "FN-49",
+    "strength": "hard",
+    "statement": "A lambda that escapes its scope — queued to another thread, stored, returned — captures by value, with any needed non-local pointer owned (unique_ptr) and whole-object snapshots spelled [*this].",
+    "doc": "functions-and-interfaces.md",
+    "detector": "review",
+    "upstream": [
+      "F.53"
+    ]
+  },
+  {
+    "id": "FN-50",
+    "strength": "hard",
+    "statement": "[this] stays a borrow: it is safe only where the lambda cannot outlive the owner — synchronous call sites, or a queue proven to join before the owner dies.",
+    "doc": "functions-and-interfaces.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "FN-51",
+    "strength": "hard",
+    "statement": "Never [=] inside a member function (F.54): it captures this by value, so members arrive by reference wearing a value-capture costume.",
+    "doc": "functions-and-interfaces.md",
+    "detector": "review",
+    "upstream": [
+      "F.54"
+    ]
+  },
+  {
+    "id": "FN-52",
+    "strength": "hard",
+    "statement": "Single-argument constructors are explicit by default (C.46); implicit conversion is reserved for value types where it reads naturally, decided deliberately.",
+    "doc": "functions-and-interfaces.md",
+    "detector": "review",
+    "upstream": [
+      "C.46"
+    ]
+  },
+  {
+    "id": "FN-53",
+    "strength": "default",
+    "statement": "Meaningful literals get names (Enum.2): constexpr for single constants (Con.5), enum class for related sets (Enum.1).",
+    "doc": "functions-and-interfaces.md",
+    "detector": "review",
+    "upstream": [
+      "Con.5"
+    ]
+  },
+  {
+    "id": "FN-54",
+    "strength": "default",
+    "statement": "Functions whose bodies are naturally constant-evaluable take constexpr — without contorting logic to earn the keyword; constexpr permits compile-time evaluation, it does not force it (F.4; compile-time discipline lives in Quality Guidelines).",
+    "doc": "functions-and-interfaces.md",
+    "detector": "review",
+    "upstream": [
+      "F.4"
+    ]
+  },
+  {
+    "id": "FN-55",
+    "strength": "default",
+    "statement": "Default to immutability (P.10): something constant cannot change unexpectedly, cannot race, and optimizes better, so mutability has to justify itself at review.",
+    "doc": "functions-and-interfaces.md",
+    "detector": "compiler diagnostics — const-correctness is enforced at compile time; review for intent",
+    "upstream": [
+      "P.10"
+    ]
+  },
+  {
+    "id": "FN-56",
+    "strength": "default",
+    "statement": "Objects whose values never change after construction are declared const (Con.4) — a non-const local forces every reader to assume it mutates somewhere below, making unmodified non-const variables cleanup fodder.",
+    "doc": "functions-and-interfaces.md",
+    "detector": "compiler diagnostics — const-correctness is enforced at compile time; review for intent",
+    "upstream": [
+      "Con.4",
+      "Con.1",
+      "Con.2",
+      "Con.3"
+    ]
+  },
+  {
+    "id": "FN-57",
+    "strength": "hard",
+    "statement": "An interface is everything a caller can know without reading the body, so signatures carry the behavior: no call modes read from namespace-scope variables, no results reported through side channels a caller can forget to check — failures throw or return checked statuses (I.1).",
+    "doc": "functions-and-interfaces.md",
+    "detector": "review",
+    "upstream": [
+      "I.1"
+    ]
+  },
+  {
+    "id": "FN-58",
+    "strength": "default",
+    "statement": "Interfaces are precisely and strongly typed (I.4) — largely enforced above through views over raw sequences, option structs over flag soup, named constants over magic numbers, and units carried by types such as durations.",
+    "doc": "functions-and-interfaces.md",
+    "detector": "review",
+    "upstream": [
+      "I.4",
+      "P.4"
+    ]
+  },
+  {
+    "id": "FN-59",
+    "strength": "hard",
+    "statement": "Adjacent same-type parameters invocable with the same arguments in either order are defect bait — copy_n(p, q, n) reads three ways (I.24); mark the source const, pass spans, or bundle into named fields.",
+    "doc": "functions-and-interfaces.md",
+    "detector": "review",
+    "upstream": [
+      "I.24"
+    ]
+  },
+  {
+    "id": "FN-60",
+    "strength": "hard",
+    "statement": "Non-null parameters say so in the signature.",
+    "doc": "functions-and-interfaces.md",
+    "detector": "review",
+    "upstream": [
+      "I.12",
+      "F.23"
+    ]
+  },
+  {
+    "id": "FN-61",
+    "strength": "hard",
+    "statement": "Mutable namespace-scope state hides dependencies, initializes in unspecified order, and invites data races — every pointer or reference to mutable non-local data is a candidate race (I.2).",
+    "doc": "functions-and-interfaces.md",
+    "detector": "review",
+    "upstream": [
+      "I.2"
+    ]
+  },
+  {
+    "id": "FN-62",
+    "strength": "hard",
+    "statement": "Avoid singletons (I.3): they are complicated globals in disguise.",
+    "doc": "functions-and-interfaces.md",
+    "detector": "review",
+    "upstream": [
+      "I.3"
+    ]
+  },
+  {
+    "id": "FN-63",
+    "strength": "hard",
+    "statement": "One global's initializer never reads another — constexpr initialization where possible, accessor functions otherwise (Quality Guidelines, I.22).",
+    "doc": "functions-and-interfaces.md",
+    "detector": "review",
+    "upstream": [
+      "I.22"
+    ]
+  },
+  {
+    "id": "FN-64",
+    "strength": "default",
+    "statement": "State every precondition the type system cannot express (I.5), preferably as a dedicated spelling rather than ad-hoc ifs buried in the body (I.6).",
+    "doc": "functions-and-interfaces.md",
+    "detector": "review",
+    "upstream": [
+      "I.5",
+      "I.6"
+    ]
+  },
+  {
+    "id": "FN-65",
+    "strength": "default",
+    "statement": "State postconditions too — especially effects invisible in the return value, such as \"the mutex is released on exit\" (I.7).",
+    "doc": "functions-and-interfaces.md",
+    "detector": "review",
+    "upstream": [
+      "I.7",
+      "I.8"
+    ]
+  },
+  {
+    "id": "FN-66",
+    "strength": "hard",
+    "statement": "A failure to perform a required task must be impossible to ignore.",
+    "doc": "functions-and-interfaces.md",
+    "detector": "review",
+    "upstream": [
+      "I.10"
+    ]
+  },
+  {
+    "id": "FN-67",
+    "strength": "hard",
+    "statement": "Ugly but necessary techniques get wrapped once behind a clean interface, the suppression commented inside the abstraction (I.30); raw allocation, pointer arithmetic, and casting stay inside implementations — the standard library is the model, and low-level mess outside abstraction implementations is a review finding (P.11).",
+    "doc": "functions-and-interfaces.md",
+    "detector": "review",
+    "upstream": [
+      "I.30",
+      "P.11"
+    ]
+  },
+  {
+    "id": "FN-68",
+    "strength": "hard",
+    "statement": "Rule violations must never leak through an API into user code (the deviation-comment policy lives in the Core Guidelines disposition).",
+    "doc": "functions-and-interfaces.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "FN-69",
+    "strength": "default",
+    "statement": "Module edges are the one boundary where the interface surface shrinks.",
+    "doc": "functions-and-interfaces.md",
+    "detector": "review",
+    "upstream": [
+      "I.26",
+      "I.9",
+      "I.25",
+      "I.27"
+    ]
+  },
+  {
+    "id": "MEM-1",
+    "strength": "hard",
+    "statement": "Every resource — memory, file descriptors, sockets, mutexes, GPU handles — is owned by an object whose destructor releases it.",
+    "doc": "memory-and-ownership.md",
+    "detector": "ASan's LeakSanitizer (leaks), static analyzer leak checkers for handle types",
+    "upstream": []
+  },
+  {
+    "id": "MEM-2",
+    "strength": "hard",
+    "statement": "A resource without an existing wrapper gets one immediately: a std::unique_ptr<T, Deleter> or a small scoped guard.",
+    "doc": "memory-and-ownership.md",
+    "detector": "ASan's LeakSanitizer (leaks), static analyzer leak checkers for handle types",
+    "upstream": []
+  },
+  {
+    "id": "MEM-3",
+    "strength": "hard",
+    "statement": "Give the result of an acquisition to its manager immediately (R.12): registering the guard even one line after the open leaves a window where the next allocation throws and leaks the handle.",
+    "doc": "memory-and-ownership.md",
+    "detector": "ASan's LeakSanitizer (leaks), static analyzer leak checkers for handle types",
+    "upstream": [
+      "R.12"
+    ]
+  },
+  {
+    "id": "MEM-4",
+    "strength": "default",
+    "statement": "Prefer scoped objects (R.5): locals, members, and globals cost no separate cleanup and let destructors manage members; reach for the Default owner rung only when lifetime must exceed the scope.",
+    "doc": "memory-and-ownership.md",
+    "detector": "ASan's LeakSanitizer (leaks), static analyzer leak checkers for handle types",
+    "upstream": [
+      "R.5"
+    ]
+  },
+  {
+    "id": "MEM-5",
+    "strength": "hard",
+    "statement": "std::unique_ptr<T>; Single owner, dynamic lifetime; Zero overhead; the factory return type of choice",
+    "doc": "memory-and-ownership.md",
+    "detector": "ASan (use-after-free and double-free from broken ownership), LSan (leaked cycles that `weak_ptr` should have broken), TSan (data races from undeclared shared owners), review for shared-ptr sprawl",
+    "upstream": []
+  },
+  {
+    "id": "MEM-6",
+    "strength": "hard",
+    "statement": "Raw T*, T&, std::span, std::string_view; Access without ownership; Must not dangle; the caller guarantees outliving",
+    "doc": "memory-and-ownership.md",
+    "detector": "ASan (use-after-free and double-free from broken ownership), LSan (leaked cycles that `weak_ptr` should have broken), TSan (data races from undeclared shared owners), review for shared-ptr sprawl",
+    "upstream": []
+  },
+  {
+    "id": "MEM-7",
+    "strength": "hard",
+    "statement": "std::shared_ptr<T>; Lifetime genuinely shared, owner unknowable statically; Requires a written justification; cycles go through weak_ptr",
+    "doc": "memory-and-ownership.md",
+    "detector": "ASan (use-after-free and double-free from broken ownership), LSan (leaked cycles that `weak_ptr` should have broken), TSan (data races from undeclared shared owners), review for shared-ptr sprawl",
+    "upstream": []
+  },
+  {
+    "id": "MEM-8",
+    "strength": "hard",
+    "statement": "Owning raw new/delete, mixing malloc/free; Never; Blocked in review",
+    "doc": "memory-and-ownership.md",
+    "detector": "ASan (use-after-free and double-free from broken ownership), LSan (leaked cycles that `weak_ptr` should have broken), TSan (data races from undeclared shared owners), review for shared-ptr sprawl",
+    "upstream": []
+  },
+  {
+    "id": "MEM-9",
+    "strength": "hard",
+    "statement": "The rungs are exhaustive by construction (R.20): ownership is spelled in types, and assigning new's result to a raw pointer strands the object outside the ladder.",
+    "doc": "memory-and-ownership.md",
+    "detector": "ASan (use-after-free and double-free from broken ownership), LSan (leaked cycles that `weak_ptr` should have broken), TSan (data races from undeclared shared owners), review for shared-ptr sprawl",
+    "upstream": [
+      "R.20",
+      "R.3",
+      "R.2"
+    ]
+  },
+  {
+    "id": "MEM-10",
+    "strength": "hard",
+    "statement": "Owning raw pointers occupy Forbidden outright, which is why this project needs no owner<T*> annotation: nothing legal remains for it to mark.",
+    "doc": "memory-and-ownership.md",
+    "detector": "ASan (use-after-free and double-free from broken ownership), LSan (leaked cycles that `weak_ptr` should have broken), TSan (data races from undeclared shared owners), review for shared-ptr sprawl",
+    "upstream": [
+      "R.4"
+    ]
+  },
+  {
+    "id": "MEM-11",
+    "strength": "hard",
+    "statement": "malloc/free share the Forbidden rung (R.10) — they construct and destroy nothing (a malloc-ed record's std::string member is just a string-sized bag of bits) and mixing the verb pairs is undefined behavior; nothrow new stays as the fallback where exceptions truly cannot fly.",
+    "doc": "memory-and-ownership.md",
+    "detector": "ASan (use-after-free and double-free from broken ownership), LSan (leaked cycles that `weak_ptr` should have broken), TSan (data races from undeclared shared owners), review for shared-ptr sprawl",
+    "upstream": [
+      "R.10"
+    ]
+  },
+  {
+    "id": "MEM-12",
+    "strength": "hard",
+    "statement": "A non-const global is an undeclared shared owner and data-race candidate (R.6): constants are constexpr, mutable state gets explicit ownership plus Concurrency's locking story, and init-order traps follow Quality Guidelines' accessor-function pattern.",
+    "doc": "memory-and-ownership.md",
+    "detector": "ASan (use-after-free and double-free from broken ownership), LSan (leaked cycles that `weak_ptr` should have broken), TSan (data races from undeclared shared owners), review for shared-ptr sprawl",
+    "upstream": [
+      "R.6"
+    ]
+  },
+  {
+    "id": "MEM-13",
+    "strength": "hard",
+    "statement": "Create with std::make_unique / std::make_shared, never unique_ptr<T>(new T(...)) (R.22, R.23) — one spelling instead of repeating the type name, exception safety, and one allocation instead of two for shared.",
+    "doc": "memory-and-ownership.md",
+    "detector": "ASan (use-after-free and double-free from broken ownership), LSan (leaked cycles that `weak_ptr` should have broken), TSan (data races from undeclared shared owners), review for shared-ptr sprawl",
+    "upstream": [
+      "R.22",
+      "R.23",
+      "R.13"
+    ]
+  },
+  {
+    "id": "MEM-14",
+    "strength": "hard",
+    "statement": "\"Maybe null, not owning\" parameters take T*; \"present, not owning\" parameters take T&.",
+    "doc": "memory-and-ownership.md",
+    "detector": "ASan (use-after-free and double-free from broken ownership), LSan (leaked cycles that `weak_ptr` should have broken), TSan (data races from undeclared shared owners), review for shared-ptr sprawl",
+    "upstream": []
+  },
+  {
+    "id": "MEM-15",
+    "strength": "hard",
+    "statement": "A shared_ptr in a signature is a design decision, not convenience.",
+    "doc": "memory-and-ownership.md",
+    "detector": "ASan (use-after-free and double-free from broken ownership), LSan (leaked cycles that `weak_ptr` should have broken), TSan (data races from undeclared shared owners), review for shared-ptr sprawl",
+    "upstream": [
+      "R.21"
+    ]
+  },
+  {
+    "id": "MEM-16",
+    "strength": "hard",
+    "statement": "Observing a shared object without extending its life takes std::weak_ptr and locks — mandatory for back-edges in parent/child graphs, caches, and observer lists.",
+    "doc": "memory-and-ownership.md",
+    "detector": "ASan (use-after-free and double-free from broken ownership), LSan (leaked cycles that `weak_ptr` should have broken), TSan (data races from undeclared shared owners), review for shared-ptr sprawl",
+    "upstream": []
+  },
+  {
+    "id": "MEM-17",
+    "strength": "hard",
+    "statement": "Non-std smart pointers join the ladder through the std pattern (R.31): copyable counts as shared-like, move-only as unique-like — every smart-pointer signature rule below applies to them unchanged.",
+    "doc": "memory-and-ownership.md",
+    "detector": "ASan (use-after-free and double-free from broken ownership), LSan (leaked cycles that `weak_ptr` should have broken), TSan (data races from undeclared shared owners), review for shared-ptr sprawl",
+    "upstream": [
+      "R.31"
+    ]
+  },
+  {
+    "id": "MEM-18",
+    "strength": "hard",
+    "statement": "Custom-deleter owners: std::make_unique has no deleter-taking form (R.22 fixes only the default-deleter spelling), so an unwrapped resource with non-default cleanup writes its owner out in full at the acquisition site — std::unique_ptr<Handle, Deleter>{acquire(...), release} — and never parks the raw handle in between.",
+    "doc": "memory-and-ownership.md",
+    "detector": "ASan (use-after-free and double-free from broken ownership), LSan (leaked cycles that `weak_ptr` should have broken), TSan (data races from undeclared shared owners), review for shared-ptr sprawl",
+    "upstream": [
+      "R.22"
+    ]
+  },
+  {
+    "id": "MEM-19",
+    "strength": "hard",
+    "statement": "make_shared carve-outs (R.23): the fused allocation keeps the object's bytes alive while any weak_ptr exists — a mandated weak_ptr back-edge or cache entry over a large object pays full memory after the object is logically dead — and make_shared cannot take a custom deleter.",
+    "doc": "memory-and-ownership.md",
+    "detector": "ASan (use-after-free and double-free from broken ownership), LSan (leaked cycles that `weak_ptr` should have broken), TSan (data races from undeclared shared owners), review for shared-ptr sprawl",
+    "upstream": [
+      "R.23"
+    ]
+  },
+  {
+    "id": "MEM-20",
+    "strength": "default",
+    "statement": "std::string_view",
+    "doc": "memory-and-ownership.md",
+    "detector": "clang-tidy `performance-unnecessary-value-param` (missing moves in sinks); the `const std::string&`-that-should-be-a-view case has no reliable automatic check and is a review item",
+    "upstream": []
+  },
+  {
+    "id": "MEM-21",
+    "strength": "default",
+    "statement": "std::span<const T> (pointer + size until C++20)",
+    "doc": "memory-and-ownership.md",
+    "detector": "clang-tidy `performance-unnecessary-value-param` (missing moves in sinks); the `const std::string&`-that-should-be-a-view case has no reliable automatic check and is a review item",
+    "upstream": []
+  },
+  {
+    "id": "MEM-22",
+    "strength": "default",
+    "statement": "const T&",
+    "doc": "memory-and-ownership.md",
+    "detector": "clang-tidy `performance-unnecessary-value-param` (missing moves in sinks); the `const std::string&`-that-should-be-a-view case has no reliable automatic check and is a review item",
+    "upstream": []
+  },
+  {
+    "id": "MEM-23",
+    "strength": "default",
+    "statement": "const T*, documented as nullable",
+    "doc": "memory-and-ownership.md",
+    "detector": "clang-tidy `performance-unnecessary-value-param` (missing moves in sinks); the `const std::string&`-that-should-be-a-view case has no reliable automatic check and is a review item",
+    "upstream": []
+  },
+  {
+    "id": "MEM-24",
+    "strength": "default",
+    "statement": "By value, then std::move into storage",
+    "doc": "memory-and-ownership.md",
+    "detector": "clang-tidy `performance-unnecessary-value-param` (missing moves in sinks); the `const std::string&`-that-should-be-a-view case has no reliable automatic check and is a review item",
+    "upstream": []
+  },
+  {
+    "id": "MEM-25",
+    "strength": "hard",
+    "statement": "Return value; T& only when a second output genuinely exists",
+    "doc": "memory-and-ownership.md",
+    "detector": "clang-tidy `performance-unnecessary-value-param` (missing moves in sinks); the `const std::string&`-that-should-be-a-view case has no reliable automatic check and is a review item",
+    "upstream": []
+  },
+  {
+    "id": "MEM-26",
+    "strength": "hard",
+    "statement": "Return std::optional<T>, never a sentinel or nullptr",
+    "doc": "memory-and-ownership.md",
+    "detector": "clang-tidy `performance-unnecessary-value-param` (missing moves in sinks); the `const std::string&`-that-should-be-a-view case has no reliable automatic check and is a review item",
+    "upstream": []
+  },
+  {
+    "id": "MEM-27",
+    "strength": "hard",
+    "statement": "View parameters are borrow-only: if the value must outlive the call, copy it deliberately (see the pitfalls below before storing one).",
+    "doc": "memory-and-ownership.md",
+    "detector": "ASan for the use-after-free at first access; review for the store itself",
+    "upstream": []
+  },
+  {
+    "id": "MEM-28",
+    "strength": "default",
+    "statement": "Do not maintain both a const std::string& and a string_view overload for the same parameter; one spelling wins.",
+    "doc": "memory-and-ownership.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "MEM-29",
+    "strength": "hard",
+    "statement": "Array parameters decay: void f(int[]) *is* f(int*) after adjustment — the length is simply gone (R.14).",
+    "doc": "memory-and-ownership.md",
+    "detector": "review",
+    "upstream": [
+      "R.14"
+    ]
+  },
+  {
+    "id": "MEM-30",
+    "strength": "default",
+    "statement": "The optional-result row covers *value* results only.",
+    "doc": "memory-and-ownership.md",
+    "detector": "review",
+    "upstream": [
+      "F.42"
+    ]
+  },
+  {
+    "id": "MEM-31",
+    "strength": "hard",
+    "statement": "Take smart pointers as parameters only to explicitly express lifetime semantics (R.30): readers take Borrowed views (widget*, widget&, std::span), sinks take by-value owners, and a by-value shared_ptr parameter nobody stores is an atomic no-op billed to every caller.",
+    "doc": "memory-and-ownership.md",
+    "detector": "review — no checker reliably distinguishes takeover from borrow, so treat smart-pointer parameter types as reviewed API surface",
+    "upstream": [
+      "R.30"
+    ]
+  },
+  {
+    "id": "MEM-32",
+    "strength": "hard",
+    "statement": "Callee assumes ownership — stores or consumes the widget; Anything less takes widget* or widget& (R.32)",
+    "doc": "memory-and-ownership.md",
+    "detector": "review — no checker reliably distinguishes takeover from borrow, so treat smart-pointer parameter types as reviewed API surface",
+    "upstream": [
+      "R.32"
+    ]
+  },
+  {
+    "id": "MEM-33",
+    "strength": "hard",
+    "statement": "Callee reseats the slot — assigns or calls reset() on some path; Never reassigned, it is a forbidden pointer out-parameter wearing a template (R.33)",
+    "doc": "memory-and-ownership.md",
+    "detector": "review — no checker reliably distinguishes takeover from borrow, so treat smart-pointer parameter types as reviewed API surface",
+    "upstream": [
+      "R.33"
+    ]
+  },
+  {
+    "id": "MEM-34",
+    "strength": "hard",
+    "statement": "Callee joins the owner set — stores a copy, ideally moved; Otherwise every call pays atomic refcount traffic for nothing; the Shared-owner justification applies to signatures, not just members (R.34)",
+    "doc": "memory-and-ownership.md",
+    "detector": "review — no checker reliably distinguishes takeover from borrow, so treat smart-pointer parameter types as reviewed API surface",
+    "upstream": [
+      "R.34"
+    ]
+  },
+  {
+    "id": "MEM-35",
+    "strength": "hard",
+    "statement": "Callee might reseat the pointer; Same contract as the unique case: no assignment or reset anywhere, no parameter (R.35)",
+    "doc": "memory-and-ownership.md",
+    "detector": "review — no checker reliably distinguishes takeover from borrow, so treat smart-pointer parameter types as reviewed API surface",
+    "upstream": [
+      "R.35"
+    ]
+  },
+  {
+    "id": "MEM-36",
+    "strength": "hard",
+    "statement": "Reserved for conditionally retaining a count; See the deviation below",
+    "doc": "memory-and-ownership.md",
+    "detector": "review — no checker reliably distinguishes takeover from borrow, so treat smart-pointer parameter types as reviewed API surface",
+    "upstream": []
+  },
+  {
+    "id": "MEM-37",
+    "strength": "hard",
+    "statement": "Never pass a pointer or reference obtained from an aliased smart pointer down a call chain (R.37): resetting through another alias mid-call destroys the object under the borrowed reference.",
+    "doc": "memory-and-ownership.md",
+    "detector": "review — no checker reliably distinguishes takeover from borrow, so treat smart-pointer parameter types as reviewed API surface",
+    "upstream": [
+      "R.37"
+    ]
+  },
+  {
+    "id": "MEM-38",
+    "strength": "hard",
+    "statement": "A string_view/span return type is a promise — it points into input memory that outlives the expression; never return a view into a local or a temporary.",
+    "doc": "memory-and-ownership.md",
+    "detector": "GCC 13+ `-Wdangling-reference` flags simple cases but is prone to false positives — treat findings as leads, not verdicts; ASan flags the use-after-return at first access. Any view returned across a function boundary deserves a look under an ASan+UBSan build",
+    "upstream": []
+  },
+  {
+    "id": "MEM-39",
+    "strength": "hard",
+    "statement": "Never hold an iterator or reference across a container mutation that may invalidate it.",
+    "doc": "memory-and-ownership.md",
+    "detector": "ASan for the heap cases; libstdc++ debug mode (`_GLIBCXX_DEBUG`) or libc++ hardened/debug assertions catches container-internal violations deterministically — worth a dedicated debug-mode build if the budget allows",
+    "upstream": []
+  },
+  {
+    "id": "MEM-40",
+    "strength": "default",
+    "statement": "Containers own by default (std::vector<std::string>).",
+    "doc": "memory-and-ownership.md",
+    "detector": "ASan for the dangling use; review — no automated detector for the owner-naming declaration",
+    "upstream": []
+  },
+  {
+    "id": "MEM-41",
+    "strength": "hard",
+    "statement": "A container of views is allowed only when the owner provably outlives it in the same scope, and the declaration site says so in a comment naming the owner.",
+    "doc": "memory-and-ownership.md",
+    "detector": "ASan for the dangling use; review — no automated detector for the owner-naming declaration",
+    "upstream": []
+  },
+  {
+    "id": "MEM-42",
+    "strength": "hard",
+    "statement": "At storage boundaries (config load, deserialization, IPC), re-own: convert views to owning strings once, then pass views downward.",
+    "doc": "memory-and-ownership.md",
+    "detector": "ASan for the dangling use; review — no automated detector for the owner-naming declaration",
+    "upstream": []
+  },
+  {
+    "id": "MEM-43",
+    "strength": "hard",
+    "statement": "Parent owns children through shared_ptr; child stores a shared_ptr back to the parent; nothing is ever destroyed.",
+    "doc": "memory-and-ownership.md",
+    "detector": "LeakSanitizer reports the unreachable cycle cluster; the leak dump pointing at both ends of a mutual `shared_ptr` is the classic signature",
+    "upstream": [
+      "R.24"
+    ]
+  },
+  {
+    "id": "MEM-44",
+    "strength": "hard",
+    "statement": "The adjacent double-own trap is this itself.",
+    "doc": "memory-and-ownership.md",
+    "detector": "ASan catches the resulting double-free; a `shared_ptr` constructed directly from `this` is a review item",
+    "upstream": []
+  },
+  {
+    "id": "MEM-45",
+    "strength": "hard",
+    "statement": "The arena owns everything allocated from it; individual objects are never freed individually.",
+    "doc": "memory-and-ownership.md",
+    "detector": "ASan when annotations are wired; review for pointers escaping the arena scope",
+    "upstream": []
+  },
+  {
+    "id": "MEM-46",
+    "strength": "hard",
+    "statement": "Nothing escapes the arena scope.",
+    "doc": "memory-and-ownership.md",
+    "detector": "ASan when annotations are wired; review for pointers escaping the arena scope",
+    "upstream": []
+  },
+  {
+    "id": "MEM-47",
+    "strength": "hard",
+    "statement": "Preserve the sanitizer story: wire reset() to poison/unpoison the region (ASan container annotations or explicit poison calls) so use-after-reset stays detectable.",
+    "doc": "memory-and-ownership.md",
+    "detector": "ASan when annotations are wired; review for pointers escaping the arena scope",
+    "upstream": []
+  },
+  {
+    "id": "MEM-48",
+    "strength": "default",
+    "statement": "Measure first.",
+    "doc": "memory-and-ownership.md",
+    "detector": "ASan when annotations are wired; review for pointers escaping the arena scope",
+    "upstream": []
+  },
+  {
+    "id": "MEM-49",
+    "strength": "hard",
+    "statement": "Custom allocators ship matched pairs (R.15): any custom operator new comes with its matching operator delete, or that deallocation function is deliberately =delete-ed.",
+    "doc": "memory-and-ownership.md",
+    "detector": "ASan when annotations are wired; review for pointers escaping the arena scope",
+    "upstream": [
+      "R.15"
+    ]
+  },
+  {
+    "id": "PERF-1",
+    "strength": "hard",
+    "statement": "No optimization lands without evidence (Per.1) and none begins before the current cost is known (Per.2).",
+    "doc": "performance.md",
+    "detector": "review",
+    "upstream": [
+      "Per.1",
+      "Per.2",
+      "Per.6"
+    ]
+  },
+  {
+    "id": "PERF-2",
+    "strength": "default",
+    "statement": "Design so optimization stays possible later (Per.7): clean interfaces, replaceable data structures.",
+    "doc": "performance.md",
+    "detector": "review",
+    "upstream": [
+      "Per.7"
+    ]
+  },
+  {
+    "id": "PERF-3",
+    "strength": "hard",
+    "statement": "Numbers quoted in reviews state machine, input, build configuration, and repetition count.",
+    "doc": "performance.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "PERF-4",
+    "strength": "hard",
+    "statement": "Sanitizer builds answer correctness questions; their slowdowns make them useless for timing.",
+    "doc": "performance.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "PERF-5",
+    "strength": "hard",
+    "statement": "The benchmark that justified a change stays in the tree so the next person can re-verify it.",
+    "doc": "performance.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "PERF-6",
+    "strength": "default",
+    "statement": "Effort concentrates on code the profiler indicts, not code that merely looks slow (Per.3): a 50% win on a component eating 2% of runtime (1 point of total time) moves the whole program less than a 5% win on one eating 40% (2 points).",
+    "doc": "performance.md",
+    "detector": "review",
+    "upstream": [
+      "Per.3",
+      "Per.30"
+    ]
+  },
+  {
+    "id": "PERF-7",
+    "strength": "default",
+    "statement": "The target is the count of allocations and deallocations, not merely their unit cost (Per.14): reserve(), in-place construction, and buffers reused across iterations attack the count itself.",
+    "doc": "performance.md",
+    "detector": "heap profilers (allocation counts and byte totals); allocator statistics from sanitizer builds during correctness runs",
+    "upstream": [
+      "Per.14"
+    ]
+  },
+  {
+    "id": "PERF-8",
+    "strength": "default",
+    "statement": "reserve() before growth loops — vectors, string builders, hash maps heading for a known size.",
+    "doc": "performance.md",
+    "detector": "heap profilers (allocation counts and byte totals); allocator statistics from sanitizer builds during correctness runs",
+    "upstream": []
+  },
+  {
+    "id": "PERF-9",
+    "strength": "default",
+    "statement": "emplace_back(...) over push_back(T{...}): construct in place instead of materializing a temporary to move.",
+    "doc": "performance.md",
+    "detector": "heap profilers (allocation counts and byte totals); allocator statistics from sanitizer builds during correctness runs",
+    "upstream": []
+  },
+  {
+    "id": "PERF-10",
+    "strength": "default",
+    "statement": "Steady-state buffers are reused across iterations, not rebuilt per call; hoist them to a scope outliving the loop.",
+    "doc": "performance.md",
+    "detector": "heap profilers (allocation counts and byte totals); allocator statistics from sanitizer builds during correctness runs",
+    "upstream": []
+  },
+  {
+    "id": "PERF-11",
+    "strength": "default",
+    "statement": "Building text appends into one reserved buffer; chained + in a loop is forbidden.",
+    "doc": "performance.md",
+    "detector": "heap profilers (allocation counts and byte totals); allocator statistics from sanitizer builds during correctness runs",
+    "upstream": []
+  },
+  {
+    "id": "PERF-12",
+    "strength": "default",
+    "statement": "Where a profile shows allocator pressure that reserve() cannot fix, arenas and object pools are the escalation path — under the ownership and ASan-annotation rules in Memory and Ownership.",
+    "doc": "performance.md",
+    "detector": "heap profilers (allocation counts and byte totals); allocator statistics from sanitizer builds during correctness runs",
+    "upstream": []
+  },
+  {
+    "id": "PERF-13",
+    "strength": "hard",
+    "statement": "An arena introduced without a profile is complexity debt, not performance work (Per.2).",
+    "doc": "performance.md",
+    "detector": "review",
+    "upstream": [
+      "Per.2"
+    ]
+  },
+  {
+    "id": "PERF-14",
+    "strength": "hard",
+    "statement": "Nothing allocates on the critical branch (Per.15): sizes are known and buffers staged before the hot region begins.",
+    "doc": "performance.md",
+    "detector": "heap profilers (allocation counts and byte totals); allocator statistics from sanitizer builds during correctness runs",
+    "upstream": [
+      "Per.15"
+    ]
+  },
+  {
+    "id": "PERF-15",
+    "strength": "hard",
+    "statement": "std::move appears exactly where the source's value is finished, typically at a return or hand-off (ES.56).",
+    "doc": "performance.md",
+    "detector": "review",
+    "upstream": [
+      "ES.56"
+    ]
+  },
+  {
+    "id": "PERF-16",
+    "strength": "hard",
+    "statement": "A moved-from object is destructible and assignable; everything else about its state is unspecified.",
+    "doc": "performance.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "PERF-17",
+    "strength": "default",
+    "statement": "Return values need no help: return local; already moves or elides, and writing return std::move(local); pessimizes by suppressing elision.",
+    "doc": "performance.md",
+    "detector": "`-Wpessimizing-move` for the returned-local case; review for the move-out accessor's contract",
+    "upstream": []
+  },
+  {
+    "id": "PERF-18",
+    "strength": "default",
+    "statement": "Read-only text arrives as std::string_view; read-only sequences arrive as a pointer-plus-size pair — (const T* data, std::size_t size), or gsl::span<const T> where GSL is adopted — until C++20 std::span takes over the spelling, so literals, substrings, and slices cross the boundary without allocating.",
+    "doc": "performance.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "PERF-19",
+    "strength": "default",
+    "statement": "Inside the callee, slicing is free — remove_prefix and substr on views allocate nothing.",
+    "doc": "performance.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "PERF-20",
+    "strength": "hard",
+    "statement": "Views borrow.",
+    "doc": "performance.md",
+    "detector": "review — no automated detector; ASan flags the use-after-free when a borrowed view actually outlives its owner",
+    "upstream": []
+  },
+  {
+    "id": "PERF-21",
+    "strength": "default",
+    "statement": "Redundant temporaries are the same sin inside bodies: each format(a) + \", \" + format(b) materializes intermediates, while an append chain into one buffer does not.",
+    "doc": "performance.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "PERF-22",
+    "strength": "default",
+    "statement": "The static type system is doing performance work too (Per.10): void* erasures, weak types, and byte-level manipulation strip exactly the information the optimizer needs — strongly typed simple code compiles better than clever low-level code.",
+    "doc": "performance.md",
+    "detector": "review",
+    "upstream": [
+      "Per.10"
+    ]
+  },
+  {
+    "id": "PERF-23",
+    "strength": "default",
+    "statement": "Anything computable at compile time should be (Per.11): lookup tables, polynomial coefficients, dispatch matrices.",
+    "doc": "performance.md",
+    "detector": "review",
+    "upstream": [
+      "Per.11"
+    ]
+  },
+  {
+    "id": "PERF-24",
+    "strength": "default",
+    "statement": "Limits: tricks that balloon build minutes or binary size tax everyone on every build.",
+    "doc": "performance.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "PERF-25",
+    "strength": "default",
+    "statement": "Compact structures win (Per.16): fewer bytes means more objects per cache line.",
+    "doc": "performance.md",
+    "detector": "review",
+    "upstream": [
+      "Per.16",
+      "Per.17"
+    ]
+  },
+  {
+    "id": "PERF-26",
+    "strength": "default",
+    "statement": "Space is time (Per.18): shaving a flag-swollen struct from 64 to 56 bytes cuts scan traffic by an eighth before anything else improves.",
+    "doc": "performance.md",
+    "detector": "review",
+    "upstream": [
+      "Per.18"
+    ]
+  },
+  {
+    "id": "PERF-27",
+    "strength": "default",
+    "statement": "Predictable access wins (Per.19): linear walks over contiguous memory beat pointer-chasing through node containers, and small sorted-array lookups often beat hash maps at low cardinality — measure, then choose.",
+    "doc": "performance.md",
+    "detector": "review",
+    "upstream": [
+      "Per.19"
+    ]
+  },
+  {
+    "id": "PERF-28",
+    "strength": "default",
+    "statement": "Hot data keeps one canonical access path (Per.12): redundant aliases — several names reaching the same storage — cost reader clarity and inhibit optimization.",
+    "doc": "performance.md",
+    "detector": "review",
+    "upstream": [
+      "Per.12"
+    ]
+  },
+  {
+    "id": "PERF-29",
+    "strength": "default",
+    "statement": "Threads writing adjacent data false-share a cache line: two hot per-thread counters inside one line turn independent updates into ping-pong between cores.",
+    "doc": "performance.md",
+    "detector": "`perf c2c` or cache-miss profiling — the program stays correct, so TSan reports nothing",
+    "upstream": []
+  },
+  {
+    "id": "PERF-30",
+    "strength": "default",
+    "statement": "When profiles show scan-heavy numeric loops starving on strided access, restructure hot data from array-of-structs to struct-of-arrays: one contiguous array per field lets each pass stream exactly the fields it touches.",
+    "doc": "performance.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "PERF-31",
+    "strength": "hard",
+    "statement": "Readability is the default currency.",
+    "doc": "performance.md",
+    "detector": "review",
+    "upstream": [
+      "Per.1",
+      "Per.5"
+    ]
+  },
+  {
+    "id": "QUAL-1",
+    "strength": "hard",
+    "statement": "PascalCase; HttpRequestParser",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-2",
+    "strength": "hard",
+    "statement": "PascalCase, single word or T; Sinkable, T",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-3",
+    "strength": "hard",
+    "statement": "snake_case; parse_header",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-4",
+    "strength": "hard",
+    "statement": "snake_case; retry_count",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-5",
+    "strength": "hard",
+    "statement": "snake_case + trailing _; size_, buffer_",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-6",
+    "strength": "hard",
+    "statement": "k prefix + PascalCase; kMaxRetries",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-7",
+    "strength": "hard",
+    "statement": "k prefix + PascalCase; Status::kOk",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-8",
+    "strength": "hard",
+    "statement": "short, lowercase; net, http",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-9",
+    "strength": "hard",
+    "statement": "PROJECT_PREFIX_ALL_CAPS; MYLIB_ASSERT",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-10",
+    "strength": "hard",
+    "statement": "Do not use m_ or plain names plus setter/getter gymnastics.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": [
+      "NL.16"
+    ]
+  },
+  {
+    "id": "QUAL-11",
+    "strength": "hard",
+    "statement": "Comments that narrate what the code already says are rot-prone noise (NL.1): compilers never read them and they drift.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": [
+      "NL.1"
+    ]
+  },
+  {
+    "id": "QUAL-12",
+    "strength": "hard",
+    "statement": "Comments earn their place by stating intent the code cannot express — why, constraints, expected behavior (NL.2).",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": [
+      "NL.2"
+    ]
+  },
+  {
+    "id": "QUAL-13",
+    "strength": "hard",
+    "statement": "Keep comments crisp, grammatical, and professional: verbosity spreads understanding thin, SMS spelling ages badly (NL.3).",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": [
+      "NL.3"
+    ]
+  },
+  {
+    "id": "QUAL-14",
+    "strength": "hard",
+    "statement": "No Hungarian-style type warts (NL.5): names describe functionality, and overloading matches types automatically.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": [
+      "NL.5"
+    ]
+  },
+  {
+    "id": "QUAL-15",
+    "strength": "hard",
+    "statement": "Name length proportional to scope (NL.7): short conventional names (i, p) locally, descriptive names for anything visible across functions; a cryptic one-letter global is always wrong.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": [
+      "NL.7"
+    ]
+  },
+  {
+    "id": "QUAL-16",
+    "strength": "hard",
+    "statement": "One house style for our code, imported libraries keep theirs (NL.8) — the table above is that house style.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": [
+      "NL.8"
+    ]
+  },
+  {
+    "id": "QUAL-17",
+    "strength": "hard",
+    "statement": "Reserved identifiers (__-prefixed or leading _X) stay banned along with everything else the standard reserves.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-18",
+    "strength": "hard",
+    "statement": "ALL_CAPS is reserved for macros (NL.9) so a shouting identifier always means text-substitution hazard; constants and scoped-enum values take k names per the table, never caps.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": [
+      "NL.9",
+      "NL.10"
+    ]
+  },
+  {
+    "id": "QUAL-19",
+    "strength": "hard",
+    "statement": "Reject easily misread names (NL.19) — oO01lL, near-twin pairs like splunk/splonk: screens differ and humans skim.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": [
+      "NL.19"
+    ]
+  },
+  {
+    "id": "QUAL-20",
+    "strength": "hard",
+    "statement": "One name per declaration (NL.21): int a, b; invites declarator-syntax confusion, and splitting costs nothing while reading better.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": [
+      "NL.21"
+    ]
+  },
+  {
+    "id": "QUAL-21",
+    "strength": "hard",
+    "statement": "Write f(), not f(void) (NL.25): in C++ the empty parameter list already means no parameters, and the C-compat ceremony adds nothing.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": [
+      "NL.25"
+    ]
+  },
+  {
+    "id": "QUAL-22",
+    "strength": "hard",
+    "statement": "West const (const int x, const T&) per conventional notation (NL.26): east const is logically defensible but unfamiliar to most readers; consistency wins and suffixed const is rejected in review.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": [
+      "NL.26",
+      "NL.27",
+      "SF.1"
+    ]
+  },
+  {
+    "id": "QUAL-23",
+    "strength": "hard",
+    "statement": "Make literals readable (NL.11): digit separators (299'792'458) and typed suffixes (\"...\"s, 100ms) where the type matters.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": [
+      "NL.11"
+    ]
+  },
+  {
+    "id": "QUAL-24",
+    "strength": "hard",
+    "statement": "Five Guidelines rules are layout-shaped, and hand-policing formatting wastes the exact attention reviews exist for.",
+    "doc": "quality-guidelines.md",
+    "detector": "clang-format — the committed configuration is the single encoding of each layout decision",
+    "upstream": [
+      "NL.4",
+      "NL.15",
+      "NL.17",
+      "NL.18",
+      "NL.20"
+    ]
+  },
+  {
+    "id": "QUAL-25",
+    "strength": "default",
+    "statement": "clang-tidy earns its keep on changed sources only when curated — wholesale category dumps bury signal under hundreds of hits.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-26",
+    "strength": "default",
+    "statement": "Individual cppcoreguidelines-* checks follow the same discipline — curated one by one, never enabled as a family.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-27",
+    "strength": "default",
+    "statement": "When a check lands in .clang-tidy, record it in the same change that adopts the corresponding rule; when a check is rejected, leave the reason here so the question is answered once.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-28",
+    "strength": "hard",
+    "statement": ".cpp for code files, .h for interface files, everywhere unless an existing project convention wins (SF.1) — identical in substance to NL.27 in the naming section; uniformity is the point, not the letters.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": [
+      "SF.1",
+      "NL.27"
+    ]
+  },
+  {
+    "id": "QUAL-29",
+    "strength": "hard",
+    "statement": "Namespaces mirror logical structure (SF.20): components and layers, short and lowercase per the naming table — net, http.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": [
+      "SF.20"
+    ]
+  },
+  {
+    "id": "QUAL-30",
+    "strength": "hard",
+    "statement": "Every header must be self-contained (SF.11): it includes everything its own code names — include what you name (SF.10), never depending on what a transitively included header happens to drag in; deliberate aggregation headers remain acceptable.",
+    "doc": "quality-guidelines.md",
+    "detector": "the compiler — building each `.cpp` with its own header first (QUAL-31) turns a missing include into a build error",
+    "upstream": [
+      "SF.11",
+      "SF.10"
+    ]
+  },
+  {
+    "id": "QUAL-31",
+    "strength": "hard",
+    "statement": "Enforce mechanically (SF.5): make each header the *first* include of its own .cpp.",
+    "doc": "quality-guidelines.md",
+    "detector": "the compiler — building each `.cpp` with its own header first (QUAL-31) turns a missing include into a build error",
+    "upstream": [
+      "SF.5"
+    ]
+  },
+  {
+    "id": "QUAL-32",
+    "strength": "hard",
+    "statement": "Includes go first in both .h and .cpp (SF.4); upstream's include-after-code insulation trick protects exactly one level, which is why it is not adopted here.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": [
+      "SF.4"
+    ]
+  },
+  {
+    "id": "QUAL-33",
+    "strength": "hard",
+    "statement": "Quoted includes for locally relative files, angle brackets for everything else (SF.12): quoting a search-path header risks a future sibling file silently shadowing the intended one.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": [
+      "SF.12"
+    ]
+  },
+  {
+    "id": "QUAL-34",
+    "strength": "hard",
+    "statement": "Spell header identifiers exactly as on disk (SF.13) — matching case, / separators, never backslashes — because the standard leaves lookup unspecified and platform-specific paths do not survive porting.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": [
+      "SF.13"
+    ]
+  },
+  {
+    "id": "QUAL-35",
+    "strength": "hard",
+    "statement": "Forward-declare only what you can: parameters, references, pointers, and return-pointer types in declarations.",
+    "doc": "quality-guidelines.md",
+    "detector": "the compiler — using an incomplete type where the complete type is required fails the build",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-36",
+    "strength": "hard",
+    "statement": "Never forward-declare std:: types — it is UB.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-37",
+    "strength": "default",
+    "statement": "Prefer including over forward-declaring for project headers unless compile-time pain is measured, not assumed.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-38",
+    "strength": "hard",
+    "statement": "One header declares one primary type; do not chain forward declarations to break artificial cycles that better layering would remove.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-39",
+    "strength": "hard",
+    "statement": "Eliminate cyclic includes with better layering; do not paper over them with guards (SF.9) — the same stance as refusing forward-declaration chains to break artificial cycles that better layering would remove.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": [
+      "SF.9"
+    ]
+  },
+  {
+    "id": "QUAL-40",
+    "strength": "hard",
+    "statement": "Use #pragma once.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": [
+      "SF.8"
+    ]
+  },
+  {
+    "id": "QUAL-41",
+    "strength": "hard",
+    "statement": "Headers carry declarations, templates, class definitions, and inline/constexpr definitions (SF.2) — never namespace-scope object definitions or non-inline function bodies, which duplicate per translation unit and die in linkage errors.",
+    "doc": "quality-guidelines.md",
+    "detector": "the linker — non-inline bodies die in duplicate-symbol errors; per-TU object copies only surface under review or ODR-sensitive tools",
+    "upstream": [
+      "SF.2"
+    ]
+  },
+  {
+    "id": "QUAL-42",
+    "strength": "hard",
+    "statement": "Anything declared in multiple source files gets one home in a header (SF.3): hand-written extern declarations drift silently until the linker complains late.",
+    "doc": "quality-guidelines.md",
+    "detector": "the linker — non-inline bodies die in duplicate-symbol errors; per-TU object copies only surface under review or ODR-sensitive tools",
+    "upstream": [
+      "SF.3"
+    ]
+  },
+  {
+    "id": "QUAL-43",
+    "strength": "hard",
+    "statement": "Deviation from SF.6: using namespace is tolerated sparingly inside .cpp files (a translation unit counts as local scope) and during transitions, but we stop short of blessing blanket using namespace std; — qualify when ambiguity threatens.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": [
+      "SF.6"
+    ]
+  },
+  {
+    "id": "QUAL-44",
+    "strength": "hard",
+    "statement": "Never in headers (SF.7): at global scope it hijacks every includer's name lookup and makes include order semantically load-bearing.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": [
+      "SF.7"
+    ]
+  },
+  {
+    "id": "QUAL-45",
+    "strength": "hard",
+    "statement": "File-local helpers in .cpp files go in an anonymous namespace (SF.22: all internal, non-exported entities live there — preferred over static for uniformity with type declarations, with exported entities staying outside).",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": [
+      "SF.22"
+    ]
+  },
+  {
+    "id": "QUAL-46",
+    "strength": "hard",
+    "statement": "Anonymous namespaces in headers are forbidden (SF.21): every including translation unit gets its own private copies, silently duplicating code and data and tripping ODR-sensitive tools.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": [
+      "SF.21"
+    ]
+  },
+  {
+    "id": "QUAL-47",
+    "strength": "hard",
+    "statement": "Namespace-scope constants defined in headers must be inline constexpr (SF.2 bans object definitions in headers outright; this inline form is the sanctioned shape) so there is exactly one entity across all translation units.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": [
+      "SF.2"
+    ]
+  },
+  {
+    "id": "QUAL-48",
+    "strength": "hard",
+    "statement": "Initialization order of namespace-scope objects across translation units is unspecified.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-49",
+    "strength": "hard",
+    "statement": "Headers of libraries distributed as binaries must not expose private members: adding a member later changes sizeof and breaks ABI.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-50",
+    "strength": "hard",
+    "statement": "dynamic_cast and typeid require identical RTTI representations on both sides of a module boundary.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-51",
+    "strength": "hard",
+    "statement": "The RTTI caution above has a quieter sibling: the standard library itself must be binary-compatible on both sides of a module boundary.",
+    "doc": "quality-guidelines.md",
+    "detector": "the linker — unresolved `std::__cxx11::` symbols, `LNK2038`/`LNK4098` conflict errors; loud, but only at the final link of the combined binary",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-52",
+    "strength": "hard",
+    "statement": "The review gate is earlier: ABI-relevant compiler flags and prebuilt dependencies (see Third-Party Dependencies below) are decided for the whole module graph, never per target.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-53",
+    "strength": "hard",
+    "statement": "The standard library is the default supplier (SL.2): it ships with the toolchain, is tested as a unit, and keeps every module on one ABI (see the pitfalls above).",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": [
+      "SL.2"
+    ]
+  },
+  {
+    "id": "QUAL-54",
+    "strength": "hard",
+    "statement": "A third-party dependency is a permanent design decision — vet it before adopting on four axes (SL.1): maintenance activity, portability across the supported compilers, license compatibility, and supply-chain provenance.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": [
+      "SL.1"
+    ]
+  },
+  {
+    "id": "QUAL-55",
+    "strength": "hard",
+    "statement": "Adopted components are used within their contracts (SL.4): no relying on growth schedules, SSO capacities, or other implementation details.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": [
+      "SL.4"
+    ]
+  },
+  {
+    "id": "QUAL-56",
+    "strength": "hard",
+    "statement": "Nothing user-defined enters namespace std (SL.3) — the sanctioned escapes are the few specializations the standard itself blesses; the ODR rules above explain why this one is absolute: a stray addition to std poisons every translation unit that includes you, and no tool tells you where.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": [
+      "SL.3"
+    ]
+  },
+  {
+    "id": "QUAL-57",
+    "strength": "hard",
+    "statement": "Scoped enum class everywhere (Enum.3): plain enums convert to int too readily, and unrelated enumerations collide on shared enumerator names.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-58",
+    "strength": "default",
+    "statement": "Define the operations enumeration users need (Enum.4) — a wrapping operator++ for iteration-like sets, for instance.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-59",
+    "strength": "hard",
+    "statement": "Unnamed enumerations are unrelated integer constants in costume: declare each value as constexpr instead (Enum.6), which also gives it the right individual type — the constexpr-discipline section below applied.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-60",
+    "strength": "default",
+    "statement": "Leave the underlying type at its default unless necessary (Enum.7); specifying it is required for forward-declarable enums and fixed bit width — precisely the ABI-sensitive-header situations flagged under ODR and ABI above.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-61",
+    "strength": "default",
+    "statement": "Give enumerators explicit values only when meaning demands it (Enum.8): conventional numbering such as months starting at 1, or bit-flag sets.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-62",
+    "strength": "hard",
+    "statement": "Enumerators whose integer values cross a module or storage boundary (published headers, serialized or logged forms) pin explicit values and grow only by appending.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-63",
+    "strength": "default",
+    "statement": "Use compile-time evaluation where it is free: pure computations, lookup tables, literal formatting, trait-like dispatch.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-64",
+    "strength": "default",
+    "statement": "Do not obfuscate straightforward runtime logic as template metaprogramming without a measured benefit; unreadable zero-cost is usually negative-cost once maintenance is priced in.",
+    "doc": "quality-guidelines.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "TPL-1",
+    "strength": "hard",
+    "statement": "Constrain every public template.",
+    "doc": "templates-and-generics.md",
+    "detector": "compile time itself — that is the point. Readability of the failure is review-visible: if a colleague cannot tell why their type fails within one screen of output, the constraint is missing or miswritten",
+    "upstream": [
+      "T.10"
+    ]
+  },
+  {
+    "id": "TPL-2",
+    "strength": "default",
+    "statement": "A constraint must carry meaning, not just syntax.",
+    "doc": "templates-and-generics.md",
+    "detector": "compile time itself — that is the point. Readability of the failure is review-visible: if a colleague cannot tell why their type fails within one screen of output, the constraint is missing or miswritten",
+    "upstream": [
+      "T.20"
+    ]
+  },
+  {
+    "id": "TPL-3",
+    "strength": "default",
+    "statement": "Prefer one concept over enable_if gymnastics wherever the dialect allows.",
+    "doc": "templates-and-generics.md",
+    "detector": "compile time itself — that is the point. Readability of the failure is review-visible: if a colleague cannot tell why their type fails within one screen of output, the constraint is missing or miswritten",
+    "upstream": []
+  },
+  {
+    "id": "TPL-4",
+    "strength": "default",
+    "statement": "Constrain to what the algorithm essentially needs, nothing more (T.41): debug streamability does not belong in sort's concept, and nobody demands operator<< inside a sorting routine because some caller once debugged through it.",
+    "doc": "templates-and-generics.md",
+    "detector": "compile time itself — that is the point. Readability of the failure is review-visible: if a colleague cannot tell why their type fails within one screen of output, the constraint is missing or miswritten",
+    "upstream": [
+      "T.41"
+    ]
+  },
+  {
+    "id": "TPL-5",
+    "strength": "hard",
+    "statement": "An unconstrained template with a common, attractive name (swap, begin, hash) hijacks overload resolution far beyond its home directory; give such helpers a constrained or namespaced spelling (T.47).",
+    "doc": "templates-and-generics.md",
+    "detector": "compile time itself — that is the point. Readability of the failure is review-visible: if a colleague cannot tell why their type fails within one screen of output, the constraint is missing or miswritten",
+    "upstream": [
+      "T.47"
+    ]
+  },
+  {
+    "id": "TPL-6",
+    "strength": "default",
+    "statement": "A concept must require a coherent, complete set of operations (T.21): Subtractable alone is meaningless without +, and comparison arrives as the full six-operator set.",
+    "doc": "templates-and-generics.md",
+    "detector": "compile time itself — that is the point. Readability of the failure is review-visible: if a colleague cannot tell why their type fails within one screen of output, the constraint is missing or miswritten",
+    "upstream": [
+      "T.21"
+    ]
+  },
+  {
+    "id": "TPL-7",
+    "strength": "default",
+    "statement": "Concepts carry axioms (T.22) — the mathematical assumptions (a - a == 0, distributivity) written as comments beside the requires clause until language support exists.",
+    "doc": "templates-and-generics.md",
+    "detector": "compile time itself — that is the point. Readability of the failure is review-visible: if a colleague cannot tell why their type fails within one screen of output, the constraint is missing or miswritten",
+    "upstream": [
+      "T.22"
+    ]
+  },
+  {
+    "id": "TPL-8",
+    "strength": "default",
+    "statement": "Differentiate a refined concept from its more general case by adding use patterns (T.23): a forward iterator is an input iterator plus suffix ++, letting the compiler derive subsumption from requirement sets alone.",
+    "doc": "templates-and-generics.md",
+    "detector": "compile time itself — that is the point. Readability of the failure is review-visible: if a colleague cannot tell why their type fails within one screen of output, the constraint is missing or miswritten",
+    "upstream": [
+      "T.23"
+    ]
+  },
+  {
+    "id": "TPL-9",
+    "strength": "default",
+    "statement": "When two concepts differ only in semantics, separate them with a trait or tag class (T.24) — *contiguous* is random-access plus is_contiguous_v — preferring standard-library traits and wrapping the trait back into a named concept.",
+    "doc": "templates-and-generics.md",
+    "detector": "compile time itself — that is the point. Readability of the failure is review-visible: if a colleague cannot tell why their type fails within one screen of output, the constraint is missing or miswritten",
+    "upstream": [
+      "T.24"
+    ]
+  },
+  {
+    "id": "TPL-10",
+    "strength": "hard",
+    "statement": "Never write complementary constraints (T.25): paired requires C<T> / requires !C<T> definitions explode combinatorially, and legacy enable_if code commits this habit routinely.",
+    "doc": "templates-and-generics.md",
+    "detector": "compile time itself — that is the point. Readability of the failure is review-visible: if a colleague cannot tell why their type fails within one screen of output, the constraint is missing or miswritten",
+    "upstream": [
+      "T.25"
+    ]
+  },
+  {
+    "id": "TPL-11",
+    "strength": "default",
+    "statement": "Deviation from T.12: a bare auto is the weakest possible concept, so where a fitting C++20 concept exists prefer the constrained spelling; on the C++17 baseline the notation does not exist and plain auto stays acceptable.",
+    "doc": "templates-and-generics.md",
+    "detector": "compile time itself — that is the point. Readability of the failure is review-visible: if a colleague cannot tell why their type fails within one screen of output, the constraint is missing or miswritten",
+    "upstream": [
+      "T.12"
+    ]
+  },
+  {
+    "id": "TPL-12",
+    "strength": "default",
+    "statement": "Deviation from T.13: the shorthand for simple single-type-argument concepts — template <Sortable T>, or Sortable auto&& — reads the way we speak and wins wherever C++20 is available; the C++17 fallback remains the traits-based static_assert spelled out above.",
+    "doc": "templates-and-generics.md",
+    "detector": "compile time itself — that is the point. Readability of the failure is review-visible: if a colleague cannot tell why their type fails within one screen of output, the constraint is missing or miswritten",
+    "upstream": [
+      "T.13"
+    ]
+  },
+  {
+    "id": "TPL-13",
+    "strength": "default",
+    "statement": "Deviation from T.48: without concept support the guideline's best emulation is enable_if, which drags in complementary-constraint designs; this project's C++17 dialect instead prefers static_assert trait checks for stating contracts and quarantines SFINAE behind named aliases for genuine overload selection.",
+    "doc": "templates-and-generics.md",
+    "detector": "compile time itself — that is the point. Readability of the failure is review-visible: if a colleague cannot tell why their type fails within one screen of output, the constraint is missing or miswritten",
+    "upstream": [
+      "T.48"
+    ]
+  },
+  {
+    "id": "TPL-14",
+    "strength": "default",
+    "statement": "When a class claims to model a concept, prove it early: static_assert(Modelable<T>) pointed at concrete model types (T.150) — review-visible, cheap, and the same idiom this guide mandates inside template bodies.",
+    "doc": "templates-and-generics.md",
+    "detector": "compile time itself — that is the point. Readability of the failure is review-visible: if a colleague cannot tell why their type fails within one screen of output, the constraint is missing or miswritten",
+    "upstream": [
+      "T.150"
+    ]
+  },
+  {
+    "id": "TPL-15",
+    "strength": "default",
+    "statement": "Every template parameter is a tax paid at every call site, in error messages, and in header coupling.",
+    "doc": "templates-and-generics.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "TPL-16",
+    "strength": "default",
+    "statement": "Keep templates independent of their surroundings: fewer includes, fewer global names visible at instantiation (T.60).",
+    "doc": "templates-and-generics.md",
+    "detector": "review",
+    "upstream": [
+      "T.60"
+    ]
+  },
+  {
+    "id": "TPL-17",
+    "strength": "default",
+    "statement": "Name a template (or give it a stable home) only when reuse is real; an operation needed exactly once does not earn a header of its own (T.140, T.141).",
+    "doc": "templates-and-generics.md",
+    "detector": "review",
+    "upstream": [
+      "T.140",
+      "T.141"
+    ]
+  },
+  {
+    "id": "TPL-18",
+    "strength": "hard",
+    "statement": "Spell aliases with using, never typedef (T.43): the new name leads, the syntax parallels auto, and only using can form template aliases; expect enforcement to flag legacy typedefs widely.",
+    "doc": "templates-and-generics.md",
+    "detector": "review",
+    "upstream": [
+      "T.43"
+    ]
+  },
+  {
+    "id": "TPL-19",
+    "strength": "default",
+    "statement": "CTAD (T.44) is authored, not lucky.",
+    "doc": "templates-and-generics.md",
+    "detector": "review",
+    "upstream": [
+      "T.44"
+    ]
+  },
+  {
+    "id": "TPL-20",
+    "strength": "hard",
+    "statement": "Pass operations to algorithms as function objects (T.40) — lambdas included — which carry state through the interface and inline well, rather than function pointers; function-pointer template arguments get flagged by enforcement.",
+    "doc": "templates-and-generics.md",
+    "detector": "review",
+    "upstream": [
+      "T.40"
+    ]
+  },
+  {
+    "id": "TPL-21",
+    "strength": "hard",
+    "statement": "Initialize with {} rather than () inside templates (T.68): the paren form invites both the parse where T v1(T(u)); declares a function and silent casts like f(1, \"asdf\").",
+    "doc": "templates-and-generics.md",
+    "detector": "review",
+    "upstream": [
+      "T.68"
+    ]
+  },
+  {
+    "id": "TPL-22",
+    "strength": "hard",
+    "statement": "An unqualified call to a non-member with a dependent argument is an ADL customization point whether intended or not (T.69); private helpers live in a detail namespace and are called qualified.",
+    "doc": "templates-and-generics.md",
+    "detector": "review",
+    "upstream": [
+      "T.69"
+    ]
+  },
+  {
+    "id": "TPL-23",
+    "strength": "default",
+    "statement": "Do not write unintentionally non-generic code (T.143): compare iterators with != not <, test emptiness with empty(), accept the least-derived type providing what you use — or skip the ceremony entirely with range-for where it applies.",
+    "doc": "templates-and-generics.md",
+    "detector": "review",
+    "upstream": [
+      "T.143"
+    ]
+  },
+  {
+    "id": "TPL-24",
+    "strength": "default",
+    "statement": "Templates exist to express algorithms that apply across many argument types (T.2) and containers/ranges over them (T.3).",
+    "doc": "templates-and-generics.md",
+    "detector": "review",
+    "upstream": [
+      "T.2",
+      "T.3",
+      "T.1"
+    ]
+  },
+  {
+    "id": "TPL-25",
+    "strength": "default",
+    "statement": "Defaults (T.49): inside a module, on hot paths, with statically known types — templates.",
+    "doc": "templates-and-generics.md",
+    "detector": "review",
+    "upstream": [
+      "T.49"
+    ]
+  },
+  {
+    "id": "TPL-26",
+    "strength": "hard",
+    "statement": "The deduce-then-decay constructor (Model<std::decay_t<F>>) is load-bearing: with the plain Model<F>, an lvalue argument deduces F to L&, and Model stores a reference member bound to the caller's object — the first run() after the caller's scope exits reads dead memory.",
+    "doc": "templates-and-generics.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "TPL-27",
+    "strength": "hard",
+    "statement": "Branching on type properties inside a function body is if constexpr territory on C++17 and later.",
+    "doc": "templates-and-generics.md",
+    "detector": "none reliably — reviewers watch for fresh `std::enable_if` and tag-dispatch scaffolding in C++17 code and ask whether `if constexpr` collapses it. clang-tidy flags several related modernization opportunities on changed sources",
+    "upstream": []
+  },
+  {
+    "id": "TPL-28",
+    "strength": "default",
+    "statement": "Value-based selection between statements in one function: if constexpr.",
+    "doc": "templates-and-generics.md",
+    "detector": "none reliably — reviewers watch for fresh `std::enable_if` and tag-dispatch scaffolding in C++17 code and ask whether `if constexpr` collapses it. clang-tidy flags several related modernization opportunities on changed sources",
+    "upstream": []
+  },
+  {
+    "id": "TPL-29",
+    "strength": "default",
+    "statement": "Selecting between *overloads* visible to callers, or constraining a public API: concepts on C++20; on C++17, a traits-based enable_if remains acceptable — but hide it behind a descriptive alias.",
+    "doc": "templates-and-generics.md",
+    "detector": "none reliably — reviewers watch for fresh `std::enable_if` and tag-dispatch scaffolding in C++17 code and ask whether `if constexpr` collapses it. clang-tidy flags several related modernization opportunities on changed sources",
+    "upstream": []
+  },
+  {
+    "id": "TPL-30",
+    "strength": "default",
+    "statement": "Class-template shape differences still belong to (partial) specialization (T.64) — one general interface, specialized implementations for the shapes that need them; if constexpr does not replace choosing a different data layout.",
+    "doc": "templates-and-generics.md",
+    "detector": "none reliably — reviewers watch for fresh `std::enable_if` and tag-dispatch scaffolding in C++17 code and ask whether `if constexpr` collapses it. clang-tidy flags several related modernization opportunities on changed sources",
+    "upstream": [
+      "T.64",
+      "T.67"
+    ]
+  },
+  {
+    "id": "TPL-31",
+    "strength": "hard",
+    "statement": "Do not specialize function templates — overload or delegate instead (T.144); specialization interacts badly with overload resolution and surprises even experts.",
+    "doc": "templates-and-generics.md",
+    "detector": "none reliably — reviewers watch for fresh `std::enable_if` and tag-dispatch scaffolding in C++17 code and ask whether `if constexpr` collapses it. clang-tidy flags several related modernization opportunities on changed sources",
+    "upstream": [
+      "T.144"
+    ]
+  },
+  {
+    "id": "TPL-32",
+    "strength": "default",
+    "statement": "Deviation from T.65: tag dispatch — selecting function implementations from type properties at compile time — is a legitimate technique, but demoted here: if constexpr and constrained overloads express the same selection more readably, so tag machinery survives only where those cannot.",
+    "doc": "templates-and-generics.md",
+    "detector": "none reliably — reviewers watch for fresh `std::enable_if` and tag-dispatch scaffolding in C++17 code and ask whether `if constexpr` collapses it. clang-tidy flags several related modernization opportunities on changed sources",
+    "upstream": [
+      "T.65"
+    ]
+  },
+  {
+    "id": "TPL-33",
+    "strength": "default",
+    "statement": "The Curiously Recurring Template Pattern — class Derived : Base<Derived> — buys static polymorphism: shared machinery in a base template, dispatched to the derived class without a vtable.",
+    "doc": "templates-and-generics.md",
+    "detector": "review. Nothing mechanical distinguishes justified CRTP from habit",
+    "upstream": [
+      "T.5",
+      "C.129"
+    ]
+  },
+  {
+    "id": "TPL-34",
+    "strength": "hard",
+    "statement": "Do not naively templatize a class hierarchy (T.80): parameterizing the base multiplies every virtual into per-instantiation code the compiler must emit whether called or not — keep the base unparameterized and stable, adding type variation in thin derived wrappers.",
+    "doc": "templates-and-generics.md",
+    "detector": "review. Nothing mechanical distinguishes justified CRTP from habit",
+    "upstream": [
+      "T.80"
+    ]
+  },
+  {
+    "id": "TPL-35",
+    "strength": "default",
+    "statement": "Linearizing a hierarchy — shared non-virtual base machinery with static dispatch to the leaf (T.82) — is what CRTP offers in reverse: vtable-free polymorphism paid for with worse errors and backwards-looking inheritance, justified in the declaring header.",
+    "doc": "templates-and-generics.md",
+    "detector": "review. Nothing mechanical distinguishes justified CRTP from habit",
+    "upstream": [
+      "T.82"
+    ]
+  },
+  {
+    "id": "TPL-36",
+    "strength": "hard",
+    "statement": "Respect the hard compiler boundary: a member function template cannot be virtual (T.83) — vtables would need link-time generation — so route dynamic behavior through double dispatch, visitors, or computed dispatch instead.",
+    "doc": "templates-and-generics.md",
+    "detector": "review. Nothing mechanical distinguishes justified CRTP from habit",
+    "upstream": [
+      "T.83",
+      "T.81",
+      "C.152",
+      "T.84"
+    ]
+  },
+  {
+    "id": "TPL-37",
+    "strength": "hard",
+    "statement": "Variadic templates are the tool when a function takes a variable number of arguments of a variety of types (T.100) — efficient and type-safe where C varargs are neither; va_arg never appears in user code, and enforcement flags it outright.",
+    "doc": "templates-and-generics.md",
+    "detector": "review",
+    "upstream": [
+      "T.100"
+    ]
+  },
+  {
+    "id": "TPL-38",
+    "strength": "default",
+    "statement": "Homogeneous argument lists have precise spellings instead (T.103) — std::initializer_list, std::array, spans — so variadic machinery stays reserved for genuinely mixed-type packs.",
+    "doc": "templates-and-generics.md",
+    "detector": "review",
+    "upstream": [
+      "T.103"
+    ]
+  },
+  {
+    "id": "TPL-39",
+    "strength": "hard",
+    "statement": "Deviation from T.101: upstream's entry is a placeholder whose one recorded caution is to beware move-only and reference arguments entering a pack.",
+    "doc": "templates-and-generics.md",
+    "detector": "review",
+    "upstream": [
+      "T.101"
+    ]
+  },
+  {
+    "id": "TPL-40",
+    "strength": "default",
+    "statement": "Deviation from T.102: also unfinished upstream, hinting at forwarding, type checking, and references; process pack elements with fold expressions or recursion, validating each against traits or static_assert before use rather than trusting the caller.",
+    "doc": "templates-and-generics.md",
+    "detector": "review",
+    "upstream": [
+      "T.102"
+    ]
+  },
+  {
+    "id": "TPL-41",
+    "strength": "default",
+    "statement": "Template metaprogramming is hard to write, slow to compile, and harder to maintain (T.120): deploy it only where it measurably wins or expresses the fundamental idea better than runtime code.",
+    "doc": "templates-and-generics.md",
+    "detector": "review",
+    "upstream": [
+      "T.120"
+    ]
+  },
+  {
+    "id": "TPL-42",
+    "strength": "default",
+    "statement": "Deviation from T.4: upstream's syntax-tree-manipulation entry is an unfinished placeholder; accepted in principle as TMP's legitimate niche, it enters the codebase only through T.120's measured-payoff gate, never as casual cleverness.",
+    "doc": "templates-and-generics.md",
+    "detector": "review",
+    "upstream": [
+      "T.4",
+      "T.120"
+    ]
+  },
+  {
+    "id": "TPL-43",
+    "strength": "default",
+    "statement": "Where TMP is unavoidable pre-C++20, its day job is emulating concepts (T.121): enable_if-selected overloads standing in for constrained ones, retired wholesale once real concepts land.",
+    "doc": "templates-and-generics.md",
+    "detector": "review",
+    "upstream": [
+      "T.121"
+    ]
+  },
+  {
+    "id": "TPL-44",
+    "strength": "default",
+    "statement": "Computing types at compile time belongs to template aliases (T.122); classic trait-struct techniques survive mainly inside the standard library itself.",
+    "doc": "templates-and-generics.md",
+    "detector": "review",
+    "upstream": [
+      "T.122"
+    ]
+  },
+  {
+    "id": "TPL-45",
+    "strength": "default",
+    "statement": "Values are computed at compile time by constexpr functions (T.123) — the conventional, cheaper spelling — and value-yielding TMP gets flagged for replacement; operational detail lives in Quality Guidelines' Compile-Time Discipline section.",
+    "doc": "templates-and-generics.md",
+    "detector": "review",
+    "upstream": [
+      "T.123"
+    ]
+  },
+  {
+    "id": "TPL-46",
+    "strength": "default",
+    "statement": "Reach for the standard library's TMP facilities first (T.124) — std::conditional, std::enable_if, tuple — because they are portable and universally known; custom machinery must beat them to appear.",
+    "doc": "templates-and-generics.md",
+    "detector": "review",
+    "upstream": [
+      "T.124"
+    ]
+  },
+  {
+    "id": "TPL-47",
+    "strength": "hard",
+    "statement": "Deviation from T.125: beyond those facilities, prefer an established TMP library to home-grown support — such a dependency carries the usual justification bar, and hand-rolled advanced TMP infrastructure is rejected outright.",
+    "doc": "templates-and-generics.md",
+    "detector": "review",
+    "upstream": [
+      "T.125"
+    ]
+  },
+  {
+    "id": "TEST-1",
+    "strength": "hard",
+    "statement": "One framework per repository — never mix.",
+    "doc": "testing-conventions.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "TEST-2",
+    "strength": "hard",
+    "statement": "Test files mirror the source tree, named <name>.test.cpp, one test binary per production translation unit:",
+    "doc": "testing-conventions.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "TEST-3",
+    "strength": "hard",
+    "statement": "Every new test file must be registered with the test runner so the suite discovers it automatically.",
+    "doc": "testing-conventions.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "TEST-4",
+    "strength": "hard",
+    "statement": "Scope of the 1:1 mandate: every production translation unit with observable behavior gets a mirrored suite.",
+    "doc": "testing-conventions.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "TEST-5",
+    "strength": "hard",
+    "statement": "Format: TEST(<Suite>, Test_<Subject>_<Behavior>_<Expectation>).",
+    "doc": "testing-conventions.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "TEST-6",
+    "strength": "hard",
+    "statement": "Deviation-style caveat on underscores in the TEST arguments: GoogleTest documents that underscores there can generate colliding fixture classes — TEST(Time, Flies_Like_An_Arrow) and TEST(Time_Flies, Like_An_Arrow) both expand to a class named Time_Flies_Like_An_Arrow — and may break across gTest versions.",
+    "doc": "testing-conventions.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "TEST-7",
+    "strength": "hard",
+    "statement": "Whole unit suite finishes in seconds; any test over ~100 ms belongs in the integration tier — the budget is declared on the default ASan + UBSan run, so the ~2x sanitizer cost is inside it (the plain build is roughly half the cost, which only helps)",
+    "doc": "testing-conventions.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "TEST-8",
+    "strength": "hard",
+    "statement": "No ordering dependence, no shared mutable globals; every test runs alone via --gtest_filter, and the suite passes --gtest_shuffle --gtest_repeat=2 (or the framework's equivalent shuffle mode) — passing alone verifies independence, only shuffling exposes order dependence.",
+    "doc": "testing-conventions.md",
+    "detector": "the `--gtest_shuffle --gtest_repeat=2` gate (or the framework's equivalent shuffle mode)",
+    "upstream": []
+  },
+  {
+    "id": "TEST-9",
+    "strength": "hard",
+    "statement": "Same verdict on every machine and run: no wall-clock reads, sleeps, network, or unseeded randomness",
+    "doc": "testing-conventions.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "TEST-10",
+    "strength": "hard",
+    "statement": "Assertions decide pass/fail; a test requiring human inspection of output is not a test",
+    "doc": "testing-conventions.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "TEST-11",
+    "strength": "default",
+    "statement": "Written with the change it protects, not scheduled \"later\"",
+    "doc": "testing-conventions.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "TEST-12",
+    "strength": "hard",
+    "statement": "Integration tier.",
+    "doc": "testing-conventions.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "TEST-13",
+    "strength": "hard",
+    "statement": "Inject time (Clock interface) instead of reading system time.",
+    "doc": "testing-conventions.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "TEST-14",
+    "strength": "hard",
+    "statement": "Seed RNG per test with a fixed value; reserve std::random_device for fuzz harnesses only.",
+    "doc": "testing-conventions.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "TEST-15",
+    "strength": "hard",
+    "statement": "Never sleep() to wait for anything; wait on the synchronization primitive itself or fake the clock.",
+    "doc": "testing-conventions.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "TEST-16",
+    "strength": "hard",
+    "statement": "Unit tests run under sanitizers by default; a green test run without them proves less than it appears to.",
+    "doc": "testing-conventions.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "TEST-17",
+    "strength": "hard",
+    "statement": "The unit suite runs under ASan + UBSan, failing hard on the first finding — a sanitizer warning printed and ignored is a bug deferred to production.",
+    "doc": "testing-conventions.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "TEST-18",
+    "strength": "hard",
+    "statement": "Threading changes additionally run under TSan in its own build, because TSan cannot combine with ASan.",
+    "doc": "testing-conventions.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "TEST-19",
+    "strength": "hard",
+    "statement": "Test the public contract through the public API.",
+    "doc": "testing-conventions.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "TEST-20",
+    "strength": "hard",
+    "statement": "Boundary conditions: empty input, single element, capacity exactly reached, maximum sizes, malformed encodings.",
+    "doc": "testing-conventions.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "TEST-21",
+    "strength": "hard",
+    "statement": "Error paths: every documented error code/status thrown or returned by the unit is exercised at least once.",
+    "doc": "testing-conventions.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "TEST-22",
+    "strength": "hard",
+    "statement": "Regressions: every fixed bug ships with a test that failed before the fix.",
+    "doc": "testing-conventions.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "TEST-23",
+    "strength": "hard",
+    "statement": "White-box access to privates — friend class ...Test, #define private public, testing free functions that exist only to serve internals — is forbidden.",
+    "doc": "testing-conventions.md",
+    "detector": "the compiler for direct private-member access; review for `friend` and macro end-runs",
+    "upstream": []
+  },
+  {
+    "id": "TEST-24",
+    "strength": "default",
+    "statement": "Internal-linkage helpers meet the same wall from the other side: a function in an anonymous namespace (SF.22) is invisible outside its translation unit, so it is untestable by construction — and the white-box ban above rules out peeling it open.",
+    "doc": "testing-conventions.md",
+    "detector": "review",
+    "upstream": [
+      "SF.22"
+    ]
+  },
+  {
+    "id": "TEST-25",
+    "strength": "hard",
+    "statement": "Prefer fixtures (::testing::Test subclasses; fresh instance per test) over global/shared state.",
+    "doc": "testing-conventions.md",
+    "detector": "the shuffle gate — shared mutable state surfaces as passes-alone-fails-shuffled (`--gtest_shuffle --gtest_repeat=2`)",
+    "upstream": []
+  },
+  {
+    "id": "TEST-26",
+    "strength": "default",
+    "statement": "Shared helpers live in tests/test_util.h / test_fixtures.h; duplicated setup across suites is a refactor signal, not a style choice.",
+    "doc": "testing-conventions.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "TEST-27",
+    "strength": "hard",
+    "statement": "Randomness: seeded generators created inside the fixture; log the seed so failures replay.",
+    "doc": "testing-conventions.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "TEST-28",
+    "strength": "hard",
+    "statement": "No cross-test data files with hidden coupling; each test constructs the inputs it needs.",
+    "doc": "testing-conventions.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "TEST-29",
+    "strength": "default",
+    "statement": "Trivial getters/setters and one-line forwarding wrappers — exercised transitively by every behavioral test.",
+    "doc": "testing-conventions.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "TEST-30",
+    "strength": "default",
+    "statement": "Third-party library behavior — do not re-test whether the vendor's sort sorts.",
+    "doc": "testing-conventions.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "TEST-31",
+    "strength": "default",
+    "statement": "Generated and vendored code — owned upstream.",
+    "doc": "testing-conventions.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "TEST-32",
+    "strength": "default",
+    "statement": "Coverage percentage as a goal: chasing a number produces assertion-free tests, which are worse than none.",
+    "doc": "testing-conventions.md",
+    "detector": "review",
+    "upstream": []
+  }
+]

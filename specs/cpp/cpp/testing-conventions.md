@@ -12,18 +12,26 @@ Tests exist to pin **observable behavior**. A test suite that is slow, order-dep
 
 ## Framework Stance
 
+Default strength: hard.
+
+Caught by: review — no automated detector.
+
 | Framework | Status | Notes |
 |-----------|--------|-------|
 | GoogleTest | Default | Mature, universally known; death tests, value/type-parameterized tests, `gtest_discover_tests` |
 | Catch2 (v3+) | Acceptable | Preferred when a zero-install dependency model matters more than gmock: v3 is a compiled library — vendoring the amalgamated two-file release keeps installation trivial — while header-only is the v2 model, which trades per-TU compile time for zero build wiring |
 
-One framework per repository — never mix. Choose Catch2 only deliberately and document why in the repo README.
+**TEST-1.** One framework per repository — never mix. Choose Catch2 only deliberately and document why in the repo README.
 
 ---
 
 ## File Layout
 
-Test files mirror the source tree, named `<name>.test.cpp`, one test binary per production translation unit:
+Default strength: hard.
+
+Caught by: review — no automated detector.
+
+**TEST-2.** Test files mirror the source tree, named `<name>.test.cpp`, one test binary per production translation unit:
 
 ```
 src/
@@ -35,11 +43,11 @@ tests/
   test_util.h            // shared fixtures/helpers, no tests of its own
 ```
 
-Every new test file must be registered with the test runner so the suite discovers it automatically.
+**TEST-3.** Every new test file must be registered with the test runner so the suite discovers it automatically.
 
 A test that exists but is not registered does not exist — nothing ever executes it, and it rots.
 
-Scope of the 1:1 mandate: every production translation unit with **observable behavior** gets a mirrored suite. `main.cpp` glue, generated code, and vendored code are excluded — they carry no project-owned behavior to pin, and a test file for them would violate What NOT to Test, not honor it.
+**TEST-4.** Scope of the 1:1 mandate: every production translation unit with **observable behavior** gets a mirrored suite. `main.cpp` glue, generated code, and vendored code are excluded — they carry no project-owned behavior to pin, and a test file for them would violate What NOT to Test, not honor it.
 
 ```cpp
 // Wrong: unregistered "temporary" test living in src/, still there two years later
@@ -55,7 +63,11 @@ TEST(HttpParser, Test_Parse_EmptyInput_ReturnsError) { ... }
 
 ## Naming
 
-Format: `TEST(<Suite>, Test_<Subject>_<Behavior>_<Expectation>)`.
+Default strength: hard.
+
+Caught by: review — no automated detector.
+
+**TEST-5.** Format: `TEST(<Suite>, Test_<Subject>_<Behavior>_<Expectation>)`.
 
 - `<Suite>`: component under test (`HttpParser`, `RingBuffer`).
 - `<Subject>`: function or feature (`Parse`, `Push`).
@@ -64,7 +76,7 @@ Format: `TEST(<Suite>, Test_<Subject>_<Behavior>_<Expectation>)`.
 
 The name must read as a sentence describing the contract, so a red test communicates the bug without opening the file.
 
-Deviation-style caveat on underscores in the `TEST` arguments: GoogleTest documents that underscores there can generate colliding fixture classes — `TEST(Time, Flies_Like_An_Arrow)` and `TEST(Time_Flies, Like_An_Arrow)` both expand to a class named `Time_Flies_Like_An_Arrow` — and may break across gTest versions. The grammar above stays; the mitigation is structural: keep the `<Suite>` argument underscore-free, so an underscore can never blur the suite boundary.
+**TEST-6.** Deviation-style caveat on underscores in the `TEST` arguments: GoogleTest documents that underscores there can generate colliding fixture classes — `TEST(Time, Flies_Like_An_Arrow)` and `TEST(Time_Flies, Like_An_Arrow)` both expand to a class named `Time_Flies_Like_An_Arrow` — and may break across gTest versions. The grammar above stays; the mitigation is structural: keep the `<Suite>` argument underscore-free, so an underscore can never blur the suite boundary.
 
 ```cpp
 // Good
@@ -81,21 +93,25 @@ TEST(HttpParser, HandlesErrors);        // which errors? from what?
 
 ## FIRST Principles, Adapted
 
+Default strength: hard.
+
+Caught by: review — no automated detector.
+
 | Principle | Meaning here |
 |-----------|--------------|
-| Fast | Whole unit suite finishes in seconds; any test over ~100 ms belongs in the integration tier — the budget is declared on the default **ASan + UBSan** run, so the ~2x sanitizer cost is inside it (the plain build is roughly half the cost, which only helps) |
-| Isolated | No ordering dependence, no shared mutable globals; every test runs alone via `--gtest_filter`, and the suite passes `--gtest_shuffle --gtest_repeat=2` (or the framework's equivalent shuffle mode) — passing alone verifies independence, only shuffling exposes order dependence |
-| Repeatable | Same verdict on every machine and run: no wall-clock reads, sleeps, network, or unseeded randomness |
-| Self-validating | Assertions decide pass/fail; a test requiring human inspection of output is not a test |
-| Timely | Written with the change it protects, not scheduled "later" |
+| **TEST-7** Fast | Whole unit suite finishes in seconds; any test over ~100 ms belongs in the integration tier — the budget is declared on the default **ASan + UBSan** run, so the ~2x sanitizer cost is inside it (the plain build is roughly half the cost, which only helps) |
+| **TEST-8** Isolated | No ordering dependence, no shared mutable globals; every test runs alone via `--gtest_filter`, and the suite passes `--gtest_shuffle --gtest_repeat=2` (or the framework's equivalent shuffle mode) — passing alone verifies independence, only shuffling exposes order dependence. Caught by: the `--gtest_shuffle --gtest_repeat=2` gate (or the framework's equivalent shuffle mode). |
+| **TEST-9** Repeatable | Same verdict on every machine and run: no wall-clock reads, sleeps, network, or unseeded randomness |
+| **TEST-10** Self-validating | Assertions decide pass/fail; a test requiring human inspection of output is not a test |
+| **TEST-11 (default)** Timely | Written with the change it protects, not scheduled "later" |
 
-**Integration tier.** Anything over the 100 ms gate — process spawns, network or filesystem fixtures, end-to-end runs — goes to a separate integration suite: its own binary or tag, excluded from the fast default pass, so the everyday gate stays in seconds. Same FIRST rules apply; only the run schedule differs.
+**TEST-12.** **Integration tier.** Anything over the 100 ms gate — process spawns, network or filesystem fixtures, end-to-end runs — goes to a separate integration suite: its own binary or tag, excluded from the fast default pass, so the everyday gate stays in seconds. Same FIRST rules apply; only the run schedule differs.
 
 Determinism mechanics:
 
-- Inject time (`Clock` interface) instead of reading system time.
-- Seed RNG per test with a fixed value; reserve `std::random_device` for fuzz harnesses only.
-- Never `sleep()` to wait for anything; wait on the synchronization primitive itself or fake the clock.
+- **TEST-13.** Inject time (`Clock` interface) instead of reading system time.
+- **TEST-14.** Seed RNG per test with a fixed value; reserve `std::random_device` for fuzz harnesses only.
+- **TEST-15.** Never `sleep()` to wait for anything; wait on the synchronization primitive itself or fake the clock.
 
 ```cpp
 // Wrong: flaky by construction
@@ -117,7 +133,13 @@ TEST_F(CacheTest, Test_Expiry_AfterTtl_EntryNotFindable) {
 
 ## Sanitizer Pairing
 
-Unit tests run under sanitizers by default; a green test run without them proves less than it appears to. Memory bugs often manifest as *passing* tests that corrupt state for later ones.
+Default strength: hard.
+
+Caught by: review — no automated detector.
+
+**TEST-16.** Unit tests run under sanitizers by default; a green test run without them proves less than it appears to.
+
+Memory bugs often manifest as *passing* tests that corrupt state for later ones.
 
 | Sanitizer | What it catches | Hard constraints | Rough cost |
 |-----------|-----------------|------------------|------------|
@@ -126,18 +148,25 @@ Unit tests run under sanitizers by default; a green test run without them proves
 | TSan | Data races, lock-order inversions, destruction-of-locked-mutex hazards | Never combined with ASan; reports only interleavings that actually execute | 5–15x |
 | MSan | Reads of uninitialized memory | Clang-only; needs an instrumented libc++ and fully instrumented dependencies | ~3x |
 
-Two postures follow from the table. The unit suite runs under **ASan + UBSan**, failing hard on the first finding — a sanitizer warning printed and ignored is a bug deferred to production. Threading changes additionally run under **TSan** in its own build, because TSan cannot combine with ASan.
+Two postures follow from the table.
+
+**TEST-17.** The unit suite runs under **ASan + UBSan**, failing hard on the first finding — a sanitizer warning printed and ignored is a bug deferred to production.
+
+**TEST-18.** Threading changes additionally run under **TSan** in its own build, because TSan cannot combine with ASan.
 
 ---
 
 ## What to Test
 
-Test the public contract through the public API:
+Default strength: hard.
 
-- **Observable behavior**: return values, emitted events, state transitions visible to callers.
-- **Boundary conditions**: empty input, single element, capacity exactly reached, maximum sizes, malformed encodings.
-- **Error paths**: every documented error code/status thrown or returned by the unit is exercised at least once. Untested error paths are theoretical code.
-- **Regressions**: every fixed bug ships with a test that failed before the fix.
+Caught by: review — no automated detector.
+
+**TEST-19.** Test the public contract through the public API. Observable behavior: return values, emitted events, state transitions visible to callers.
+
+- **TEST-20.** Boundary conditions: empty input, single element, capacity exactly reached, maximum sizes, malformed encodings.
+- **TEST-21.** Error paths: every documented error code/status thrown or returned by the unit is exercised at least once. Untested error paths are theoretical code.
+- **TEST-22.** Regressions: every fixed bug ships with a test that failed before the fix.
 
 ```cpp
 // Good: contract-level assertions
@@ -149,18 +178,30 @@ EXPECT_CALL(mock_internal_scanner, scan_token_times(3));
 EXPECT_EQ(parser.state_, State::kHeaderDone);     // private member poking
 ```
 
-White-box access to privates — `friend class ...Test`, `#define private public`, testing free functions that exist only to serve internals — is forbidden. If a private piece is complex enough to need direct tests, it wants to be extracted behind its own interface and tested through it.
+**TEST-23.** White-box access to privates — `friend class ...Test`, `#define private public`, testing free functions that exist only to serve internals — is forbidden. If a private piece is complex enough to need direct tests, it wants to be extracted behind its own interface and tested through it.
 
-Internal-linkage helpers meet the same wall from the other side: a function in an anonymous namespace (`SF.22`) is invisible outside its translation unit, so it is untestable by construction — and the white-box ban above rules out peeling it open. The reachable path is promotion: logic worth direct testing moves to an internal header or a named-namespace translation unit with its own suite; what stays anonymous is what the public suite already exercises transitively. The linkage side of this trade is the quality guide's [internal-linkage rules](./quality-guidelines.md).
+Caught by: the compiler for direct private-member access; review for `friend` and macro end-runs.
+
+**TEST-24 (default).** Internal-linkage helpers meet the same wall from the other side: a function in an anonymous namespace (`SF.22`) is invisible outside its translation unit, so it is untestable by construction — and the white-box ban above rules out peeling it open. The reachable path is promotion: logic worth direct testing moves to an internal header or a named-namespace translation unit with its own suite; what stays anonymous is what the public suite already exercises transitively. The linkage side of this trade is the quality guide's [internal-linkage rules](./quality-guidelines.md).
+
+Caught by: review — no automated detector.
 
 ---
 
 ## Test Utilities and Fixtures
 
-- Prefer **fixtures** (`::testing::Test` subclasses; fresh instance per test) over global/shared state. Anything static-and-mutable in test code is a defect waiting for `-j` parallelism.
-- Shared helpers live in `tests/test_util.h` / `test_fixtures.h`; duplicated setup across suites is a refactor signal, not a style choice.
-- Randomness: seeded generators created inside the fixture; log the seed so failures replay.
-- No cross-test data files with hidden coupling; each test constructs the inputs it needs.
+Default strength: hard.
+
+- **TEST-25.** Prefer **fixtures** (`::testing::Test` subclasses; fresh instance per test) over global/shared state. Anything static-and-mutable in test code is a defect waiting for `-j` parallelism.
+
+Caught by: the shuffle gate — shared mutable state surfaces as passes-alone-fails-shuffled (`--gtest_shuffle --gtest_repeat=2`).
+
+- **TEST-26 (default).** Shared helpers live in `tests/test_util.h` / `test_fixtures.h`; duplicated setup across suites is a refactor signal, not a style choice.
+
+Caught by: review — no automated detector.
+
+- **TEST-27.** Randomness: seeded generators created inside the fixture; log the seed so failures replay.
+- **TEST-28.** No cross-test data files with hidden coupling; each test constructs the inputs it needs.
 
 ```cpp
 // Right: fresh state per test, deterministic seed
@@ -188,12 +229,16 @@ TEST(RingBuffer, B) { EXPECT_EQ(g_buffer.size(), 1); }   // passes alone, fails 
 
 ## What NOT to Test
 
+Default strength: default.
+
+Caught by: review — no automated detector.
+
 Skip these; they cost review time and rot without catching defects:
 
-- **Trivial getters/setters** and one-line forwarding wrappers — exercised transitively by every behavioral test.
-- **Third-party library behavior** — do not re-test whether the vendor's sort sorts. Test *your* seam: the adapter's mapping between your types and theirs.
-- **Generated and vendored code** — owned upstream.
-- Coverage percentage as a goal: chasing a number produces assertion-free tests, which are worse than none.
+- **TEST-29.** **Trivial getters/setters** and one-line forwarding wrappers — exercised transitively by every behavioral test.
+- **TEST-30.** **Third-party library behavior** — do not re-test whether the vendor's sort sorts. Test *your* seam: the adapter's mapping between your types and theirs.
+- **TEST-31.** **Generated and vendored code** — owned upstream.
+- **TEST-32.** Coverage percentage as a goal: chasing a number produces assertion-free tests, which are worse than none.
 
 ```cpp
 // Bad: tests the compiler, not the design

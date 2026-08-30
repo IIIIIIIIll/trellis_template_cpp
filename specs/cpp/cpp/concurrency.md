@@ -8,13 +8,17 @@
 
 Two facts shape every rule here. First, a data race is undefined behavior, not a slowdown (`CP.2`): racing code has no meaningful specification at all, so "it seems to work" is not evidence. Second, any function may eventually run on more than one thread, whether or not its author planned for it (`CP.1`) — libraries cannot know their callers' threading model.
 
+Default strength: hard.
+
+Caught by: review — no automated detector.
+
 Therefore the design order of preference is:
 
-1. **Do not share** mutable state across threads at all (`CP.3`).
-2. **Share immutable** data freely — immutability needs no synchronization.
-3. **Communicate instead of sharing**: move ownership through channels, queues, futures.
-4. Where sharing survives, guard every access with a mutex co-designed with its data (`CP.50`).
-5. Atomics for narrow, single-variable cases only.
+- **CONC-1.** **Do not share** mutable state across threads at all (`CP.3`).
+- **CONC-2.** **Share immutable** data freely — immutability needs no synchronization.
+- **CONC-3.** **Communicate instead of sharing**: move ownership through channels, queues, futures.
+- **CONC-4.** Where sharing survives, guard every access with a mutex co-designed with its data (`CP.50`).
+- **CONC-5.** Atomics for narrow, single-variable cases only.
 
 Baseline: C++17 (`std::thread` plus explicit join discipline). C++20's `std::jthread`, `std::stop_token`, and counting semaphores are preferred where the toolchain provides them; differences are noted inline.
 
@@ -24,7 +28,9 @@ Coroutines are C++20-only; on the C++17 baseline the coroutine section below doe
 
 ## Shared Mutable State Is a Design Decision
 
-Mutable data reachable from two threads without a synchronization mechanism is a defect regardless of observed behavior. Every shared object gets one row in this ladder, chosen deliberately:
+**CONC-6 (hard).** Mutable data reachable from two threads without a synchronization mechanism is a defect regardless of observed behavior. Every shared object gets one row in this ladder, chosen deliberately:
+
+Caught by: TSan reports the race when both accesses actually execute under a ThreadSanitizer build — see the gate below. Nothing catches a race whose interleaving the test run happens never to trigger, which is why the design rule comes first.
 
 | Rank | Mechanism | Cost | Use when |
 |------|-----------|------|----------|
@@ -65,29 +71,33 @@ private:
 
 Notes:
 
-- Prefer making objects immutable over making them synchronized: `const`-first APIs keep the concurrency story out of most types entirely (constants-and-immutability defaults: immutable by default, `const` members by default, `const&` parameters by default — `Con.1`, `Con.2`, `Con.3`; recompute-at-compile-time where possible, `Con.5`).
-- Refactoring to remove sharing beats refactoring to protect it. Before adding a second mutex to a class, ask which design produced two writers.
+- **CONC-7 (default).** Prefer making objects immutable over making them synchronized: `const`-first APIs keep the concurrency story out of most types entirely (constants-and-immutability defaults: immutable by default, `const` members by default, `const&` parameters by default — `Con.1`, `Con.2`, `Con.3`; recompute-at-compile-time where possible, `Con.5`).
+- **CONC-8 (default).** Refactoring to remove sharing beats refactoring to protect it. Before adding a second mutex to a class, ask which design produced two writers.
 - Returning shared *immutable* snapshots (`shared_ptr<const T>`) lets readers work without locks after the hand-off point.
-- Ownership crossing unrelated thread lifetimes goes through `shared_ptr` (`CP.32`) — the only safe deletion story; static objects, never-freed objects, and owner-outlives-sharer arrangements are exempt. Ladder-first: prefer the immutable snapshots above so readers need no locks, and justify sharing per [Memory and Ownership](./memory-and-ownership.md).
-
-Caught by: TSan reports the race when both accesses actually execute under a ThreadSanitizer build — see the gate below. Nothing catches a race whose interleaving the test run happens never to trigger, which is why the design rule comes first.
+- **CONC-9 (hard).** Ownership crossing unrelated thread lifetimes goes through `shared_ptr` (`CP.32`) — the only safe deletion story; static objects, never-freed objects, and owner-outlives-sharer arrangements are exempt. Ladder-first: prefer the immutable snapshots above so readers need no locks, and justify sharing per [Memory and Ownership](./memory-and-ownership.md).
 
 ---
 
 ## Threads: `jthread` and Join Discipline
 
-A running thread is a resource like a file descriptor: someone must own it and wait for its completion exactly once.
+Default strength: hard.
+
+**CONC-10.** A running thread is a resource like a file descriptor: someone must own it and wait for its completion exactly once.
+
+Caught by: review for `detach()` and unjoined `std::thread`; TSan flags races caused by threads outliving their data.
 
 | Tool | Status | Notes |
 |------|--------|-------|
 | `std::jthread` (C++20) | Preferred owner | Joins in its destructor; cooperative cancellation via `stop_token` |
 | `std::thread` | Allowed with care | Must be joined (or moved into a pool/jthread wrapper) before every scope exit |
 | `detach()` | Forbidden in application code | Detached threads outlive every guard, logger, and config object they touch |
-| Raw handles from third-party runtimes | Quarantined | Wrap immediately in an owning RAII adapter |
+| **CONC-11** Raw handles from third-party runtimes | Quarantined | Wrap immediately in an owning RAII adapter |
 
-The guideline phrasing that joins should behave like destructors — automatic, unconditional, exception-safe (`CP.23`) — and the preference for a joining thread abstraction over bare `std::thread` (`CP.25`) land on `std::jthread` in C++20 code. Never detach (`CP.26`).
+**CONC-12.** The guideline phrasing that joins should behave like destructors — automatic, unconditional, exception-safe (`CP.23`) — and the preference for a joining thread abstraction over bare `std::thread` (`CP.25`) land on `std::jthread` in C++20 code.
 
-Think of a thread as a global container (`CP.24`): anything reachable from it must provably outlive every possible use, and a thread that might detach is assumed to outlive its constructing scope — including racing static-object teardown at program exit. The detach ban and joining owners subsume most of the risk, yet the framing stays load-bearing for third-party runtimes, which the table above quarantines behind owning RAII adapters.
+**CONC-13.** Never detach (`CP.26`).
+
+**CONC-14.** Think of a thread as a global container (`CP.24`): anything reachable from it must provably outlive every possible use, and a thread that might detach is assumed to outlive its constructing scope — including racing static-object teardown at program exit. The detach ban and joining owners subsume most of the risk, yet the framing stays load-bearing for third-party runtimes, which the table above quarantines behind owning RAII adapters.
 
 Wrong:
 
@@ -117,15 +127,17 @@ void start_polling(Device& dev) {
 }
 ```
 
-On C++17, wrap `std::thread` in a small joining-thread class whose destructor calls `join()` unless already joined; do not sprinkle `join()` calls through control flow — the early-return branch is how terminates happen. Waiting for a thread's result means `join()` (or a future), not polling a flag.
+**CONC-15.** On C++17, wrap `std::thread` in a small joining-thread class whose destructor calls `join()` unless already joined; do not sprinkle `join()` calls through control flow — the early-return branch is how terminates happen.
 
-Caught by: review for `detach()` and unjoined `std::thread`; TSan flags races caused by threads outliving their data.
+**CONC-16.** Waiting for a thread's result means `join()` (or a future), not polling a flag.
 
 ---
 
 ## Locks
 
-Locking is RAII-only. Plain `lock()`/`unlock()` pairs are forbidden (`CP.20`) — the early return, the throw, and the second maintainer all defeat them.
+**CONC-17 (hard).** Locking is RAII-only. Plain `lock()`/`unlock()` pairs are forbidden (`CP.20`) — the early return, the throw, and the second maintainer all defeat them.
+
+Caught by: TSan for the resulting races; deadlock detection tools and code review for lock-order issues. clang-tidy's concurrency checks catch some unnamed-guard cases; the rest are review items.
 
 | Situation | Tool |
 |-----------|------|
@@ -137,16 +149,16 @@ Locking is RAII-only. Plain `lock()`/`unlock()` pairs are forbidden (`CP.20`) �
 
 Rules:
 
-1. Define each mutex next to the data it guards, with names that pair visibly (`state_` / `stateMutex_`) (`CP.50`). A mutex guarding three distant fields is a distributed invariant waiting to break.
-2. Name every guard (`CP.44`). The brace spelling compiles, runs, and protects nothing — an unnamed temporary that destroys the lock at the end of the statement. The paren spelling of the same line is not the safer alternative: it is a most-vexing-parse declaration of a default-initialized guard, and `std::lock_guard` has no default constructor, so it fails to compile. The silent sibling is the paren spelling of `unique_lock`, which *is* default-constructible:
+- **CONC-18 (hard).** Define each mutex next to the data it guards, with names that pair visibly (`state_` / `stateMutex_`) (`CP.50`). A mutex guarding three distant fields is a distributed invariant waiting to break.
+- **CONC-19 (hard).** Name every guard (`CP.44`). The brace spelling compiles, runs, and protects nothing — an unnamed temporary that destroys the lock at the end of the statement. The paren spelling of the same line is not the safer alternative: it is a most-vexing-parse declaration of a default-initialized guard, and `std::lock_guard` has no default constructor, so it fails to compile. The silent sibling is the paren spelling of `unique_lock`, which *is* default-constructible:
    ```cpp
    std::lock_guard<std::mutex>{queueMutex_};         // WRONG: unnamed temporary, destroyed at end of statement
    std::unique_lock<std::mutex>(m1);                 // WRONG: vexing parse — default-constructed local named `m1`, never locks
    std::lock_guard<std::mutex> guard(queueMutex_);   // RIGHT: named, lives to scope end
    ```
-3. Hold locks for the shortest region that keeps the invariant (`CP.43`): copy what you need out under the lock, then work on the copy. I/O, allocation-heavy formatting, and logging stay outside critical sections.
-4. Never call unknown code while holding a lock (`CP.22`) — callbacks, virtual functions on overridable interfaces, `std::function` parameters, anything that can re-enter. The callee that takes another lock (or the same one) deadlocks; the callee that runs long serializes the whole system. Copy inputs out, release, then invoke.
-5. Wait on a condition variable only inside a predicate loop (`CP.42`); spurious wakeups are guaranteed, not theoretical. Prefer waits with timeouts so a lost wakeup degrades instead of hanging forever.
+- **CONC-20 (default).** Hold locks for the shortest region that keeps the invariant (`CP.43`): copy what you need out under the lock, then work on the copy. I/O, allocation-heavy formatting, and logging stay outside critical sections.
+- **CONC-21 (hard).** Never call unknown code while holding a lock (`CP.22`) — callbacks, virtual functions on overridable interfaces, `std::function` parameters, anything that can re-enter. The callee that takes another lock (or the same one) deadlocks; the callee that runs long serializes the whole system. Copy inputs out, release, then invoke.
+- **CONC-22 (hard).** Wait on a condition variable only inside a predicate loop (`CP.42`); spurious wakeups are guaranteed, not theoretical. Prefer waits with timeouts so a lost wakeup degrades instead of hanging forever.
 
 Wrong:
 
@@ -175,25 +187,31 @@ void broadcast(const Event& ev, const std::vector<Listener*>& listeners) {
 }
 ```
 
-Caught by: TSan for the resulting races; deadlock detection tools and code review for lock-order issues. clang-tidy's concurrency checks catch some unnamed-guard cases; the rest are review items.
-
 ---
 
 ## Coroutines and Suspension Points
 
 A coroutine is a threading change like any other and answers to the TSan gate below. Three rules keep suspensions from shredding memory:
 
-1. Never write a capturing lambda that is a coroutine (`CP.51`): the captures die with the closure scope while resumption after the first suspension reads them — use-after-free even for `shared_ptr` and copyable captures. Take values as parameters, or write a plain coroutine function.
-2. Never hold a lock across a suspension point (`CP.52`): resumption may want the held lock (self-deadlock), may land on a different thread (undefined behavior), and if the coroutine is destroyed while suspended, the frame's guard destructor runs on whichever thread does the destroying — cross-thread unlock again — all while the held lock serializes everyone else for the suspension's duration. Scope the guard, release, then suspend; the shortest-critical-region rule gains a coroutine clause.
-3. Coroutine parameters pass by value (`CP.53`): reference parameters dangle from the first suspension onward, and some coroutine shapes suspend before their first line runs. The copy lives in the coroutine frame; output parameters are forbidden outright, matching the return-don't-out discipline.
+Default strength: hard.
+
+Caught by: review — no automated detector for the constructs themselves; TSan catches the resulting races when the path executes under the gate.
+
+- **CONC-23.** Never write a capturing lambda that is a coroutine (`CP.51`): the captures die with the closure scope while resumption after the first suspension reads them — use-after-free even for `shared_ptr` and copyable captures. Take values as parameters, or write a plain coroutine function.
+- **CONC-24.** Never hold a lock across a suspension point (`CP.52`): resumption may want the held lock (self-deadlock), may land on a different thread (undefined behavior), and if the coroutine is destroyed while suspended, the frame's guard destructor runs on whichever thread does the destroying — cross-thread unlock again — all while the held lock serializes everyone else for the suspension's duration. Scope the guard, release, then suspend; the shortest-critical-region rule gains a coroutine clause.
+- **CONC-25.** Coroutine parameters pass by value (`CP.53`): reference parameters dangle from the first suspension onward, and some coroutine shapes suspend before their first line runs. The copy lives in the coroutine frame; output parameters are forbidden outright, matching the return-don't-out discipline.
 
 ---
 
 ## Atomics: Flags and Counters Only
 
+Default strength: hard.
+
 Atomics provide lock-free reads/writes of single variables. They are the tool for progress flags, counters, sequence numbers, and published pointers. They are not a general synchronization mechanism: an atomic variable does not make neighboring non-atomic data safe, does not compose into multi-variable invariants, and its memory-ordering rules are easy to get subtly wrong.
 
-`volatile` is not synchronization (`CP.8`). It disables compiler caching around hardware-special accesses; it inserts no fences, orders nothing, and races on `volatile` remain undefined behavior. Its legitimate job is narrow (`CP.200`): memory shared with non-C++ code or hardware — clock registers, device mappings — almost never a local or data member; a flagged `volatile T` nearly always wanted `std::atomic<T>`.
+Caught by: TSan for the racy cases; review for `volatile` used near threading and for any new `memory_order_` spelling beyond relaxed-with-comment.
+
+**CONC-26.** `volatile` is not synchronization (`CP.8`). It disables compiler caching around hardware-special accesses; it inserts no fences, orders nothing, and races on `volatile` remain undefined behavior. Its legitimate job is narrow (`CP.200`): memory shared with non-C++ code or hardware — clock registers, device mappings — almost never a local or data member; a flagged `volatile T` nearly always wanted `std::atomic<T>`.
 
 Wrong:
 
@@ -220,21 +238,21 @@ packets_dropped.fetch_add(1, std::memory_order_relaxed);   // statistics need no
 
 Rules:
 
-1. Default to sequential-consistency ordering. Relax/acquire/release require a comment naming the exact protocol they implement and why it suffices.
-2. Two variables whose relationship matters (a buffer pointer plus its length, a state plus a payload) need a mutex, a sequenced publication protocol, or a single larger atomic — never two independent atomic members.
-3. `shared_ptr`'s atomic refcounts are not atomic pointer access: concurrent reads and writes of a shared `shared_ptr` member race even when every pointee is immutable. On the C++17 baseline the spellings are `std::atomic_load(&ptr_)` / `std::atomic_store(&ptr_, value)` — deprecated in C++20 in favor of `std::atomic<std::shared_ptr<T>>` — or a plain mutex; the better default remains the immutable-snapshot hand-off (`shared_ptr<const T>`) from the design section above, which leaves readers nothing to synchronize.
-4. Do not write lock-free data structures by hand (`CP.100`). The standard containers, well-tested concurrent libraries, or a plain mutex cover nearly everything; a homemade queue is a research project with a bug quota. Beyond atomics and a handful of standard patterns, lock-free programming is expert-only (`CP.102`): a proposal arrives citing the literature (Williams, Herlihy & Shavit, Boehm) and survives design review, or it stays a mutex. Beware classic hazards such as A-B-A reuse of addresses if you ever must (`CP.101` territory).
-5. Lazy initialization is solved by magic statics (`static local` initialization is thread-safe since C++11) or `std::call_once`. Hand-rolled double-checked locking is forbidden (`CP.110`, `CP.111`).
-
-Caught by: TSan for the racy cases; review for `volatile` used near threading and for any new `memory_order_` spelling beyond relaxed-with-comment.
+- **CONC-27.** Default to sequential-consistency ordering. Relax/acquire/release require a comment naming the exact protocol they implement and why it suffices.
+- **CONC-28.** Two variables whose relationship matters (a buffer pointer plus its length, a state plus a payload) need a mutex, a sequenced publication protocol, or a single larger atomic — never two independent atomic members.
+- **CONC-29.** `shared_ptr`'s atomic refcounts are not atomic pointer access: concurrent reads and writes of a shared `shared_ptr` member race even when every pointee is immutable. On the C++17 baseline the spellings are `std::atomic_load(&ptr_)` / `std::atomic_store(&ptr_, value)` — deprecated in C++20 in favor of `std::atomic<std::shared_ptr<T>>` — or a plain mutex; the better default remains the immutable-snapshot hand-off (`shared_ptr<const T>`) from the design section above, which leaves readers nothing to synchronize.
+- **CONC-30.** Do not write lock-free data structures by hand (`CP.100`). The standard containers, well-tested concurrent libraries, or a plain mutex cover nearly everything; a homemade queue is a research project with a bug quota. Beyond atomics and a handful of standard patterns, lock-free programming is expert-only (`CP.102`): a proposal arrives citing the literature (Williams, Herlihy & Shavit, Boehm) and survives design review, or it stays a mutex. Beware classic hazards such as A-B-A reuse of addresses if you ever must (`CP.101` territory).
+- **CONC-31.** Lazy initialization is solved by magic statics (`static local` initialization is thread-safe since C++11) or `std::call_once`. Hand-rolled double-checked locking is forbidden (`CP.110`, `CP.111`).
 
 ---
 
 ## Message Passing and Task-Based Flow
 
+Caught by: review — no automated detector.
+
 Wherever the design allows, replace shared state with data flowing between owners: a work item moves down a queue, a future carries a result back, nobody needs a lock because nobody shares (`CP.31`).
 
-Think in tasks, not threads (`CP.4`): name *what* runs concurrently, and let infrastructure decide *where*. Ad-hoc `thread-per-request` scales poorly and hides its cost structure; a bounded pool makes both visible.
+**CONC-32 (hard).** Think in tasks, not threads (`CP.4`): name *what* runs concurrently, and let infrastructure decide *where*. Ad-hoc `thread-per-request` scales poorly and hides its cost structure; a bounded pool makes both visible.
 
 ```cpp
 // Producer/consumer through a bounded blocking queue: ownership moves, no locks leak.
@@ -256,40 +274,44 @@ auto compressed = result.get();          // exactly once, transfers ownership
 
 Pitfalls:
 
-- The launch policy is spelled on every call: without `std::launch::async`, `std::async` may run the task deferred — inline at `.get()`, or not at all if the future is dropped — while an async launch blocks in the future's destructor. Omitting the policy is forbidden.
-- `std::async` returned-future destruction blocks until completion; dropping the future to "fire and forget" turns an async call into a synchronous surprise (`CP.61`). Fire-and-forget work goes to the project's job queue, not `std::async`.
-- `promise`/`future` pairs are single-use; a broken promise (destroyed without setting) surfaces as an exception on the waiting side — handle it where the `.get()` lives.
-- Channels and queues must have a bound and an overflow policy. Unbounded growth converts a producer/consumer bug into an OOM incident hours later.
+- **CONC-33 (hard).** The launch policy is spelled on every call: without `std::launch::async`, `std::async` may run the task deferred — inline at `.get()`, or not at all if the future is dropped — while an async launch blocks in the future's destructor. Omitting the policy is forbidden.
+- **CONC-34 (hard).** `std::async` returned-future destruction blocks until completion; dropping the future to "fire and forget" turns an async call into a synchronous surprise (`CP.61`). Fire-and-forget work goes to the project's job queue, not `std::async`.
+- **CONC-35 (default).** `promise`/`future` pairs are single-use; a broken promise (destroyed without setting) surfaces as an exception on the waiting side — handle it where the `.get()` lives.
+- **CONC-36 (hard).** Channels and queues must have a bound and an overflow policy. Unbounded growth converts a producer/consumer bug into an OOM incident hours later.
 
 ---
 
 ## Thread Pools and Shutdown
 
+Caught by: review — no automated detector.
+
 Thread creation and destruction cost real time (`CP.41`): a thread-per-message dispatcher is the anti-pattern, ad-hoc spawning hiding its cost structure until latency budgets vanish. Pre-created workers fed by a queue keep both visible.
 
 Default infrastructure for background work is one process-wide pool with:
 
-1. **Bounded queue depth** with an explicit policy on overflow (block, reject, or shed — documented per entry point).
-2. **Pool size** derived from workload class: CPU-bound ≈ hardware cores; I/O-bound sized against measured latency targets, not folklore.
-3. **Cooperative cancellation**: jobs accept `std::stop_token` (C++20) or check an atomic shutdown flag between units, so drain time is bounded.
-4. **Ordered shutdown**: stop accepting, drain or cancel queued work, join workers — in that order, exercised by a test, because shutdown races are the ones nobody debugs calmly.
+- **CONC-37 (hard).** **Bounded queue depth** with an explicit policy on overflow (block, reject, or shed — documented per entry point).
+- **CONC-38 (default).** **Pool size** derived from workload class: CPU-bound ≈ hardware cores; I/O-bound sized against measured latency targets, not folklore.
+- **CONC-39 (hard).** **Cooperative cancellation**: jobs accept `std::stop_token` (C++20) or check an atomic shutdown flag between units, so drain time is bounded.
+- **CONC-40 (hard).** **Ordered shutdown**: stop accepting, drain or cancel queued work, join workers — in that order, exercised by a test, because shutdown races are the ones nobody debugs calmly.
 
-Library code never spawns unbounded threads per call and never assumes a pool exists around it; accept an executor/pool reference where scheduling matters. Application wiring decides pools.
+**CONC-41 (hard).** Library code never spawns unbounded threads per call and never assumes a pool exists around it; accept an executor/pool reference where scheduling matters. Application wiring decides pools.
 
 ---
 
 ## The TSan Gate
 
-Any change touching threads, atomics, locks, or signal handlers runs a ThreadSanitizer build (`-fsanitize=thread`) of the full test suite before merge:
+**CONC-42 (hard).** Any change touching threads, atomics, locks, or signal handlers runs a ThreadSanitizer build (`-fsanitize=thread`) of the full test suite before merge:
+
+Caught by: review — no automated detector.
 
 Operating notes:
 
-- TSan detects data races, lock-order inversions, and destruction-of-locked-mutex hazards *when executed*. Tests must genuinely exercise the concurrent paths; a test that never overlaps two threads validates nothing here.
-- TSan and ASan never share one binary — the separate builds exist precisely for that reason.
+- **CONC-43 (hard).** TSan detects data races, lock-order inversions, and destruction-of-locked-mutex hazards *when executed*. Tests must genuinely exercise the concurrent paths; a test that never overlaps two threads validates nothing here.
+- **CONC-44 (hard).** TSan and ASan never share one binary — the separate builds exist precisely for that reason.
 - Expect real overhead (roughly 5–15x CPU, 5–10x memory in practice): schedule the full suite accordingly rather than skipping it.
-- A flaky sanitizer finding is still a finding. Fix it, or reduce it to a tracked issue the same day; quieting the tool is forbidden.
+- **CONC-45 (hard).** A flaky sanitizer finding is still a finding. Fix it, or reduce it to a tracked issue the same day; quieting the tool is forbidden.
 
-Signal handlers sit inside this gate too. Deviation from `CP.201`: the upstream entry is itself a question mark; its usable content is that very little is async-signal-safe and the best handler communicates "not at all". Local posture: handlers store only to lock-free atomic flags consumed outside the handler — polled or drained via self-pipe — and any signal-handler change runs a ThreadSanitizer build explicitly.
+**CONC-46 (hard).** Signal handlers sit inside this gate too. Deviation from `CP.201`: the upstream entry is itself a question mark; its usable content is that very little is async-signal-safe and the best handler communicates "not at all". Local posture: handlers store only to lock-free atomic flags consumed outside the handler — polled or drained via self-pipe — and any signal-handler change runs a ThreadSanitizer build explicitly.
 
 ---
 
