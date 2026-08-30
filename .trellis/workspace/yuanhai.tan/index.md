@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 1
+- **Total Sessions**: 2
 - **Last Active**: 2026-08-30
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~29 | Active |
+| `journal-1.md` | ~54 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 2 | 2026-08-30 | Machine-consumable rule structure for cpp guidelines | `6e99321`, `dfd4126`, `9856cca`, `84507f4`, `63cbf55` | `main` |
 | 1 | 2026-08-30 | C++ spec review: index coverage fix + editorial content pass | `8b30d72`, `e6a483a` | `main` |
 <!-- @@@/auto:session-history -->
 
