@@ -4,7 +4,8 @@
 For every fenced ```cpp block (with its doc, line, and preceding lead hint)
 the harness prepends tools/stubs/stubs.hpp plus a #line directive and runs
 `g++ -Wall -Wextra -fsyntax-only` on the combined source (baseline dialect
-`-std=c++17`; fences annotated `// C++20` compile with `-std=c++20`), so
+`-std=c++14`; fences annotated `// C++17` compile with `-std=c++17` and
+`// C++20` with `-std=c++20`), so
 diagnostics carry the guideline's own doc:line coordinates. A per-doc stub
 file (tools/stubs/per-doc/<doc>.hpp) may append names one guide spells
 differently, and -isystem exposes tools/stubs/include for stub headers the
@@ -52,11 +53,25 @@ STUBS_INC = STUBS.resolve().parent / "include"
 PER_DOC_STUBS = STUBS.resolve().parent / "per-doc"
 
 CXX = "g++"
-# Baseline dialect is C++17; a `// C++20` comment in the fence upgrades that
-# block to -std=c++20 (see rules_grammar.MARKER_CXX20_RE).
+# Baseline dialect is C++14; `// C++17` / `// C++20` comments in a fence
+# upgrade that block to -std=c++17 / -std=c++20 (see rules_grammar
+# MARKER_CXX17_RE / MARKER_CXX20_RE).
 ISYSTEM = ["-isystem", str(STUBS_INC)]
+CXX14_FLAGS = ["-std=c++14", "-Wall", "-Wextra", *ISYSTEM, "-fsyntax-only"]
 CXX17_FLAGS = ["-std=c++17", "-Wall", "-Wextra", *ISYSTEM, "-fsyntax-only"]
 CXX20_FLAGS = ["-std=c++20", "-Wall", "-Wextra", *ISYSTEM, "-fsyntax-only"]
+
+
+def flags_for(fence: rg.Fence) -> list:
+    """Compiler flags for one fence: `// C++20` wins, then `// C++17`, else
+    the C++14 baseline."""
+    if fence.cxx20:
+        return CXX20_FLAGS
+    if fence.cxx17:
+        return CXX17_FLAGS
+    return CXX14_FLAGS
+
+
 PROXIMITY = 2  # primary diagnostic may drift this many lines from the marker
 DIAG_RE = re.compile(
     r"^(?P<file>[^:\n]+):(?P<line>\d+):(?P<col>\d+):\s+"
@@ -357,7 +372,7 @@ def compile_block(stubs: str, doc: rg.ParsedDoc, fence: rg.Fence, tmpdir: Path):
     usage shape), then the whole block in a function body. When every attempt
     fails, report the first whose errors are not fragment artifacts.
     """
-    flags = CXX20_FLAGS if fence.cxx20 else CXX17_FLAGS
+    flags = flags_for(fence)
     sectioned = marker_sections(fence) is not None
     rc, diags = compile_once(flags, build_source(stubs, doc, fence, False), tmpdir)
     if rc == 0 or rc is None or sectioned:

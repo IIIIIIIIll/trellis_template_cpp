@@ -6,6 +6,10 @@
 #ifndef TOOLS_STUBS_RESULT_H
 #define TOOLS_STUBS_RESULT_H
 
+// Built on tl::expected (std::variant inside), so the header is a no-op below
+// C++17; fences that include result.h carry a `// C++17` fence marker.
+#if __cplusplus >= 201703L
+
 #include "tl/expected.hpp"
 
 template <typename T, typename E>
@@ -15,5 +19,7 @@ template <typename E>
 auto make_error(E&& e) {
     return tl::make_unexpected(std::forward<E>(e));
 }
+
+#endif  // __cplusplus >= 201703L
 
 #endif  // TOOLS_STUBS_RESULT_H

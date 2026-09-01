@@ -5,7 +5,8 @@
 //
 // The snippet harness prepends this header (plus a #line directive) to every
 // fenced ```cpp example before running g++ -Wall -Wextra -fsyntax-only
-// (-std=c++17 baseline; -std=c++20 for fences annotated // C++20), so
+// (-std=c++14 baseline; fences annotated // C++17 / // C++20 compile at
+// -std=c++17 / -std=c++20), so
 // guideline examples can use the standard library freely and name the
 // invented types each guide uses (Session, Task, JoinOptions, ...) without
 // carrying their definitions inline.
@@ -13,8 +14,8 @@
 // Two halves:
 //   1. a common std prelude — every guide's examples lean on the same core
 //      headers; including them here keeps the examples focused on the rule
-//      being shown. C++20-only headers are guarded so the same prelude works
-//      under -std=c++17 and -std=c++20.
+//      being shown. C++17- and C++20-only headers are guarded so the same
+//      prelude works under -std=c++14, -std=c++17, and -std=c++20.
 //   2. stub declarations for invented names — declared, not defined where the
 //      docs define them; keep bodies trivial. Stubs must never collide with a
 //      name any doc fence defines (the harness compiles such fences per
@@ -55,7 +56,6 @@
 #include <mutex>
 #include <new>
 #include <numeric>
-#include <optional>
 #include <ostream>
 #include <queue>
 #include <random>
@@ -64,7 +64,6 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
-#include <string_view>
 #include <system_error>
 #include <thread>
 #include <tuple>
@@ -74,8 +73,16 @@
 #include <unordered_set>
 #include <utility>
 #include <unistd.h>
-#include <variant>
 #include <vector>
+
+// C++17-only headers: libstdc++ tolerates including them at C++14 (contents
+// guarded out) but libc++ hard-errors pre-17, so gate them like the C++20
+// block below.
+#if __cplusplus >= 201703L
+#include <optional>
+#include <string_view>
+#include <variant>
+#endif
 
 #if __cplusplus >= 202002L
 #include <bit>
@@ -92,6 +99,12 @@
 
 // --- 2. stub declarations for invented names ---------------------------------
 // Grouped by the doc that needs each name.
+//
+// Declarations naming C++17-only standard types (std::string_view,
+// std::optional, std::variant) sit behind `#if __cplusplus >= 201703L`: those
+// names do not exist at the C++14 baseline, and fences relying on such stubs
+// carry a `// C++17` fence marker. Inline namespace-scope variables stay
+// unguarded (warning-only at C++14; the gate has no -Werror).
 
 // quality-guidelines.md
 enum class Mode { kFast, kSafe, kRaw };
@@ -149,7 +162,9 @@ struct Session {
 };
 inline Config config;  // CLS-22 two-stage-construction fragment references it
 using Bytes = std::vector<char>;       // CLS-72 Codec interface
+#if __cplusplus >= 201703L
 using BytesView = std::string_view;    // CLS-72 Codec interface
+#endif
 
 // concurrency.md
 struct Request {};
@@ -186,7 +201,9 @@ struct Key {};
 struct Value {};
 struct Map {
     Item at(Key) const { return Item{}; }
+#if __cplusplus >= 201703L
     std::optional<Item> lookup(Key) const { return std::nullopt; }
+#endif
 };
 struct Table {
     Value& operator[](int) { static Value v; return v; }
@@ -214,7 +231,9 @@ enum {                          // ERR-43 module-edge status codes
 };
 struct ParseError : std::exception {};
 struct MylibDoc;  // opaque across the C ABI
+#if __cplusplus >= 201703L
 inline MylibDoc* parse_doc(std::string_view);
+#endif
 inline MylibDoc* release_to_c(MylibDoc*);
 inline void set_last_error(const char*);
 struct Handler {
@@ -272,8 +291,10 @@ struct Rect {
 // memory-and-ownership.md
 inline bool parse(std::FILE*);                           // MEM-1 wrong example
 inline bool parse(std::ifstream&);                       // MEM-1 right example
+#if __cplusplus >= 201703L
 inline std::string normalize(std::string_view);          // MEM-38 wrong example
 inline std::string_view extract_host(const std::string&);
+#endif
 inline std::string make_name();                          // MEM-38 temporary trap
 inline std::vector<int> v;                               // MEM-39 wrong fragment
 inline int x = 0;
@@ -359,17 +380,23 @@ protected:
 #define EXPECT_FALSE(x) (void)(x)
 #define EXPECT_EQ(a, b) (void)((a) == (b))
 #define EXPECT_CALL(obj, call) (void)(&obj)
+#if __cplusplus >= 201703L
 using std::nullopt;  // TEST-4 fragment compares against bare nullopt
+#endif
 struct RingBuffer {                                    // TEST-28 fixture example
     explicit RingBuffer(std::size_t) {}
     void push(int) {}
     std::size_t size() const { return 0; }
 };
+#if __cplusplus >= 201703L
 inline void put(std::string_view, std::string_view, std::chrono::seconds) {}
 inline std::string find(std::string_view) { return {}; }
+#endif
 struct Cache {                                         // TEST-15 right example
+#if __cplusplus >= 201703L
     void put(std::string_view, std::string_view, std::chrono::seconds) {}
     std::optional<std::string> find(std::string_view) { return std::nullopt; }
+#endif
 };
 inline Cache* cache_ = nullptr;
 inline std::chrono::seconds ttl_{1};
@@ -383,7 +410,9 @@ struct RouteMatch {
     RouteHandler handler() const { return handle_user; }
 };
 struct Router {
+#if __cplusplus >= 201703L
     RouteMatch route(std::string_view) { return {}; }
+#endif
 };
 inline Router router;
 enum class ParseErr { kIncomplete, kNotFound };
@@ -392,7 +421,9 @@ struct ParseReply {
     ParseErr error() const { return ParseErr::kIncomplete; }
 };
 struct TestParser {
+#if __cplusplus >= 201703L
     ParseReply parse(std::string_view) { return {}; }
+#endif
     State state_ = State::kHeaderDone;
 };
 inline TestParser parser;
@@ -405,9 +436,13 @@ struct AdapterReply {
     Errc error() const { return Errc::kNotFound; }
 };
 struct Adapter {
+#if __cplusplus >= 201703L
     AdapterReply open(std::string_view) { return {}; }
+#endif
 };
 inline Adapter adapter;
+#if __cplusplus >= 201703L
 inline std::optional<int> parse(std::string_view) { return std::nullopt; }  // TEST-4 fragment
+#endif
 
 #endif  // TOOLS_STUBS_STUBS_HPP

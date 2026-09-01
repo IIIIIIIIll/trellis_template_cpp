@@ -7,6 +7,10 @@
 #ifndef TOOLS_STUBS_TL_EXPECTED_HPP
 #define TOOLS_STUBS_TL_EXPECTED_HPP
 
+// Internally built on std::variant, so the header is a no-op below C++17;
+// fences that name tl::expected carry a `// C++17` fence marker.
+#if __cplusplus >= 201703L
+
 #include <new>
 #include <utility>
 #include <variant>
@@ -48,5 +52,7 @@ private:
 };
 
 }  // namespace tl
+
+#endif  // __cplusplus >= 201703L
 
 #endif  // TOOLS_STUBS_TL_EXPECTED_HPP
