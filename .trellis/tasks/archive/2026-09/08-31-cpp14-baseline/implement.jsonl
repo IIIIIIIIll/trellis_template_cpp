@@ -1,0 +1,5 @@
+{"file": ".trellis/spec/registry/guideline-authoring.md", "reason": "House grammar: rule blocks, markers, sync obligations"}
+{"file": "tools/check_snippets.py", "reason": "Snippet gate: flag selection, classification, per-doc stubs"}
+{"file": "tools/rules_grammar.py", "reason": "Fence parsing and dialect marker regexes"}
+{"file": "tools/stubs/stubs.hpp", "reason": "Shared stub header needing C++14 dialect guards"}
+{"file": "specs/cpp/README.md", "reason": "Baseline contract statement to update"}
