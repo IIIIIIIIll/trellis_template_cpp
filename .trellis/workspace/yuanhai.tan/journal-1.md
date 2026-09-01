@@ -52,3 +52,26 @@ Task 08-30-cpp-rules-machine-format: restructured the shipped cpp guidelines for
 ### Status
 
 [OK] **Completed**
+
+
+## Session 3: Lower C++ guideline baseline to C++14
+
+**Date**: 2026-09-01
+**Task**: Lower C++ guideline baseline to C++14
+**Branch**: `main`
+
+### Summary
+
+Task 08-31-cpp14-baseline: baseline of the shipped cpp guideline set lowered from C++17 to C++14 while keeping every C++17/20 recommendation as a marked upgrade. Tooling (7b9c7be): // C++17 fence marker + Fence.cxx17 in rules_grammar.py, CXX14_FLAGS + flags_for() three-way selection in check_snippets.py, stub declarations/includes dialect-guarded at __cplusplus >= 201703L (15/15 dialect combos verified). Docs (634902d): canonical C++14 baseline paragraph in all 10 topic guides + index/README/disposition; 43 rule statements rewritten C++14-first with **C++17:**/**C++20:** notes; 37 fences marked; rules.json regen (540 rules, IDs/strengths/pairings unchanged, byte-identical); carried pre-session R.22<->R.23 citation fix. Hygiene (8c95c10): pyc untracked, *pyc ignored. Gates all green: validate_rules 0, check_snippets 121 blocks 0 violations, digest deterministic, manifest/links clean; AC4 sweep clean; AC6 hand-compiles green incl. negative control (stripped marker fails with string_view error — no stub masking). Seven parallel slices (S0 tooling + S1-S6 docs) + trellis-check full-scope pass (fixed testing-conventions Overview gap + 2 concurrency cells). Spec capture: guideline-authoring Dialect markers bullet + _v-trait-aliases-are-C++17 gotcha. Notable correction: S3 probe showed _v trait aliases are C++17, median fence rewritten to ::value.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `7b9c7be` | (see git log) |
+| `634902d` | (see git log) |
+| `8c95c10` | (see git log) |
+
+### Status
+
+[OK] **Completed**
