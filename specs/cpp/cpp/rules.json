@@ -476,7 +476,7 @@
   {
     "id": "CLS-49",
     "strength": "default",
-    "statement": "Ordering: C++17 has no defaulted comparisons (<=> arrives in C++20 and will replace this spelling) — a regular value type writes operator< memberwise, std::tie(x_, y_) < std::tie(o.x_, o.y_) giving lexicographic order, and derives >, <=, >= from == and <, ideally once in a CRTP ordering base.",
+    "statement": "Ordering: a regular value type writes operator< memberwise — std::tie(x_, y_) < std::tie(o.x_, o.y_) giving lexicographic order — and derives >, <=, >= from == and <, ideally once in a CRTP ordering base.",
     "doc": "classes-and-hierarchies.md",
     "detector": "review",
     "upstream": []
@@ -593,7 +593,7 @@
   {
     "id": "CLS-61",
     "strength": "hard",
-    "statement": "Name lookup hides too: a derived member hides its bases' entire same-named overload sets — d.f(2.3) quietly calls f(int) — so using B::f; restores them, for virtual and non-virtual alike; C++17's variadic using Ts::operator()...",
+    "statement": "Name lookup hides too: a derived member hides its bases' entire same-named overload sets — d.f(2.3) quietly calls f(int) — so using B::f; restores them, for virtual and non-virtual alike; the overloader idiom writes one explicit using Base::operator(); per base — or forwards through a small call set — to unhide each operator() at C++14.",
     "doc": "classes-and-hierarchies.md",
     "detector": "clang-tidy `cppcoreguidelines-virtual-class-destructor`; ASan reports leaked derived subobjects",
     "upstream": [
@@ -1070,7 +1070,7 @@
   {
     "id": "CONC-15",
     "strength": "hard",
-    "statement": "On C++17, wrap std::thread in a small joining-thread class whose destructor calls join() unless already joined; do not sprinkle join() calls through control flow — the early-return branch is how terminates happen.",
+    "statement": "Wrap std::thread in a small joining-thread class whose destructor calls join() unless already joined; do not sprinkle join() calls through control flow — the early-return branch is how terminates happen.",
     "doc": "concurrency.md",
     "detector": "review for `detach()` and unjoined `std::thread`; TSan flags races caused by threads outliving their data",
     "upstream": []
@@ -1489,7 +1489,7 @@
   {
     "id": "ERR-15",
     "strength": "hard",
-    "statement": "On a C++17 codebase, pick one of, in order of preference — centralized behind one alias so migration is mechanical:",
+    "statement": "Expected-style results are not a C++23 luxury — on the C++14 baseline, pick one of, in order of preference, centralized behind one alias so migration is mechanical:",
     "doc": "error-handling.md",
     "detector": "review",
     "upstream": []
@@ -1505,7 +1505,7 @@
   {
     "id": "ERR-17",
     "strength": "default",
-    "statement": "Do not hand-roll monadic .and_then() chains in C++17 wrappers; keep the wrapper surface minimal so the future swap stays trivial.",
+    "statement": "Do not hand-roll monadic .and_then() chains in expected-style wrappers; keep the wrapper surface minimal so the future swap stays trivial.",
     "doc": "error-handling.md",
     "detector": "review",
     "upstream": [
@@ -1889,7 +1889,7 @@
   {
     "id": "EXPR-8",
     "strength": "default",
-    "statement": "One declarator per statement (ES.10): comma lists hide an uninitialized variable among initialized ones and blur pointer decoration — function parameters and structured bindings are the sanctioned exceptions.",
+    "statement": "One declarator per statement (ES.10): comma lists hide an uninitialized variable among initialized ones and blur pointer decoration — function parameters and structured bindings (C++17) are the sanctioned exceptions.",
     "doc": "expressions-and-flow.md",
     "detector": "clang-tidy `readability-isolate-declaration`",
     "upstream": [
@@ -1899,7 +1899,7 @@
   {
     "id": "EXPR-9",
     "strength": "default",
-    "statement": "Loop counters declare in the for initializer, and C++17 if/switch initializer statements confine selection variables to their block (ES.6) — nothing outlives the construct that needed it.",
+    "statement": "Loop counters declare in the for initializer, and selection variables live in the tightest enclosing scope (ES.6) — declare an if/switch condition's variable in a block immediately wrapping the construct so nothing outlives the branch that needed it.",
     "doc": "expressions-and-flow.md",
     "detector": "review",
     "upstream": [
@@ -2007,7 +2007,7 @@
   {
     "id": "EXPR-20",
     "strength": "default",
-    "statement": "memcpy (C++17), std::bit_cast (C++20)",
+    "statement": "memcpy, std::bit_cast (C++20)",
     "doc": "expressions-and-flow.md",
     "detector": "review",
     "upstream": []
@@ -2378,7 +2378,7 @@
   {
     "id": "FN-2",
     "strength": "default",
-    "statement": "T (cheap copy), const T&, std::string_view, std::span<const T>; Callee reads; copies anything it stores",
+    "statement": "T (cheap copy), const T&, std::string_view (C++17; C++14: const std::string&), std::span<const T> (C++20; C++14: const T* + size); Callee reads; copies anything it stores",
     "doc": "functions-and-interfaces.md",
     "detector": "review — hidden `inout` behavior has no dependable static check; the signature convention makes it catchable by humans. Unsynchronized argument-keyed cache mutation surfaces under TSan",
     "upstream": []
@@ -2457,7 +2457,7 @@
   {
     "id": "FN-11",
     "strength": "default",
-    "statement": "Unused parameters stay unnamed, or wear [[maybe_unused]] when conditionally dead — template dispatch especially (F.9).",
+    "statement": "Unused parameters stay unnamed, or — when conditionally dead, template dispatch especially (F.9) — are silenced with a (void)p; statement.",
     "doc": "functions-and-interfaces.md",
     "detector": "review — hidden `inout` behavior has no dependable static check; the signature convention makes it catchable by humans. Unsynchronized argument-keyed cache mutation surfaces under TSan",
     "upstream": [
@@ -2494,7 +2494,7 @@
   {
     "id": "FN-15",
     "strength": "default",
-    "statement": "std::string_view by value (SL.str.12); Literals and substrings arrive without conversion",
+    "statement": "std::string_view (C++17; C++14: const std::string&) by value (SL.str.12); Literals and substrings arrive without conversion",
     "doc": "functions-and-interfaces.md",
     "detector": "clang-tidy `performance-unnecessary-value-param` catches sinks missing their move; needless `const T&` on scalars is a review item",
     "upstream": []
@@ -2502,7 +2502,7 @@
   {
     "id": "FN-16",
     "strength": "default",
-    "statement": "std::span<const T> (F.24; pointer + size before C++20); One spelling for arrays, vectors, slices",
+    "statement": "std::span<const T> (F.24; C++20; C++14: const T* + size); One spelling for arrays, vectors, slices",
     "doc": "functions-and-interfaces.md",
     "detector": "clang-tidy `performance-unnecessary-value-param` catches sinks missing their move; needless `const T&` on scalars is a review item",
     "upstream": [
@@ -2570,7 +2570,7 @@
   {
     "id": "FN-23",
     "strength": "default",
-    "statement": "Read-only text and sequences enter as views so callers pay no conversion tax (SL.str.12, F.24).",
+    "statement": "Read-only text and sequences enter without copying caller data — on C++14 as const std::string& (or const char*) and pointer-plus-size pairs; C++17: std::string_view / std::span<const T> spell the borrow in the type (SL.str.12, F.24).",
     "doc": "functions-and-interfaces.md",
     "detector": "ASan flags use-after-free when a stored view outlives its owner; review catches the boundary case earlier",
     "upstream": [
@@ -2609,7 +2609,7 @@
   {
     "id": "FN-27",
     "strength": "hard",
-    "statement": "Never return a pointer or reference to a local, including wrapped in a view (F.43).",
+    "statement": "Never return a pointer or reference to a local (F.43); on C++14 the string-copy case returns std::string by value.",
     "doc": "functions-and-interfaces.md",
     "detector": "GCC 13+ `-Wdangling-reference` for simple cases, ASan on first use otherwise; clang-tidy flags `std::move` in return statements",
     "upstream": [
@@ -2685,7 +2685,7 @@
     "strength": "hard",
     "statement": "Always",
     "doc": "functions-and-interfaces.md",
-    "detector": "`-Wunused-result` via the attribute; review for categories the attribute cannot see",
+    "detector": "`-Wunused-result` via the attribute (C++17; the C++14 comment marking is review-enforced); review for categories the attribute cannot see",
     "upstream": []
   },
   {
@@ -2693,7 +2693,7 @@
     "strength": "hard",
     "statement": "Yes",
     "doc": "functions-and-interfaces.md",
-    "detector": "`-Wunused-result` via the attribute; review for categories the attribute cannot see",
+    "detector": "`-Wunused-result` via the attribute (C++17; the C++14 comment marking is review-enforced); review for categories the attribute cannot see",
     "upstream": []
   },
   {
@@ -2701,15 +2701,15 @@
     "strength": "hard",
     "statement": "No",
     "doc": "functions-and-interfaces.md",
-    "detector": "`-Wunused-result` via the attribute; review for categories the attribute cannot see",
+    "detector": "`-Wunused-result` via the attribute (C++17; the C++14 comment marking is review-enforced); review for categories the attribute cannot see",
     "upstream": []
   },
   {
     "id": "FN-37",
     "strength": "hard",
-    "statement": "The attribute also applies at class level: mark a status/Result type [[nodiscard]] once, and every function returning it is covered — no per-function decoration to forget.",
+    "statement": "The marking also applies at type level: tag a status/Result type once — the /* must-check */ comment on C++14, C++17: the [[nodiscard]] attribute — and every function returning it is covered, no per-function decoration to forget.",
     "doc": "functions-and-interfaces.md",
-    "detector": "`-Wunused-result` via the attribute; review for categories the attribute cannot see",
+    "detector": "`-Wunused-result` via the attribute (C++17; the C++14 comment marking is review-enforced); review for categories the attribute cannot see",
     "upstream": [
       "F.20"
     ]
@@ -2828,7 +2828,7 @@
   {
     "id": "FN-49",
     "strength": "hard",
-    "statement": "A lambda that escapes its scope — queued to another thread, stored, returned — captures by value, with any needed non-local pointer owned (unique_ptr) and whole-object snapshots spelled [*this].",
+    "statement": "A lambda that escapes its scope — queued to another thread, stored, returned — captures by value, with any needed non-local pointer owned (unique_ptr) and whole-object snapshots captured by copy — [snapshot = *this] on C++14; C++17: [*this] spells the same in one token.",
     "doc": "functions-and-interfaces.md",
     "detector": "review",
     "upstream": [
@@ -2919,7 +2919,7 @@
   {
     "id": "FN-58",
     "strength": "default",
-    "statement": "Interfaces are precisely and strongly typed (I.4) — largely enforced above through views over raw sequences, option structs over flag soup, named constants over magic numbers, and units carried by types such as durations.",
+    "statement": "Interfaces are precisely and strongly typed (I.4) — largely enforced above through views over raw sequences (or their C++14 pointer-plus-size spellings), option structs over flag soup, named constants over magic numbers, and units carried by types such as durations.",
     "doc": "functions-and-interfaces.md",
     "detector": "review",
     "upstream": [
@@ -2930,7 +2930,7 @@
   {
     "id": "FN-59",
     "strength": "hard",
-    "statement": "Adjacent same-type parameters invocable with the same arguments in either order are defect bait — copy_n(p, q, n) reads three ways (I.24); mark the source const, pass spans, or bundle into named fields.",
+    "statement": "Adjacent same-type parameters invocable with the same arguments in either order are defect bait — copy_n(p, q, n) reads three ways (I.24); mark the source const, pass pointer-plus-size pairs (std::span on C++20), or bundle into named fields.",
     "doc": "functions-and-interfaces.md",
     "detector": "review",
     "upstream": [
@@ -3089,7 +3089,7 @@
   {
     "id": "MEM-6",
     "strength": "hard",
-    "statement": "Raw T*, T&, std::span, std::string_view; Access without ownership; Must not dangle; the caller guarantees outliving",
+    "statement": "Raw T*, T&, std::span (C++20; C++14: T* + size), std::string_view (C++17; C++14: const std::string&); Access without ownership; Must not dangle; the caller guarantees outliving",
     "doc": "memory-and-ownership.md",
     "detector": "ASan (use-after-free and double-free from broken ownership), LSan (leaked cycles that `weak_ptr` should have broken), TSan (data races from undeclared shared owners), review for shared-ptr sprawl",
     "upstream": []
@@ -3203,17 +3203,7 @@
   {
     "id": "MEM-18",
     "strength": "hard",
-    "statement": "Custom-deleter owners: std::make_unique has no deleter-taking form (R.22 fixes only the default-deleter spelling), so an unwrapped resource with non-default cleanup writes its owner out in full at the acquisition site — std::unique_ptr<Handle, Deleter>{acquire(...), release} — and never parks the raw handle in between.",
-    "doc": "memory-and-ownership.md",
-    "detector": "ASan (use-after-free and double-free from broken ownership), LSan (leaked cycles that `weak_ptr` should have broken), TSan (data races from undeclared shared owners), review for shared-ptr sprawl",
-    "upstream": [
-      "R.22"
-    ]
-  },
-  {
-    "id": "MEM-19",
-    "strength": "hard",
-    "statement": "make_shared carve-outs (R.23): the fused allocation keeps the object's bytes alive while any weak_ptr exists — a mandated weak_ptr back-edge or cache entry over a large object pays full memory after the object is logically dead — and make_shared cannot take a custom deleter.",
+    "statement": "Custom-deleter owners: std::make_unique has no deleter-taking form (R.23 fixes only the default-deleter spelling), so an unwrapped resource with non-default cleanup writes its owner out in full at the acquisition site — std::unique_ptr<Handle, Deleter>{acquire(...), release} — and never parks the raw handle in between.",
     "doc": "memory-and-ownership.md",
     "detector": "ASan (use-after-free and double-free from broken ownership), LSan (leaked cycles that `weak_ptr` should have broken), TSan (data races from undeclared shared owners), review for shared-ptr sprawl",
     "upstream": [
@@ -3221,9 +3211,19 @@
     ]
   },
   {
+    "id": "MEM-19",
+    "strength": "hard",
+    "statement": "make_shared carve-outs (R.22): the fused allocation keeps the object's bytes alive while any weak_ptr exists — a mandated weak_ptr back-edge or cache entry over a large object pays full memory after the object is logically dead — and make_shared cannot take a custom deleter.",
+    "doc": "memory-and-ownership.md",
+    "detector": "ASan (use-after-free and double-free from broken ownership), LSan (leaked cycles that `weak_ptr` should have broken), TSan (data races from undeclared shared owners), review for shared-ptr sprawl",
+    "upstream": [
+      "R.22"
+    ]
+  },
+  {
     "id": "MEM-20",
     "strength": "default",
-    "statement": "std::string_view",
+    "statement": "std::string_view (C++17; C++14: const std::string&)",
     "doc": "memory-and-ownership.md",
     "detector": "clang-tidy `performance-unnecessary-value-param` (missing moves in sinks); the `const std::string&`-that-should-be-a-view case has no reliable automatic check and is a review item",
     "upstream": []
@@ -3231,7 +3231,7 @@
   {
     "id": "MEM-21",
     "strength": "default",
-    "statement": "std::span<const T> (pointer + size until C++20)",
+    "statement": "std::span<const T> (C++20; C++14: const T* + size)",
     "doc": "memory-and-ownership.md",
     "detector": "clang-tidy `performance-unnecessary-value-param` (missing moves in sinks); the `const std::string&`-that-should-be-a-view case has no reliable automatic check and is a review item",
     "upstream": []
@@ -3271,7 +3271,7 @@
   {
     "id": "MEM-26",
     "strength": "hard",
-    "statement": "Return std::optional<T>, never a sentinel or nullptr",
+    "statement": "Return std::optional<T> (C++17; C++14: a named result struct), never a sentinel or nullptr",
     "doc": "memory-and-ownership.md",
     "detector": "clang-tidy `performance-unnecessary-value-param` (missing moves in sinks); the `const std::string&`-that-should-be-a-view case has no reliable automatic check and is a review item",
     "upstream": []
@@ -3315,7 +3315,7 @@
   {
     "id": "MEM-31",
     "strength": "hard",
-    "statement": "Take smart pointers as parameters only to explicitly express lifetime semantics (R.30): readers take Borrowed views (widget*, widget&, std::span), sinks take by-value owners, and a by-value shared_ptr parameter nobody stores is an atomic no-op billed to every caller.",
+    "statement": "Take smart pointers as parameters only to explicitly express lifetime semantics (R.30): readers take Borrowed views (widget*, widget&; C++20: std::span), sinks take by-value owners, and a by-value shared_ptr parameter nobody stores is an atomic no-op billed to every caller.",
     "doc": "memory-and-ownership.md",
     "detector": "review — no checker reliably distinguishes takeover from borrow, so treat smart-pointer parameter types as reviewed API surface",
     "upstream": [
@@ -3383,7 +3383,7 @@
   {
     "id": "MEM-38",
     "strength": "hard",
-    "statement": "A string_view/span return type is a promise — it points into input memory that outlives the expression; never return a view into a local or a temporary.",
+    "statement": "A borrowed-view return — T&, T*, const std::string& included (C++17: string_view; C++20: std::span) — is a promise: it points into input memory that outlives the expression; never return a view into a local or a temporary.",
     "doc": "memory-and-ownership.md",
     "detector": "GCC 13+ `-Wdangling-reference` flags simple cases but is prone to false positives — treat findings as leads, not verdicts; ASan flags the use-after-return at first access. Any view returned across a function boundary deserves a look under an ASan+UBSan build",
     "upstream": []
@@ -3636,7 +3636,7 @@
   {
     "id": "PERF-18",
     "strength": "default",
-    "statement": "Read-only text arrives as std::string_view; read-only sequences arrive as a pointer-plus-size pair — (const T* data, std::size_t size), or gsl::span<const T> where GSL is adopted — until C++20 std::span takes over the spelling, so literals, substrings, and slices cross the boundary without allocating.",
+    "statement": "Read-only text arrives as const std::string& on the C++14 baseline — literals and slices pay one construction at the boundary.",
     "doc": "performance.md",
     "detector": "review",
     "upstream": []
@@ -4199,7 +4199,7 @@
   {
     "id": "QUAL-47",
     "strength": "hard",
-    "statement": "Namespace-scope constants defined in headers must be inline constexpr (SF.2 bans object definitions in headers outright; this inline form is the sanctioned shape) so there is exactly one entity across all translation units.",
+    "statement": "A namespace-scope constant defined in a header must exist exactly once across all translation units.",
     "doc": "quality-guidelines.md",
     "detector": "review",
     "upstream": [
@@ -4451,7 +4451,7 @@
   {
     "id": "TPL-11",
     "strength": "default",
-    "statement": "Deviation from T.12: a bare auto is the weakest possible concept, so where a fitting C++20 concept exists prefer the constrained spelling; on the C++17 baseline the notation does not exist and plain auto stays acceptable.",
+    "statement": "Deviation from T.12: a bare auto is the weakest possible concept, so plain auto stays acceptable on the C++14 baseline, where the constrained notation does not exist.",
     "doc": "templates-and-generics.md",
     "detector": "compile time itself — that is the point. Readability of the failure is review-visible: if a colleague cannot tell why their type fails within one screen of output, the constraint is missing or miswritten",
     "upstream": [
@@ -4461,7 +4461,7 @@
   {
     "id": "TPL-12",
     "strength": "default",
-    "statement": "Deviation from T.13: the shorthand for simple single-type-argument concepts — template <Sortable T>, or Sortable auto&& — reads the way we speak and wins wherever C++20 is available; the C++17 fallback remains the traits-based static_assert spelled out above.",
+    "statement": "Deviation from T.13: the traits-based static_assert spelled out above is the C++14 default for simple single-type-argument contracts.",
     "doc": "templates-and-generics.md",
     "detector": "compile time itself — that is the point. Readability of the failure is review-visible: if a colleague cannot tell why their type fails within one screen of output, the constraint is missing or miswritten",
     "upstream": [
@@ -4471,7 +4471,7 @@
   {
     "id": "TPL-13",
     "strength": "default",
-    "statement": "Deviation from T.48: without concept support the guideline's best emulation is enable_if, which drags in complementary-constraint designs; this project's C++17 dialect instead prefers static_assert trait checks for stating contracts and quarantines SFINAE behind named aliases for genuine overload selection.",
+    "statement": "Deviation from T.48: the project dialect prefers static_assert trait checks for stating contracts and quarantines SFINAE behind named aliases for genuine overload selection — upstream's enable_if emulation drags in complementary-constraint designs.",
     "doc": "templates-and-generics.md",
     "detector": "compile time itself — that is the point. Readability of the failure is review-visible: if a colleague cannot tell why their type fails within one screen of output, the constraint is missing or miswritten",
     "upstream": [
@@ -4530,7 +4530,7 @@
   {
     "id": "TPL-19",
     "strength": "default",
-    "statement": "CTAD (T.44) is authored, not lucky.",
+    "statement": "Make deduction authored, not lucky (T.44).",
     "doc": "templates-and-generics.md",
     "detector": "review",
     "upstream": [
@@ -4610,25 +4610,25 @@
   {
     "id": "TPL-27",
     "strength": "hard",
-    "statement": "Branching on type properties inside a function body is if constexpr territory on C++17 and later.",
+    "statement": "Branching on type properties inside a function body happens at compile time: tag dispatch and enable_if SFINAE are the C++14 default spellings.",
     "doc": "templates-and-generics.md",
-    "detector": "none reliably — reviewers watch for fresh `std::enable_if` and tag-dispatch scaffolding in C++17 code and ask whether `if constexpr` collapses it. clang-tidy flags several related modernization opportunities on changed sources",
+    "detector": "none reliably — reviewers watch for fresh `std::enable_if` and tag-dispatch scaffolding and ask whether `if constexpr` (C++17) collapses it. clang-tidy flags several related modernization opportunities on changed sources",
     "upstream": []
   },
   {
     "id": "TPL-28",
     "strength": "default",
-    "statement": "Value-based selection between statements in one function: if constexpr.",
+    "statement": "Value-based selection between statements in one function: tag dispatch or an overload set — the C++14 default spellings.",
     "doc": "templates-and-generics.md",
-    "detector": "none reliably — reviewers watch for fresh `std::enable_if` and tag-dispatch scaffolding in C++17 code and ask whether `if constexpr` collapses it. clang-tidy flags several related modernization opportunities on changed sources",
+    "detector": "none reliably — reviewers watch for fresh `std::enable_if` and tag-dispatch scaffolding and ask whether `if constexpr` (C++17) collapses it. clang-tidy flags several related modernization opportunities on changed sources",
     "upstream": []
   },
   {
     "id": "TPL-29",
     "strength": "default",
-    "statement": "Selecting between *overloads* visible to callers, or constraining a public API: concepts on C++20; on C++17, a traits-based enable_if remains acceptable — but hide it behind a descriptive alias.",
+    "statement": "Selecting between *overloads* visible to callers, or constraining a public API: a traits-based enable_if remains acceptable on the C++14 baseline — but hide it behind a descriptive alias.",
     "doc": "templates-and-generics.md",
-    "detector": "none reliably — reviewers watch for fresh `std::enable_if` and tag-dispatch scaffolding in C++17 code and ask whether `if constexpr` collapses it. clang-tidy flags several related modernization opportunities on changed sources",
+    "detector": "none reliably — reviewers watch for fresh `std::enable_if` and tag-dispatch scaffolding and ask whether `if constexpr` (C++17) collapses it. clang-tidy flags several related modernization opportunities on changed sources",
     "upstream": []
   },
   {
@@ -4636,7 +4636,7 @@
     "strength": "default",
     "statement": "Class-template shape differences still belong to (partial) specialization (T.64) — one general interface, specialized implementations for the shapes that need them; if constexpr does not replace choosing a different data layout.",
     "doc": "templates-and-generics.md",
-    "detector": "none reliably — reviewers watch for fresh `std::enable_if` and tag-dispatch scaffolding in C++17 code and ask whether `if constexpr` collapses it. clang-tidy flags several related modernization opportunities on changed sources",
+    "detector": "none reliably — reviewers watch for fresh `std::enable_if` and tag-dispatch scaffolding and ask whether `if constexpr` (C++17) collapses it. clang-tidy flags several related modernization opportunities on changed sources",
     "upstream": [
       "T.64",
       "T.67"
@@ -4647,7 +4647,7 @@
     "strength": "hard",
     "statement": "Do not specialize function templates — overload or delegate instead (T.144); specialization interacts badly with overload resolution and surprises even experts.",
     "doc": "templates-and-generics.md",
-    "detector": "none reliably — reviewers watch for fresh `std::enable_if` and tag-dispatch scaffolding in C++17 code and ask whether `if constexpr` collapses it. clang-tidy flags several related modernization opportunities on changed sources",
+    "detector": "none reliably — reviewers watch for fresh `std::enable_if` and tag-dispatch scaffolding and ask whether `if constexpr` (C++17) collapses it. clang-tidy flags several related modernization opportunities on changed sources",
     "upstream": [
       "T.144"
     ]
@@ -4655,9 +4655,9 @@
   {
     "id": "TPL-32",
     "strength": "default",
-    "statement": "Deviation from T.65: tag dispatch — selecting function implementations from type properties at compile time — is a legitimate technique, but demoted here: if constexpr and constrained overloads express the same selection more readably, so tag machinery survives only where those cannot.",
+    "statement": "Deviation from T.65: tag dispatch — selecting function implementations from type properties at compile time — is the C++14 default spelling for that selection.",
     "doc": "templates-and-generics.md",
-    "detector": "none reliably — reviewers watch for fresh `std::enable_if` and tag-dispatch scaffolding in C++17 code and ask whether `if constexpr` collapses it. clang-tidy flags several related modernization opportunities on changed sources",
+    "detector": "none reliably — reviewers watch for fresh `std::enable_if` and tag-dispatch scaffolding and ask whether `if constexpr` (C++17) collapses it. clang-tidy flags several related modernization opportunities on changed sources",
     "upstream": [
       "T.65"
     ]
@@ -4719,7 +4719,7 @@
   {
     "id": "TPL-38",
     "strength": "default",
-    "statement": "Homogeneous argument lists have precise spellings instead (T.103) — std::initializer_list, std::array, spans — so variadic machinery stays reserved for genuinely mixed-type packs.",
+    "statement": "Homogeneous argument lists have precise spellings instead (T.103) — std::initializer_list, std::array, or at the C++14 baseline an iterator/pointer pair.",
     "doc": "templates-and-generics.md",
     "detector": "review",
     "upstream": [
@@ -4739,7 +4739,7 @@
   {
     "id": "TPL-40",
     "strength": "default",
-    "statement": "Deviation from T.102: also unfinished upstream, hinting at forwarding, type checking, and references; process pack elements with fold expressions or recursion, validating each against traits or static_assert before use rather than trusting the caller.",
+    "statement": "Deviation from T.102: also unfinished upstream, hinting at forwarding, type checking, and references; process pack elements with recursion — validating each against traits or static_assert before use rather than trusting the caller.",
     "doc": "templates-and-generics.md",
     "detector": "review",
     "upstream": [

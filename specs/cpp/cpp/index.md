@@ -6,7 +6,12 @@
 
 ## Overview
 
-This directory contains the guidelines for C++ development. They are opinionated defaults targeting a C++17 baseline, with C++20/23 differences noted where they change a recommendation. Treat them as the starting point to adapt: record what your project actually enforces, not aspirations nobody checks.
+This directory contains the guidelines for C++ development. They are
+opinionated defaults targeting a C++14 baseline, with C++17/20 additions
+(`std::string_view`, `std::optional`, `if constexpr`, `[[nodiscard]]`,
+`std::span`) called out as marked upgrades where they change a
+recommendation. Treat them as the starting point to adapt: record what your
+project actually enforces, not aspirations nobody checks.
 
 ---
 

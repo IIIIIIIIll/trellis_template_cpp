@@ -40,6 +40,7 @@ All fourteen major Guidelines sections, each routed to the guide that owns it:
 When a task genuinely cannot follow a rule we adopted, deviating is allowed but must be visible: bare suppressions are rejected, and a deviation comment names the rule ID, states the reason, and says what would change the answer — mirroring the directory-wide ban on silencing static analysis without justification. Anything longer belongs in the task discussion; anything shorter is a bare suppression.
 
 ```cpp
+// C++17
 struct Endpoint {           // F.21: multiple results travel in a named struct
     std::string host;
     int port;
@@ -66,10 +67,10 @@ Nine Guidelines sections contain nothing a topic guide can operationalize as cod
 | `CPL.1` | Adopt | Prefer C++ for its type checking; enforced simply by compiling everything with a C++ compiler |
 | `CPL.2` | Adapt | Surviving C stays in the common subset compiled as C++; genuine C-only translation units are recorded deviations |
 | `CPL.3` | Adopt | Call C through a C++ facade: `extern "C"` at the boundary, RAII and type safety for callers |
-| `FAQ.8` | Adopt | Modern-C++-only scope confirmed; matches this directory's C++17 baseline with noted C++20 refinements |
+| `FAQ.8` | Adopt | Modern-C++-only scope confirmed; matches this directory's C++14 baseline with noted C++17/20 refinements |
 | `FAQ.9` | Adopt | The Guidelines propose no new language features; every cited practice here uses shippable standard features |
 | `FAQ.50`, `FAQ.51`, `FAQ.52`, `FAQ.54` | Adapt | GSL declined: `std` equivalents plus curated warnings replace it; nothing vendors or assumes GSL, which was never standardized |
-| `FAQ.55` | Adopt | View taxonomy adopted directly: `std::string_view` for read-only views (C++17), `std::span` for read-write (C++20) |
+| `FAQ.55` | Adopt | View taxonomy adopted directly: `std::string_view` (C++17; C++14: `const std::string&`) for read-only views, `std::span` (C++20; C++14: pointer + size) for read-write |
 | `FAQ.59` | Adopt | `Expects` is contract-syntax placeholder, not `assert`; precondition discipline lives in Error Handling pending language contracts |
 | `FAQ.60` | Adapt | Same story for `Ensures`: Error Handling owns the failure-contract vocabulary, not a GSL macro |
 | `GSL` | Adapt | GSL declined: standard-library equivalents and curated warnings replace GSL constructs; the merged `FAQ.50`/`FAQ.51`/`FAQ.52`/`FAQ.54` row above records the reasoning |

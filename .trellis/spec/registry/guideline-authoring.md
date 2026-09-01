@@ -84,6 +84,17 @@ Caught by: `cppcoreguidelines-pro-type-cstyle-cast`
   Wrong examples that compile but misbehave at runtime carry the
   `// compiles; UB at runtime` marker; Wrong examples whose point is a failed
   compilation carry `// compile-error` on the offending construct.
+- **Dialect markers**: a fence naming a C++17-or-later symbol or syntax
+  (`std::string_view`, `std::optional`, `if constexpr`, `[[nodiscard]]`,
+  structured bindings) keeps that spelling and opens with a `// C++17`
+  comment line at or near the fence top; `// C++20` marks C++20-only idioms.
+  The markers match `//\s*C\+\+17\b` / `//\s*C\+\+20\b` (`Fence.cxx17` /
+  `Fence.cxx20` in `tools/rules_grammar.py`); `tools/check_snippets.py`
+  compiles a marked fence at `-std=c++17` / `-std=c++20` and every unmarked
+  fence at the `-std=c++14` baseline. Dialect markers coexist with the
+  Wrong/Right, UB, and compile-error markers.
+  Versioning caution: the `_v` trait aliases (`std::is_arithmetic_v`) are
+  C++17, not C++14 — an unmarked fence must use the `::value` member form.
 - **List-item form**: a rule may be a bullet item
   (`- **MEM-7 (hard).** ...`); the lead-in grammar is identical after the
   `- `.
@@ -122,8 +133,12 @@ document.
 ## Content Rules
 
 - **Opinionated defaults, not surveys.** Guides pick a side and say why.
-  Baseline is C++17; mention C++20/23 only where they change a
-  recommendation (`specs/cpp/README.md` states this contract).
+  Baseline is C++14; C++17/20 additions appear as marked upgrades where they
+  change the recommendation — a rule states the C++14 spelling first, then
+  the upgrade as a bold `**C++17:**` / `**C++20:**` note (table cells use
+  the parenthetical form `std::string_view` (C++17; C++14:
+  `const std::string&`)).
+  (`specs/cpp/README.md` states this contract.)
 - **Core Guidelines citations are anchors, never copies.** Cite IDs like
   `F.21`, `ES.20`; write our own paraphrase. The Guidelines' prose and
   examples are never copied into this repository — license footer exists

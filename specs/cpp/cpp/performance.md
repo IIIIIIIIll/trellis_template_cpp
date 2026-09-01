@@ -6,7 +6,15 @@
 
 ## Overview
 
-Performance work follows one order: measure, change the algorithm or the layout, measure again. Micro-edits justified only by intuition are rejected in review even when harmless — an unmeasured optimization costs future readers comprehension and reviewers time. Baseline is C++17. Numbers you intend to quote come from optimized (`Release`) builds; sanitizer builds answer correctness questions — never as stopwatches.
+Performance work follows one order: measure, change the algorithm or the layout, measure again. Micro-edits justified only by intuition are rejected in review even when harmless — an unmeasured optimization costs future readers comprehension and reviewers time.
+
+Baseline: C++14 (`std::make_unique`, generic lambdas, relaxed `constexpr`).
+C++17 and C++20 additions appear as marked upgrades where they change the
+recommendation — `std::string_view`, `std::optional`, `if constexpr`,
+`[[nodiscard]]`, `std::span` — each with the C++14 spelling alongside, so a
+C++14 project can follow every rule as written. Numbers you intend to quote
+come from optimized (`Release`) builds; sanitizer builds answer correctness
+questions — never as stopwatches.
 
 ---
 
@@ -142,11 +150,18 @@ Caught by: review — no automated detector.
 
 Signatures decide whether callers pay for copies.
 
-**PERF-18.** Read-only text arrives as `std::string_view`; read-only sequences arrive as a pointer-plus-size pair — `(const T* data, std::size_t size)`, or `gsl::span<const T>` where GSL is adopted — until C++20 `std::span` takes over the spelling, so literals, substrings, and slices cross the boundary without allocating.
+**PERF-18.** Read-only text arrives as `const std::string&` on the C++14
+baseline — literals and slices pay one construction at the boundary.
+**C++17:** `std::string_view` removes that cost, so literals, substrings, and
+slices cross the boundary without allocating. Read-only sequences arrive as a
+pointer-plus-size pair — `(const T* data, std::size_t size)`, or
+`gsl::span<const T>` where GSL is adopted — until **C++20:** `std::span`
+takes over the spelling.
 
 The signature policy itself is owned by [Functions and Interfaces](./functions-and-interfaces.md) — View Inputs Borrow, Never Store; what stays here is the cost rationale.
 
 ```cpp
+// C++17
 // compiles; UB at runtime
 // Wrong: every caller holding a literal or a slice pays for a std::string
 Host parse_host(const std::string& url);
@@ -179,6 +194,7 @@ Caught by: review — no automated detector.
 **PERF-23.** Anything computable at compile time should be (`Per.11`): lookup tables, polynomial coefficients, dispatch matrices. A runtime-built table costs an initialization pass on every cold start plus first-touch latency; a `constexpr` table costs binary size once.
 
 ```cpp
+// C++17
 // compiles; UB at runtime
 // Wrong when the table could be constexpr: the static is thread-safe and free
 // of init-order questions, but first use pays the build and every access pays a guard check
@@ -207,7 +223,7 @@ Data layout decides whether the memory subsystem feeds the CPU or starves it:
 - **PERF-26.** Space is time (`Per.18`): shaving a flag-swollen struct from 64 to 56 bytes cuts scan traffic by an eighth before anything else improves.
 - **PERF-27.** Predictable access wins (`Per.19`): linear walks over contiguous memory beat pointer-chasing through node containers, and small sorted-array lookups often beat hash maps at low cardinality — measure, then choose.
 - **PERF-28.** Hot data keeps one canonical access path (`Per.12`): redundant aliases — several names reaching the same storage — cost reader clarity and inhibit optimization.
-- **PERF-29.** Threads writing adjacent data false-share a cache line: two hot per-thread counters inside one line turn independent updates into ping-pong between cores. Isolate hot per-thread counters to their own line — `alignas(std::hardware_destructive_interference_size)` (C++17) or explicit padding to 64 bytes.
+- **PERF-29.** Threads writing adjacent data false-share a cache line: two hot per-thread counters inside one line turn independent updates into ping-pong between cores. Isolate hot per-thread counters to their own line — explicit padding to 64 bytes on the C++14 baseline. **C++17:** `alignas(std::hardware_destructive_interference_size)` states the intent instead of a magic constant.
 
   Caught by: `perf c2c` or cache-miss profiling — the program stays correct, so TSan reports nothing.
 

@@ -6,7 +6,13 @@
 
 ## Overview
 
-These rules are opinionated defaults whose sources are honestly mixed: functions and variables keep **std call-site rhythm** — `snake_case`, because every real-world C++ file interleaves project code with STL calls — while types and constants take **Google style** (`PascalCase`, `k` prefix), the vocabulary the standard library does not itself supply. The property that actually binds it together is **consistency beats taste**: one documented mix, applied without exception. The baseline is **C++17**; C++20/23 refinements are noted inline where they change the guidance.
+These rules are opinionated defaults whose sources are honestly mixed: functions and variables keep **std call-site rhythm** — `snake_case`, because every real-world C++ file interleaves project code with STL calls — while types and constants take **Google style** (`PascalCase`, `k` prefix), the vocabulary the standard library does not itself supply. The property that actually binds it together is **consistency beats taste**: one documented mix, applied without exception.
+
+Baseline: C++14 (`std::make_unique`, generic lambdas, relaxed
+`constexpr`). C++17 and C++20 additions appear as marked upgrades where
+they change the recommendation — `std::string_view`, `std::optional`,
+`if constexpr`, `[[nodiscard]]`, `std::span` — each with the C++14
+spelling alongside, so a C++14 project can follow every rule as written.
 
 ---
 
@@ -328,11 +334,12 @@ Default strength: hard.
 
 Caught by: review — no automated detector.
 
-### Inline Variables (C++17)
+### Namespace-Scope Constants in Headers
 
-**QUAL-47.** Namespace-scope constants defined in headers must be `inline constexpr` (`SF.2` bans object definitions in headers outright; this inline form is the sanctioned shape) so there is exactly one entity across all translation units. A plain `const` integral at namespace scope has internal linkage: legal, but each TU gets its own copy, and any address-taken use diverges or breaks.
+**QUAL-47.** A namespace-scope constant defined in a header must exist exactly once across all translation units. The C++14 spelling: declare it `extern` in the header (`extern const int kMaxConnections;`) and define it in exactly one `.cpp` — or hide it behind a function-local static accessor (`const std::array<Mode, 3>& modes()`) when a type or initializer makes the extern form clumsy. A plain non-`extern` `const` at namespace scope instead has internal linkage: legal, but each TU gets its own copy, and any address-taken use diverges or breaks. **C++17:** `inline constexpr` in the header — the one sanctioned object definition in a header (`SF.2` bans the rest).
 
 ```cpp
+// C++17
 // config.h — included everywhere
 
 // Right: one object program-wide, safe to take addresses of
@@ -340,7 +347,7 @@ inline constexpr std::array<Mode, 3> kModes{Mode::kFast, Mode::kSafe, Mode::kRaw
 inline constexpr int kMaxConnections = 128;
 
 // compiles; UB at runtime
-// Wrong (pre-C++17 habit): per-TU copies, ODR traps when addresses are compared
+// Wrong: per-TU copies, ODR traps when addresses are compared
 static const int kMaxConnections = 128;
 ```
 
@@ -349,6 +356,7 @@ static const int kMaxConnections = 128;
 **QUAL-48.** Initialization order of namespace-scope objects across translation units is unspecified. Any global whose constructor reads another global is reading garbage on some platforms. Use `constexpr` initialization where possible, otherwise function-local statics (thread-safe since C++11).
 
 ```cpp
+// C++17
 // compiles; UB at runtime
 // Wrong: g_registry may initialize before g_logger exists
 Registry g_registry(&g_logger);
@@ -368,13 +376,14 @@ Registry& registry() {
 inline constexpr Config kDefaults{/* ... */};
 ```
 
-C++20 note: mark such globals `constinit` to force compile-time initialization and turn order bugs into compile errors once the baseline moves.
+**C++20:** mark such globals `constinit` to force compile-time initialization and turn order bugs into compile errors.
 
 ### PIMPL for Published Libraries
 
 **QUAL-49.** Headers of libraries distributed as binaries must not expose private members: adding a member later changes `sizeof` and breaks ABI. Hide privates behind a pointer-to-implementation. Source-shipped internal code does not need this ceremony.
 
 ```cpp
+// C++17
 // parser.h — ABI-stable public header
 #pragma once
 #include <memory>
@@ -487,6 +496,7 @@ Caught by: review — no automated detector.
 **QUAL-64.** Do not obfuscate straightforward runtime logic as template metaprogramming without a measured benefit; unreadable zero-cost is usually negative-cost once maintenance is priced in.
 
 ```cpp
+// C++17
 // Good: free win — table computed at build time, zero startup cost
 constexpr std::array<uint8_t, 256> kReverseBits = [] {
     std::array<uint8_t, 256> t{};
@@ -500,7 +510,7 @@ constexpr std::array<uint8_t, 256> kReverseBits = [] {
     return t;
 }();
 
-// Good: C++17 if constexpr replaces SFINAE towers with readable branches
+// Good: if constexpr (C++17; C++14: tag dispatch) replaces SFINAE towers with readable branches
 template <typename T>
 auto serialize(const T& value) {
     if constexpr (std::is_integral_v<T>) {
@@ -517,8 +527,8 @@ template <int N> struct Fact { static const int value = N * Fact<N - 1>::value; 
 Guidance:
 
 - Mark functions/constructors `constexpr` when the body is naturally constant-evaluable; do not contort logic to earn the keyword.
-- C++17 lambdas can be `constexpr`; prefer them over hand-unrolled tables.
-- C++20 additions, adopt on upgrade: `consteval` for must-be-compile-time functions, `constinit` for guaranteed-initialized globals, `consteval`-checked formatting.
+- **C++17:** `constexpr` lambdas — prefer them over hand-unrolled tables.
+- **C++20:** adopt on upgrade — `consteval` for must-be-compile-time functions, `constinit` for guaranteed-initialized globals, `consteval`-checked formatting.
 
 ---
 
@@ -530,7 +540,7 @@ Before merging, confirm:
 - [ ] Every header compiles standalone (first include in its own `.cpp`)
 - [ ] No reliance on transitive includes; no forward-declared `std::` types
 - [ ] `#pragma once` present; anonymous namespaces appear only in `.cpp` files
-- [ ] Namespace-scope globals in headers are `inline constexpr`
+- [ ] Namespace-scope header constants exist once program-wide (`extern` + one definition, or `inline constexpr` on C++17+)
 - [ ] No cross-TU global-constructor dependencies; accessor functions instead
 - [ ] Binary-published library headers use PIMPL with out-of-line destructor/moves
 - [ ] No `dynamic_cast`/`typeid` in cross-module headers

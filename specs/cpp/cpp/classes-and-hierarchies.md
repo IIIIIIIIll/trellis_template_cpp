@@ -8,7 +8,13 @@
 
 Most defects in type design come from two opposite failures: writing special members the compiler already generates correctly, and reaching for inheritance where a struct plus free functions would do. This document fixes the ladder — concrete value types first, five-member types only for manual resources, hierarchies only for open variation — plus the obligations a virtual base can never skip.
 
-Parameter conventions live in [Functions and Interfaces](./functions-and-interfaces.md); ownership of what members hold lives in [Memory and Ownership](./memory-and-ownership.md). Baseline is C++17.
+Parameter conventions live in [Functions and Interfaces](./functions-and-interfaces.md); ownership of what members hold lives in [Memory and Ownership](./memory-and-ownership.md).
+
+Baseline: C++14 (`std::make_unique`, generic lambdas, relaxed
+`constexpr`). C++17 and C++20 additions appear as marked upgrades where
+they change the recommendation — `std::string_view`, `std::optional`,
+`if constexpr`, `[[nodiscard]]`, `std::span` — each with the C++14
+spelling alongside, so a C++14 project can follow every rule as written.
 
 ---
 
@@ -33,6 +39,7 @@ Caught by: review; over-design surfaces later as maintenance drag, not as warnin
 | **CLS-6** Trivial getters/setters around a bare field | Drop the facade — plain `struct` with public data (`C.131`) |
 
 ```cpp
+// C++17
 // compiles; UB at runtime
 // Wrong: a hierarchy for a closed set of two — vtables, heap copies, clone plumbing.
 class Shape { public: virtual ~Shape() = default; virtual double area() const = 0; };
@@ -258,7 +265,7 @@ Caught by: review — no automated detector.
 
 **CLS-48 (default).** Hash specializations are `noexcept`, because hashed-container users never expect access to throw; xor-combining standard-library hashes beats cleverness for non-specialists (`C.89`).
 
-**CLS-49 (default).** Ordering: C++17 has no defaulted comparisons (`<=>` arrives in C++20 and will replace this spelling) — a regular value type writes `operator<` memberwise, `std::tie(x_, y_) < std::tie(o.x_, o.y_)` giving lexicographic order, and derives `>`, `<=`, `>=` from `==` and `<`, ideally once in a CRTP ordering base.
+**CLS-49 (default).** Ordering: a regular value type writes `operator<` memberwise — `std::tie(x_, y_) < std::tie(o.x_, o.y_)` giving lexicographic order — and derives `>`, `<=`, `>=` from `==` and `<`, ideally once in a CRTP ordering base. **C++20:** defaulted comparisons arrive (`operator<=>`) and will replace this spelling.
 
 ---
 
@@ -316,7 +323,7 @@ struct GoodBase {
 
 **CLS-60.** Virtual functions never declare default arguments — defaults bind statically while dispatch is dynamic, so callers disagree depending on static type (`C.140`).
 
-**CLS-61.** Name lookup hides too: a derived member hides its bases' entire same-named overload sets — `d.f(2.3)` quietly calls `f(int)` — so `using B::f;` restores them, for virtual and non-virtual alike; C++17's variadic `using Ts::operator()...` powers the overloader idiom (`C.138`).
+**CLS-61.** Name lookup hides too: a derived member hides its bases' entire same-named overload sets — `d.f(2.3)` quietly calls `f(int)` — so `using B::f;` restores them, for virtual and non-virtual alike; the overloader idiom writes one explicit `using Base::operator();` per base — or forwards through a small call set — to unhide each `operator()` at C++14. **C++17:** a variadic `using Ts::operator()...` does it in one line (`C.138`).
 
 ---
 
@@ -338,6 +345,7 @@ Caught by: review — no automated detector.
 | **CLS-67** Callers hold base pointers they cannot spell | Genuine interface — keep |
 
 ```cpp
+// C++17
 // compiles; UB at runtime
 // Wrong: three layers whose only job is sharing format_timestamp().
 class Logger {
@@ -376,6 +384,7 @@ Caught by: review — no automated detector.
 **CLS-72.** An interface is pure protocol: no data members, no constructor logic, virtual destructor, deleted copies (`C.122`). A base used as an interface is therefore a pure abstract class — public pure virtual functions plus a virtual destructor, zero data — because data-free interfaces stay stable; upstream's founding example (a missing virtual destructor dropping the derived `string`) is this section's motivation (`C.121`). Data inside an abstract type forces every implementation into one layout — a base class wearing an interface's name.
 
 ```cpp
+// C++17
 class Codec {
 public:
     virtual ~Codec() = default;
@@ -414,6 +423,7 @@ Caught by: review — no automated detector.
 **CLS-79.** Protected data members give every subclass — present and future — a vote on the base invariant (`C.133`). Protected **hook functions** upholding invariants are fine; protected **fields** are not.
 
 ```cpp
+// C++17
 // compiles; UB at runtime
 class RingBuffer {
 protected:
@@ -470,6 +480,7 @@ Caught by: review — no automated detector.
 **CLS-83.** Use an operator only for its conventional meaning: `operator<<` composes with stream machinery where `cout_my_class()` does not, and comparisons, arithmetic, access, and assignment all carry strong conventions — honor them or invent a named function (`C.167`).
 
 ```cpp
+// C++17
 // compiles; UB at runtime
 // Wrong: member == converts the right side only — p == "p" compiles,
 // "p" == p does not; symmetry silently depends on operand order.
@@ -513,6 +524,7 @@ Caught by: review — no automated detector.
 **CLS-94.** Implement tagged unions as tag-plus-anonymous-union pairs; the explicit destroy/placement-new choreography for non-trivial members is elaborate enough that `std::variant` exists to spare you writing it (`C.182`).
 
 ```cpp
+// C++17
 // Last resort: measured pressure proves std::variant too fat.
 struct Packed {
     enum class Kind : uint8_t { Empty, Num } kind = Kind::Empty;

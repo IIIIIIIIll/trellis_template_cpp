@@ -8,6 +8,12 @@
 
 Tests exist to pin **observable behavior**. A test suite that is slow, order-dependent, or coupled to private internals gets deleted within a year; these rules keep the suite one people run voluntarily.
 
+Baseline: C++14 (`std::make_unique`, generic lambdas, relaxed `constexpr`).
+C++17 and C++20 additions appear as marked upgrades where they change the
+recommendation — `std::string_view`, `std::optional`, `if constexpr`,
+`[[nodiscard]]`, `std::span` — each with the C++14 spelling alongside, so a
+C++14 project can follow every rule as written.
+
 ---
 
 ## Framework Stance
@@ -50,6 +56,7 @@ A test that exists but is not registered does not exist — nothing ever execute
 **TEST-4.** Scope of the 1:1 mandate: every production translation unit with **observable behavior** gets a mirrored suite. `main.cpp` glue, generated code, and vendored code are excluded — they carry no project-owned behavior to pin, and a test file for them would violate What NOT to Test, not honor it.
 
 ```cpp
+// C++17
 // compiles; UB at runtime
 // Wrong: unregistered "temporary" test living in src/, still there two years later
 // src/net/http/manual_check.cpp
@@ -115,6 +122,7 @@ Determinism mechanics:
 - **TEST-15.** Never `sleep()` to wait for anything; wait on the synchronization primitive itself or fake the clock.
 
 ```cpp
+// C++17
 // compiles; UB at runtime
 // Wrong: flaky by construction
 TEST(Cache, Test_Expiry_EntriesVanish) {
@@ -171,6 +179,7 @@ Caught by: review — no automated detector.
 - **TEST-22.** Regressions: every fixed bug ships with a test that failed before the fix.
 
 ```cpp
+// C++17
 // Good: contract-level assertions
 EXPECT_EQ(router.route("/users/42").handler(), &handle_user);
 EXPECT_EQ(parser.parse("GET /\r\n").error(), ParseErr::kIncomplete);
@@ -244,6 +253,7 @@ Skip these; they cost review time and rot without catching defects:
 - **TEST-32.** Coverage percentage as a goal: chasing a number produces assertion-free tests, which are worse than none.
 
 ```cpp
+// C++17
 // Bad: tests the compiler, not the design
 TEST(Name, Test_Name_GetterReturnsName) {
     User u{"ada"};

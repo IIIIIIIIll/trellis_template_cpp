@@ -8,7 +8,13 @@
 
 Most C++ defects below the ownership level are expression-shaped: a value read before it was written, a narrowing conversion that silently ate a counter, a C-style cast that quietly stripped `const` on its way to corruption. This document fixes the shape of individual expressions and statements so the compiler catches mistakes instead of absorbing them.
 
-Baseline is C++17; deviations for C++20/23 are noted inline. Ownership and lifetime questions live in [Memory and Ownership](./memory-and-ownership.md); failure paths in [Error Handling](./error-handling.md).
+Baseline: C++14 (`std::make_unique`, generic lambdas, relaxed `constexpr`).
+C++17 and C++20 additions appear as marked upgrades where they change the
+recommendation — `std::string_view`, `std::optional`, `if constexpr`,
+`[[nodiscard]]`, `std::span` — each with the C++14 spelling alongside, so a
+C++14 project can follow every rule as written. Ownership and lifetime
+questions live in [Memory and Ownership](./memory-and-ownership.md); failure
+paths in [Error Handling](./error-handling.md).
 
 Default strength: default.
 
@@ -73,11 +79,16 @@ Status process(const Request& req) {
 
 **EXPR-7.** A name lives in the smallest scope that can hold it (`ES.5`) and appears no earlier than its first use (`ES.21`); short scopes release resources early and shrink the state a reader tracks, and long stretches between a handle's last use and its scope end are the flagged smell.
 
-**EXPR-8.** One declarator per statement (`ES.10`): comma lists hide an uninitialized variable among initialized ones and blur pointer decoration — function parameters and structured bindings are the sanctioned exceptions.
+**EXPR-8.** One declarator per statement (`ES.10`): comma lists hide an uninitialized variable among initialized ones and blur pointer decoration — function parameters and structured bindings (C++17) are the sanctioned exceptions.
 
 Caught by: clang-tidy `readability-isolate-declaration`.
 
-**EXPR-9.** Loop counters declare in the `for` initializer, and C++17 `if`/`switch` initializer statements confine selection variables to their block (`ES.6`) — nothing outlives the construct that needed it.
+**EXPR-9.** Loop counters declare in the `for` initializer, and selection
+variables live in the tightest enclosing scope (`ES.6`) — declare an
+`if`/`switch` condition's variable in a block immediately wrapping the
+construct so nothing outlives the branch that needed it. **C++17:** the
+`if`/`switch` init-statement (`if (auto it = m.find(k); it != m.end())`)
+confines the variable to the construct itself.
 
 Caught by: review — no automated detector.
 
@@ -217,7 +228,7 @@ Caught by: review — no automated detector.
 |--------|------|
 | **EXPR-18** Deliberate arithmetic conversion | `static_cast` |
 | **EXPR-19** Polymorphic downcast | `dynamic_cast`, result checked |
-| **EXPR-20** Bit-level reinterpretation of trivially copyable bytes | `memcpy` (C++17), `std::bit_cast` (C++20) |
+| **EXPR-20** Bit-level reinterpretation of trivially copyable bytes | `memcpy`, `std::bit_cast` (C++20) |
 | **EXPR-21 (hard)** Strip `const` to mutate | Forbidden (`ES.50`); Caught by: clang-tidy `cppcoreguidelines-pro-type-const-cast` |
 | **EXPR-22 (hard)** Pointer reinterpretation | `reinterpret_cast` plus a review comment justifying alignment and lifetime |
 
@@ -372,7 +383,7 @@ Loop and branch rules:
 - **EXPR-42.** Range-based `for` is the default loop (`ES.71`): it cannot mis-index and states intent. Index-based `for` survives only when the body truly needs the index — neighbor elements, strides, deliberate counter work — and binds its variable by reference, never by value copy.
 - **EXPR-43.** Prefer constructs that cannot go out of range (`ES.55`) — range-`for`, position-returning algorithms — over indexed access wrapped in checks; an explicit bounds check is usually the tell that the wrong abstraction was picked.
 - **EXPR-44 (hard).** Never mutate a container's structure while iterating it — reallocation invalidates the iterator.
-- **EXPR-45 (hard).** Range-for extends only the final range expression's temporary to the loop: a direct value-returning init such as `make_rows()` is safe, but in a chained init like `connection_pool().acquire().rows()` the intermediate temporaries die at the end of the full-expression, leaving the extended range viewing destroyed owners — own the outer object. (C++23 extends every temporary in the range-init and closes this trap; the C++17 baseline does not.) The invalidation table lives in [Memory and Ownership](./memory-and-ownership.md).
+- **EXPR-45 (hard).** Range-for extends only the final range expression's temporary to the loop: a direct value-returning init such as `make_rows()` is safe, but in a chained init like `connection_pool().acquire().rows()` the intermediate temporaries die at the end of the full-expression, leaving the extended range viewing destroyed owners — own the outer object. (C++23 extends every temporary in the range-init and closes this trap; pre-C++23 dialects do not.) The invalidation table lives in [Memory and Ownership](./memory-and-ownership.md).
 
 ```cpp
 // compiles; UB at runtime

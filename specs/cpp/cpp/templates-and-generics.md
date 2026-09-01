@@ -1,6 +1,6 @@
 # Templates and Generics
 
-> Generic code whose requirements live in the type system: concepts as documented interfaces (with C++17 fallbacks), deliberately small template surface, and explicit tradeoffs for erasure, dispatch, and CRTP.
+> Generic code whose requirements live in the type system: concepts as documented interfaces (C++14: trait checks and `static_assert`), deliberately small template surface, and explicit tradeoffs for erasure, dispatch, and CRTP.
 
 ---
 
@@ -8,7 +8,15 @@
 
 Templates are the project's abstraction workhorse, but an unconstrained template is an undocumented function: every caller discovers its requirements by compiler archaeology. This document sets the defaults for writing generic code that compiles fast, fails readably, and does not leak implementation into headers.
 
-Baseline: **C++17**, so concepts keywords are unavailable by default; requirements are expressed as trait checks and `static_assert`. Where the toolchain provides C++20 (`requires`, named concepts), those become the preferred spelling and are marked inline. The intent is identical either way: a template argument's obligations are written down next to the declaration, not reverse-engineered from instantiation errors.
+Baseline: C++14 (`std::make_unique`, generic lambdas, relaxed `constexpr`).
+C++17 and C++20 additions appear as marked upgrades where they change the
+recommendation — `std::string_view`, `std::optional`, `if constexpr`,
+`[[nodiscard]]`, `std::span` — each with the C++14 spelling alongside, so a
+C++14 project can follow every rule as written. Concepts and `requires` stay
+the marked C++20 upgrade; the C++14 default spelling for template
+requirements is trait checks and `static_assert`. The intent is identical
+either way: a template argument's obligations are written down next to the
+declaration, not reverse-engineered from instantiation errors.
 
 The standing questions before adding any template:
 
@@ -19,14 +27,14 @@ The standing questions before adding any template:
 
 ## Document Requirements with Concepts
 
-A template parameter is a contract. On C++20, the contract is a named concept; on C++17 it is a `static_assert` over standard traits. What is forbidden in both dialects is the bare `template <typename T>` whose constraints surface only as a wall of instantiation errors three translation units away.
+A template parameter is a contract. On the C++14 baseline the contract is a `static_assert` over standard traits; on C++20 it becomes a named concept. What is forbidden in both dialects is the bare `template <typename T>` whose constraints surface only as a wall of instantiation errors three translation units away.
 
 Caught by: compile time itself — that is the point. Readability of the failure is review-visible: if a colleague cannot tell why their type fails within one screen of output, the constraint is missing or miswritten.
 
 | Mechanism | Dialect | Use when |
 |-----------|---------|----------|
-| Named concepts + `requires` | C++20 | Default wherever available; best diagnostics |
-| `static_assert` over type traits in the primary template | C++17 fallback | Every public template lacking concepts support |
+| Named concepts + `requires` | C++20 | Marked upgrade where the toolchain provides it; best diagnostics |
+| `static_assert` over type traits in the primary template | C++14 default | Every public template |
 | `enable_if` SFINAE | Legacy | Only to select between overloads; see below |
 | Unconstrained parameters | Never for public APIs | Private implementation detail at most |
 
@@ -49,12 +57,14 @@ median(words);   // deduction succeeds (T = std::string); 40 lines of errors end
 Right:
 
 ```cpp
-// C++17 spelling: the same contract as a `static_assert` over standard traits.
+// The C++14 default spelling: the same contract as a `static_assert` over
+// standard traits. (C++17 adds the `_v` trait aliases for a shorter form.)
 #include <type_traits>
 
 template <typename T>
 T median(const std::vector<T>& values) {
-    static_assert(std::is_arithmetic_v<T> || std::is_same_v<T, std::chrono::milliseconds>,
+    static_assert(std::is_arithmetic<T>::value ||
+                      std::is_same<T, std::chrono::milliseconds>::value,
                   "median() requires an arithmetic element type");
     // ...
 }
@@ -86,11 +96,11 @@ Rules:
 
 Notation follows the dialect.
 
-**TPL-11 (default).** Deviation from `T.12`: a bare `auto` is the weakest possible concept, so where a fitting C++20 concept exists prefer the constrained spelling; on the C++17 baseline the notation does not exist and plain `auto` stays acceptable.
+**TPL-11 (default).** Deviation from `T.12`: a bare `auto` is the weakest possible concept, so plain `auto` stays acceptable on the C++14 baseline, where the constrained notation does not exist. **C++20:** where a fitting concept exists, prefer the constrained spelling.
 
-**TPL-12 (default).** Deviation from `T.13`: the shorthand for simple single-type-argument concepts — `template <Sortable T>`, or `Sortable auto&&` — reads the way we speak and wins wherever C++20 is available; the C++17 fallback remains the traits-based `static_assert` spelled out above.
+**TPL-12 (default).** Deviation from `T.13`: the traits-based `static_assert` spelled out above is the C++14 default for simple single-type-argument contracts. **C++20:** the shorthand — `template <Sortable T>`, or `Sortable auto&&` — reads the way we speak and wins wherever concepts are available.
 
-**TPL-13 (default).** Deviation from `T.48`: without concept support the guideline's best emulation is `enable_if`, which drags in complementary-constraint designs; this project's C++17 dialect instead prefers `static_assert` trait checks for stating contracts and quarantines SFINAE behind named aliases for genuine overload selection.
+**TPL-13 (default).** Deviation from `T.48`: the project dialect prefers `static_assert` trait checks for stating contracts and quarantines SFINAE behind named aliases for genuine overload selection — upstream's `enable_if` emulation drags in complementary-constraint designs.
 
 **TPL-14 (default).** When a class claims to model a concept, prove it early: `static_assert(Modelable<T>)` pointed at concrete model types (`T.150`) — review-visible, cheap, and the same idiom this guide mandates inside template bodies.
 
@@ -107,11 +117,12 @@ Caught by: review — no automated detector.
 | Type parameter used only for a constant inside | Take the constant as a value parameter or runtime argument |
 | Members templated though only some methods care | Hoist non-dependent members out of the template (`T.61`, `T.62`) |
 | Same alias spelled out at ten call sites | One `using` alias near the definition (`T.42`) |
-| Deduction ceremony repeated everywhere | Constructor or factory function letting CTAD work (`T.44`) |
+| Deduction ceremony repeated everywhere | Constructor or factory function making deduction trivial (`T.44`; CTAD is C++17) |
 
 Wrong:
 
 ```cpp
+// C++17
 // compiles; UB at runtime
 // CachePolicy exists only so one method can pick eviction; every get()/put() user pays for knowing it.
 template <typename K, typename V, typename CachePolicy>
@@ -128,6 +139,7 @@ private:
 Right:
 
 ```cpp
+// C++17
 // Common case carries no extra parameter.
 template <typename K, typename V>
 class LruCache {
@@ -146,7 +158,7 @@ Notes:
 - **TPL-16 (default).** Keep templates independent of their surroundings: fewer includes, fewer global names visible at instantiation (`T.60`). A helper template that reaches for six headers slows every includer.
 - **TPL-17 (default).** Name a template (or give it a stable home) only when reuse is real; an operation needed exactly once does not earn a header of its own (`T.140`, `T.141`).
 - **TPL-18 (hard).** Spell aliases with `using`, never `typedef` (`T.43`): the new name leads, the syntax parallels `auto`, and only `using` can form template aliases; expect enforcement to flag legacy `typedef`s widely.
-- **TPL-19 (default).** CTAD (`T.44`) is authored, not lucky. Constructor CTAD fires when a constructor's parameters deduce the template arguments; write an explicit deduction guide — `template <typename Iter> Container(Iter b, Iter e) -> Container<typename std::iterator_traits<Iter>::value_type>;` — when no constructor exposes the intended mapping, or when the implicit one would deduce the wrong thing. Aggregate templates generate no constructor guides: on C++17, deducing one from brace-init requires a hand-written guide, with aggregate CTAD itself arriving in C++20. And guides generated from constructors inherited via `using Base::Base;` deduce against the base template, not the derived class — making a derived class template deducible from them only landed in C++23.
+- **TPL-19 (default).** Make deduction authored, not lucky (`T.44`). On the C++14 baseline there is no CTAD: hand callers an explicit factory function, or require explicit template arguments at the call site — never leave the mapping to luck. **C++17:** CTAD fires when a constructor's parameters deduce the template arguments; write an explicit deduction guide — `template <typename Iter> Container(Iter b, Iter e) -> Container<typename std::iterator_traits<Iter>::value_type>;` — when no constructor exposes the intended mapping, or when the implicit one would deduce the wrong thing. Aggregate templates generate no constructor guides: deducing one from brace-init requires a hand-written guide, with aggregate CTAD itself arriving in C++20. And guides generated from constructors inherited via `using Base::Base;` deduce against the base template, not the derived class — making a derived class template deducible from them only landed in C++23.
 - Header-heavy instantiation volume has a relief valve in explicit instantiation declarations: `extern template class LruCache<K, V>;` in the header tells every other translation unit the definition is instantiated elsewhere, while the matching explicit instantiation (`template class LruCache<K, V>;`) is compiled once in a single source file. Judging when that trade pays lives in [Quality Guidelines](./quality-guidelines.md)' Compile-Time Discipline section.
 
 ---
@@ -216,7 +228,7 @@ Caught by: review — no automated detector.
 
 When a boundary must accept "anything drawable" or "anything loggable", there are two doors, and the choice is architectural:
 
-| Dimension | Template (`template <class T>`) | Type erasure (`std::function`, custom wrapper, `std::any` with visitors) |
+| Dimension | Template (`template <class T>`) | Type erasure (`std::function`, custom wrapper, `std::any` (C++17) with visitors) |
 |-----------|--------------------------------|--------------------------------------------------------------------------|
 | Dispatch | Compile-time, inlinable | Runtime indirection |
 | Heterogeneous containers | No | Yes |
@@ -224,14 +236,14 @@ When a boundary must accept "anything drawable" or "anything loggable", there ar
 | Compile time / binary size | Per-instantiation cost | One compiled body |
 | Error discovery | Instantiation time | Compile time for the wrapper; misuse at runtime stays possible |
 
-**TPL-25 (default).** Defaults (`T.49`): inside a module, on hot paths, with statically known types — templates. Across module boundaries, in plugin seams, in heterogeneous collections — erasure. The guideline's warning stands behind both columns: avoid type-erasure by default, since it buys flexibility at the price of an indirection hidden behind a compilation boundary; the sanctioned exceptions are exactly the cases named above. A hand-rolled erased wrapper (constructor template plus small virtual interior) beats reaching for `std::any` when operations matter:
+**TPL-25 (default).** Defaults (`T.49`): inside a module, on hot paths, with statically known types — templates. Across module boundaries, in plugin seams, in heterogeneous collections — erasure. The guideline's warning stands behind both columns: avoid type-erasure by default, since it buys flexibility at the price of an indirection hidden behind a compilation boundary; the sanctioned exceptions are exactly the cases named above. A hand-rolled erased wrapper (constructor template plus small virtual interior) beats reaching for `std::any` (C++17) when operations matter:
 
 ```cpp
-// C++20: requires-clause example (C++17 spelling: static_assert, per the inline note)
+// C++20: requires-clause example (C++14 spelling: static_assert, per the inline note)
 class Task {
 public:
     template <typename F>
-        requires std::invocable<F&>          // C++17: constrain via static_assert instead
+        requires std::invocable<F&>          // C++14: constrain via static_assert instead
     explicit Task(F&& fn) : impl_(std::make_unique<Model<std::decay_t<F>>>(std::forward<F>(fn))) {
         static_assert(std::is_move_constructible_v<std::decay_t<F>>,
                       "erased callable must be move-constructible");
@@ -261,9 +273,9 @@ One such wrapper is a design; a forest of them is a sign the boundary should hav
 
 ## `if constexpr` over SFINAE and Tag Dispatch
 
-**TPL-27 (hard).** Branching on type properties inside a function body is `if constexpr` territory on C++17 and later. The legacy tools — `enable_if` SFINAE and tag dispatch — survive only for cases `if constexpr` cannot express.
+**TPL-27 (hard).** Branching on type properties inside a function body happens at compile time: tag dispatch and `enable_if` SFINAE are the C++14 default spellings. **C++17:** `if constexpr` becomes the preferred spelling; the dispatch machinery survives only for cases it cannot express.
 
-Caught by: none reliably — reviewers watch for fresh `std::enable_if` and tag-dispatch scaffolding in C++17 code and ask whether `if constexpr` collapses it. clang-tidy flags several related modernization opportunities on changed sources.
+Caught by: none reliably — reviewers watch for fresh `std::enable_if` and tag-dispatch scaffolding and ask whether `if constexpr` (C++17) collapses it. clang-tidy flags several related modernization opportunities on changed sources.
 
 Wrong:
 
@@ -280,6 +292,7 @@ auto distance(It first, It last, ...) -> std::ptrdiff_t;
 Right:
 
 ```cpp
+// C++17
 template <typename It>
 auto distance(It first, It last) {
     if constexpr (std::is_base_of_v<std::random_access_iterator_tag,
@@ -295,11 +308,11 @@ auto distance(It first, It last) {
 
 Guidance:
 
-- **TPL-28 (default).** Value-based selection between statements in one function: `if constexpr`. Discarded branches are not instantiated, which is precisely what tag dispatch and `enable_if` used to buy.
-- **TPL-29 (default).** Selecting between *overloads* visible to callers, or constraining a public API: concepts on C++20; on C++17, a traits-based `enable_if` remains acceptable — but hide it behind a descriptive alias.
+- **TPL-28 (default).** Value-based selection between statements in one function: tag dispatch or an overload set — the C++14 default spellings. **C++17:** `if constexpr` folds the selection into one function, and discarded branches are not instantiated — precisely what tag dispatch and `enable_if` used to buy.
+- **TPL-29 (default).** Selecting between *overloads* visible to callers, or constraining a public API: a traits-based `enable_if` remains acceptable on the C++14 baseline — but hide it behind a descriptive alias. **C++20:** concepts.
 - **TPL-30 (default).** Class-template shape differences still belong to (partial) specialization (`T.64`) — one general interface, specialized implementations for the shapes that need them; `if constexpr` does not replace choosing a different data layout. Irregular types earn the same treatment: Deviation from `T.67`: upstream's entry is largely unwritten, but the usable intent stands — types needing a different representation get a dedicated specialization rather than bending the primary template.
 - **TPL-31 (hard).** Do not specialize function templates — overload or delegate instead (`T.144`); specialization interacts badly with overload resolution and surprises even experts.
-- **TPL-32 (default).** Deviation from `T.65`: tag dispatch — selecting function implementations from type properties at compile time — is a legitimate technique, but demoted here: `if constexpr` and constrained overloads express the same selection more readably, so tag machinery survives only where those cannot.
+- **TPL-32 (default).** Deviation from `T.65`: tag dispatch — selecting function implementations from type properties at compile time — is the C++14 default spelling for that selection. **C++17:** `if constexpr` (and constrained overloads on C++20) express it more readably, so tag machinery demotes to the cases those cannot express.
 
 ```cpp
 // compiles; UB at runtime
@@ -364,13 +377,14 @@ Caught by: review — no automated detector.
 
 **TPL-37 (hard).** Variadic templates are the tool when a function takes a variable number of arguments of a variety of types (`T.100`) — efficient and type-safe where C varargs are neither; `va_arg` never appears in user code, and enforcement flags it outright.
 
-**TPL-38 (default).** Homogeneous argument lists have precise spellings instead (`T.103`) — `std::initializer_list`, `std::array`, spans — so variadic machinery stays reserved for genuinely mixed-type packs.
+**TPL-38 (default).** Homogeneous argument lists have precise spellings instead (`T.103`) — `std::initializer_list`, `std::array`, or at the C++14 baseline an iterator/pointer pair. **C++20:** `std::span`. Either way, variadic machinery stays reserved for genuinely mixed-type packs.
 
 **TPL-39 (hard).** Deviation from `T.101`: upstream's entry is a placeholder whose one recorded caution is to beware move-only and reference arguments entering a pack. Working guidance until upstream fills in: forward deliberately (`T&&` plus `std::forward`) and otherwise take copies, so nothing dangles once stored.
 
-**TPL-40 (default).** Deviation from `T.102`: also unfinished upstream, hinting at forwarding, type checking, and references; process pack elements with fold expressions or recursion, validating each against traits or `static_assert` before use rather than trusting the caller.
+**TPL-40 (default).** Deviation from `T.102`: also unfinished upstream, hinting at forwarding, type checking, and references; process pack elements with recursion — validating each against traits or `static_assert` before use rather than trusting the caller. **C++17:** fold expressions collapse the recursion scaffolding.
 
 ```cpp
+// C++17
 template <typename... Ts>
 constexpr auto sum_all(Ts... values) {
     static_assert((std::is_arithmetic_v<Ts> && ...), "sum_all() needs numbers");
@@ -404,10 +418,10 @@ Caught by: review — no automated detector.
 
 Before merging generic code, confirm format-clean (`clang-format --dry-run`) and tidy-clean on changed sources plus a green unit suite:
 
-- [ ] Every new public template has written requirements: a C++20 concept or a C++17 `static_assert` trait check at the top of the definition
+- [ ] Every new public template has written requirements: a `static_assert` trait check (C++14 default) or a C++20 concept at the top of the definition
 - [ ] Constraints describe semantics the algorithm actually needs, no more
 - [ ] Template parameter lists contain no parameter removable without losing generality
-- [ ] No new `std::enable_if`, tag dispatch, or function-template specialization where `if constexpr`, overloads, or concepts express it
+- [ ] No new `std::enable_if`, tag dispatch, or function-template specialization where overloads express it — or, on C++17+, where `if constexpr` or concepts express it
 - [ ] Type erasure introduced only where heterogeneous storage or a hidden-implementation boundary demands it
 - [ ] CRTP additions carry a justification (hot-path dispatch, mixin reuse) in the declaring header
 - [ ] New templates compile warning-clean under at least two compilers

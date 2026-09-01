@@ -8,7 +8,14 @@
 
 A signature is a contract compilers partially enforce and reviewers fully judge. This page fixes that contract: parameter roles (`in`/`out`/`inout`), value-versus-reference decisions, view inputs, return economics, function size and purity, and the surface details — explicit constructors, named constants, `[[nodiscard]]` — that make intent unambiguous. The principle underneath (`P.3`): code states intent through names, types, and roles so a reader can tell whether it does what it should — a signature-first page is that principle applied. And when the standard library or a well-maintained third-party library already provides a capability, reaching for it beats hand-rolling (`P.13`): correctness, performance, and portability come pre-tested.
 
-Ownership mechanics live in [Memory and Ownership](./memory-and-ownership.md), which makes leaks structural instead of hunting them one by one (`P.8`); failure signaling lives in [Error Handling](./error-handling.md), owning what compile time cannot catch and run time must (`P.6`). Baseline is C++17; C++20's `std::span` replaces pointer-plus-size spellings without changing any rule below.
+Ownership mechanics live in [Memory and Ownership](./memory-and-ownership.md), which makes leaks structural instead of hunting them one by one (`P.8`); failure signaling lives in [Error Handling](./error-handling.md), owning what compile time cannot catch and run time must (`P.6`).
+
+Baseline: C++14 (`std::make_unique`, generic lambdas, relaxed `constexpr`).
+C++17 and C++20 additions appear as marked upgrades where they change the
+recommendation — `std::string_view`, `std::optional`, `if constexpr`,
+`[[nodiscard]]`, `std::span` — each with the C++14 spelling alongside, so a
+C++14 project can follow every rule as written. C++20's `std::span` replaces
+pointer-plus-size spellings without changing any rule below.
 
 ---
 
@@ -22,13 +29,14 @@ Caught by: review — hidden `inout` behavior has no dependable static check; th
 
 | Role | Signature | Contract |
 |------|-----------|----------|
-| **FN-2** `in` | `T` (cheap copy), `const T&`, `std::string_view`, `std::span<const T>` | Callee reads; copies anything it stores |
+| **FN-2** `in` | `T` (cheap copy), `const T&`, `std::string_view` (C++17; C++14: `const std::string&`), `std::span<const T>` (C++20; C++14: `const T*` + size) | Callee reads; copies anything it stores |
 | **FN-3** `out` | Return value | `T&` reserved for a genuine second output |
 | **FN-4** `inout` | `T&` | Reads and overwrites; the name states the transformation |
 | **FN-5** will-move-from | `T&&` plus `std::move` | Consuming sinks only |
 | **FN-6 (hard)** forward | Template `TP&&` plus `std::forward` | Generic plumbing only — every static path forwards exactly once, piecewise per member if needed (`F.19`) |
 
 ```cpp
+// C++17
 // compiles; UB at runtime
 // Wrong: three behaviors behind one signature; every call site is a guess.
 void process(std::string text, std::vector<int>& items, Stats& stats);
@@ -44,7 +52,7 @@ Rules:
 - **FN-8.** An `inout` parameter's name declares the transformation: `normalize_path(p)`, `merge_into(acc)` — never a generic `update` (`F.17`).
 - **FN-9 (hard).** Mutating through a `const T&` — a `const_cast` or any write to the referent — turns an advertised `in` into a hidden `inout`. Forbidden.
 - **FN-10 (hard).** A mutable cache keyed on a `const T&` argument is not a hidden `inout`: the parameter itself is never written. This is accepted logical constness under two obligations — the cache is documented as such (`mutable` members carry the name), and its thread safety is settled: guarded access, or confinement to one thread.
-- **FN-11.** Unused parameters stay unnamed, or wear `[[maybe_unused]]` when conditionally dead — template dispatch especially (`F.9`). A named parameter claims a purpose it does not have.
+- **FN-11.** Unused parameters stay unnamed, or — when conditionally dead, template dispatch especially (`F.9`) — are silenced with a `(void)p;` statement. **C++17:** `[[maybe_unused]]` marks them without the cast. A named parameter claims a purpose it does not have.
 
 ---
 
@@ -60,8 +68,8 @@ Caught by: clang-tidy `performance-unnecessary-value-param` catches sinks missin
 |--------------------|------|-----|
 | **FN-13** Scalar or two-word trivial type | By value | Copy beats aliasing machinery |
 | **FN-14** Class instance, read-only | `const T&` | Skips an expensive copy |
-| **FN-15** Text, read-only | `std::string_view` by value (`SL.str.12`) | Literals and substrings arrive without conversion |
-| **FN-16** Sequence, read-only | `std::span<const T>` (`F.24`; pointer + size before C++20) | One spelling for arrays, vectors, slices |
+| **FN-15** Text, read-only | `std::string_view` (C++17; C++14: `const std::string&`) by value (`SL.str.12`) | Literals and substrings arrive without conversion |
+| **FN-16** Sequence, read-only | `std::span<const T>` (`F.24`; C++20; C++14: `const T*` + size) | One spelling for arrays, vectors, slices |
 | **FN-17** Sink storing the argument | By value, then `std::move` | One copy at the provable last use |
 | **FN-18** Consumed inside generic code | `T&&` plus `std::move` (`F.18`) | Consumption stated explicitly |
 | **FN-19** Presence varies | `const T*`, documented nullable (`F.22`) | Optionality encoded in the type |
@@ -103,9 +111,10 @@ Default strength: default.
 
 Caught by: ASan flags use-after-free when a stored view outlives its owner; review catches the boundary case earlier.
 
-**FN-23.** Read-only text and sequences enter as views so callers pay no conversion tax (`SL.str.12`, `F.24`). A view is a borrow: read it during the call; copy anything kept.
+**FN-23.** Read-only text and sequences enter without copying caller data — on C++14 as `const std::string&` (or `const char*`) and pointer-plus-size pairs; **C++17:** `std::string_view` / `std::span<const T>` spell the borrow in the type (`SL.str.12`, `F.24`). A view is a borrow: read it during the call; copy anything kept.
 
 ```cpp
+// C++17
 #include "result.h"
 
 // compiles; UB at runtime
@@ -125,6 +134,7 @@ void checksum(std::span<const uint8_t> data); // Right: length travels with the 
 **FN-24 (hard).** At untrusted-input boundaries (config load, IPC, deserialization), validate and re-own first. Lifetime traps for stored views are cataloged in [Memory and Ownership](./memory-and-ownership.md).
 
 ```cpp
+// C++17
 // compiles; UB at runtime
 class Cache {                                 // Wrong: stored view dangles when caller dies
 public:
@@ -147,7 +157,7 @@ private:
 
 ## Results Return by Value
 
-Since C++17 a prvalue is constructed directly in the destination (guaranteed elision) and named locals usually get NRVO — returning by value is the cheapest correct spelling, and it composes.
+On C++14 a returned value is moved (NRVO eliding the move when the compiler can), and containers being filled pre-size with `reserve`; since C++17 the prvalue is constructed directly in the destination (guaranteed elision). Returning by value is the cheapest correct spelling either way, and it composes.
 
 Default strength: hard.
 
@@ -156,6 +166,7 @@ Caught by: GCC 13+ `-Wdangling-reference` for simple cases, ASan on first use ot
 - **FN-26.** Build the result locally, `return local;` — never `return std::move(local);`, which changes the expression type and defeats NRVO (`F.48`).
 
 ```cpp
+// C++17
 // compiles; UB at runtime
 std::vector<Token> tokenize(std::string_view src) {
     std::vector<Token> out;
@@ -165,6 +176,7 @@ std::vector<Token> tokenize(std::string_view src) {
 ```
 
 ```cpp
+// C++17
 std::vector<Token> tokenize(std::string_view src) {
     std::vector<Token> out;
     // ...
@@ -172,9 +184,10 @@ std::vector<Token> tokenize(std::string_view src) {
 }
 ```
 
-- **FN-27.** Never return a pointer or reference to a local, including wrapped in a view (`F.43`). A `string_view`/`span` return promises memory that outlives the call — a callee-owned cache or static storage qualifies; who owns the backing bytes is a separate, documented question.
+- **FN-27.** Never return a pointer or reference to a local (`F.43`); on C++14 the string-copy case returns `std::string` by value. **C++17:** a `string_view`/`span` return promises memory that outlives the call — a callee-owned cache or static storage qualifies; who owns the backing bytes is a separate, documented question — and a local wrapped in a view is the same bug.
 
 ```cpp
+// C++17
 // compiles; UB at runtime
 std::string_view trim_prefix(std::string_view s) {
     std::string buf(s.substr(PREFIX_LEN));
@@ -183,6 +196,7 @@ std::string_view trim_prefix(std::string_view s) {
 ```
 
 ```cpp
+// C++17
 std::string_view trim_prefix(std::string_view s) {
     return s.substr(PREFIX_LEN);  // Right: view into the caller's argument, which outlives the call
 }
@@ -193,6 +207,7 @@ std::string_view trim_prefix(std::string_view s) {
 - **FN-29.** Multiple results travel as a named struct (`F.21`).
 
 ```cpp
+// C++17
 // compiles; UB at runtime
 void parse(std::string_view src, AST& ast, size_t& consumed);   // Wrong: results stacked as out-params
 
@@ -244,19 +259,20 @@ Ownership transfer and sharing through returned pointers route through [Memory a
 
 ## `[[nodiscard]]`: Results That Must Not Vanish
 
-Discarding a computed answer or status is a bug wearing an optimization hat. Policy:
+Discarding a computed answer or status is a bug wearing an optimization hat. On C++14, must-check results carry a `/* must-check */` comment on the declaration and a dropped result is a review finding; **C++17:** `[[nodiscard]]` hands enforcement to the compiler. Policy:
 
 Default strength: hard.
 
-Caught by: `-Wunused-result` via the attribute; review for categories the attribute cannot see.
+Caught by: `-Wunused-result` via the attribute (C++17; the C++14 comment marking is review-enforced); review for categories the attribute cannot see.
 
-| Category | `[[nodiscard]]` |
+| Category | Must-check marking |
 |----------|-----------------|
-| **FN-34** Status/result returns (`Result<T,E>`, `optional`, predicates) | Always |
+| **FN-34** Status/result returns (`Result<T,E>`, `optional` (C++17; C++14: status enum), predicates) | Always |
 | **FN-35** Pure computation where the result is the point; factories and builders | Yes |
 | **FN-36** Effect-only procedures (logging, duplicate-tolerant inserts) | No |
 
 ```cpp
+// C++17
 #include "result.h"
 
 // compiles; UB at runtime
@@ -271,9 +287,9 @@ auto cfg = load_config("app.conf");
 if (!cfg) return cfg.error();
 ```
 
-**FN-37.** The attribute also applies at class level: mark a status/`Result` type `[[nodiscard]]` once, and every function returning it is covered — no per-function decoration to forget.
+**FN-37.** The marking also applies at type level: tag a status/`Result` type once — the `/* must-check */` comment on C++14, **C++17:** the `[[nodiscard]]` attribute — and every function returning it is covered, no per-function decoration to forget.
 
-This extends `F.20`: once outputs travel as values, discarding them trips the attribute at every call site. Treat new violations as merge blockers.
+This extends `F.20`: once outputs travel as values, a discarded result is a visible defect at every call site — **C++17:** the attribute turns it into a compile error. Treat new violations as merge blockers.
 
 ---
 
@@ -350,6 +366,7 @@ One cost to know: a default argument's value is baked into each call site, so ch
 **FN-43 (hard).** Anything allocating, formatting, logging, or calling unknown code must not be `noexcept`.
 
 ```cpp
+// C++17
 class Ring {
 public:
     [[nodiscard]] bool empty() const noexcept { return head_ == tail_; }  // narrow: holds
@@ -370,7 +387,7 @@ private:
 
 ### No `va_arg` Argument Passing
 
-**FN-46 (hard).** Reading varargs trusts caller discipline the type system cannot verify, so mismatches are undefined behavior (`F.55`). Variadic templates with fold expressions cover the real cases; a bare `...` used only to close an overload set stays acceptable.
+**FN-46 (hard).** Reading varargs trusts caller discipline the type system cannot verify, so mismatches are undefined behavior (`F.55`). Variadic templates cover the real cases — recursion or `std::index_sequence` on C++14; **C++17:** fold expressions collapse the recursion. A bare `...` used only to close an overload set stays acceptable.
 
 ---
 
@@ -395,11 +412,12 @@ bool entry_less(const Entry& a, const Entry& b);
 
 **FN-48.** Lambdas used locally — including passed to parallel algorithms that join before returning — capture by reference (`F.52`): cheaper than copies and preserving intended side effects on the caller's objects.
 
-**FN-49 (hard).** A lambda that escapes its scope — queued to another thread, stored, returned — captures by value, with any needed non-local pointer owned (`unique_ptr`) and whole-object snapshots spelled `[*this]`. Deviation from `F.53`: upstream avoids escaping by-reference captures where lifetimes can be proven; we make by-value unconditional, because proving a referenced object outlives another thread is exactly the review burden the rule exists to remove — mirroring the borrowed-view rules above and in [Memory and Ownership](./memory-and-ownership.md).
+**FN-49 (hard).** A lambda that escapes its scope — queued to another thread, stored, returned — captures by value, with any needed non-local pointer owned (`unique_ptr`) and whole-object snapshots captured by copy — `[snapshot = *this]` on C++14; **C++17:** `[*this]` spells the same in one token. Deviation from `F.53`: upstream avoids escaping by-reference captures where lifetimes can be proven; we make by-value unconditional, because proving a referenced object outlives another thread is exactly the review burden the rule exists to remove — mirroring the borrowed-view rules above and in [Memory and Ownership](./memory-and-ownership.md).
 
 **FN-50 (hard).** `[this]` stays a borrow: it is safe only where the lambda cannot outlive the owner — synchronous call sites, or a queue proven to join before the owner dies.
 
 ```cpp
+// C++17
 // compiles; UB at runtime
 class Poller {
 public:
@@ -412,9 +430,10 @@ private:
 };
 ```
 
-**FN-51 (hard).** Never `[=]` inside a member function (`F.54`): it captures `this` by value, so members arrive by reference wearing a value-capture costume. Write `[this]` (or `[i, this]`) explicitly, or `[*this]` for a true snapshot.
+**FN-51 (hard).** Never `[=]` inside a member function (`F.54`): it captures `this` by value, so members arrive by reference wearing a value-capture costume. Write `[this]` (or `[i, this]`) explicitly; for a true snapshot, `[snapshot = *this]` on C++14 — **C++17:** `[*this]`.
 
 ```cpp
+// C++17
 // compiles; UB at runtime
 class Poller {
 public:
@@ -485,6 +504,7 @@ Caught by: compiler diagnostics — const-correctness is enforced at compile tim
 **FN-56.** Objects whose values never change after construction are declared `const` (`Con.4`) — a non-`const` local forces every reader to assume it mutates somewhere below, making unmodified non-`const` variables cleanup fodder. Objects that need not change stay `const` (`Con.1`), observing member functions are `const` (`Con.2`), inputs arrive as `const` references (`Con.3`). Const-correctness lets the compiler prove the read-only half of every contract above.
 
 ```cpp
+// C++17
 class Ledger {
 public:
     [[nodiscard]] std::optional<Amount> balance(Account id) const;  // observes
@@ -504,9 +524,9 @@ Caught by: review — no automated detector.
 
 ### Strongly Typed Inputs
 
-**FN-58 (default).** Interfaces are precisely and strongly typed (`I.4`) — largely enforced above through views over raw sequences, option structs over flag soup, named constants over magic numbers, and units carried by types such as durations. Push toward static type safety (`P.4`): unions become `variant`, array decay becomes `span`, and narrowing conversions plus casual casts are banned — the conversion and initialization rules live in [Expressions and Flow](./expressions-and-flow.md).
+**FN-58 (default).** Interfaces are precisely and strongly typed (`I.4`) — largely enforced above through views over raw sequences (or their C++14 pointer-plus-size spellings), option structs over flag soup, named constants over magic numbers, and units carried by types such as durations. Push toward static type safety (`P.4`): on C++14 a raw union becomes a tagged struct and array decay becomes a pointer-plus-size pair; **C++17:** unions become `variant`; **C++20:** decay becomes `span`. Narrowing conversions plus casual casts stay banned — the conversion and initialization rules live in [Expressions and Flow](./expressions-and-flow.md).
 
-**FN-59.** Adjacent same-type parameters invocable with the same arguments in either order are defect bait — `copy_n(p, q, n)` reads three ways (`I.24`); mark the source `const`, pass spans, or bundle into named fields. Order-insensitive pairs like `max(a, b)` are exempt.
+**FN-59.** Adjacent same-type parameters invocable with the same arguments in either order are defect bait — `copy_n(p, q, n)` reads three ways (`I.24`); mark the source `const`, pass pointer-plus-size pairs (`std::span` on C++20), or bundle into named fields. Order-insensitive pairs like `max(a, b)` are exempt.
 
 ```cpp
 // C++20: std::span
@@ -553,7 +573,7 @@ Rect intersect(Rect a, Rect b) {
 
 **FN-69 (default).** Module edges are the one boundary where the interface surface shrinks. Deviation from `I.26`: cross-compiler ABI compatibility is not a project target, so full C++ interfaces are fine in-process; the C-style subset discipline applies only at genuine module edges — total catches translating to status codes in [Error Handling](./error-handling.md), ABI-stable headers in [Quality Guidelines](./quality-guidelines.md).
 
-Template parameters document themselves — a named concept on C++20, a `static_assert` over standard traits on C++17 ([Templates and Generics](./templates-and-generics.md), `I.9`). Protocol interfaces stay pure — no data members, virtual destructor, deleted copies ([Classes and Hierarchies](./classes-and-hierarchies.md), `I.25`) — and headers distributed as binaries use Pimpl with an out-of-line destructor and move operations ([Quality Guidelines](./quality-guidelines.md), `I.27`).
+Template parameters document themselves — a `static_assert` over standard traits (`std::is_integral<T>::value`) on C++14; **C++17:** the `_v` variable-template spelling; **C++20:** a named concept ([Templates and Generics](./templates-and-generics.md), `I.9`). Protocol interfaces stay pure — no data members, virtual destructor, deleted copies ([Classes and Hierarchies](./classes-and-hierarchies.md), `I.25`) — and headers distributed as binaries use Pimpl with an out-of-line destructor and move operations ([Quality Guidelines](./quality-guidelines.md), `I.27`).
 
 ---
 
@@ -564,10 +584,10 @@ Gates before merging interface work: format-clean (`clang-format --dry-run`) and
 Review checklist:
 
 - [ ] Every parameter's role is readable from type and name; scalars by value, objects by `const T&`
-- [ ] Text and sequences enter as views; nothing borrowed is stored without a documented owner
+- [ ] Text and sequences enter as views (C++17; C++14: `const std::string&` / pointer + size); nothing borrowed is stored without a documented owner
 - [ ] Sinks take by value and `std::move`; no parallel view/non-view overloads
 - [ ] No `return std::move(local)`; no pointer, reference, or view into a local escapes
-- [ ] Multi-part results return structs; `[[nodiscard]]` on every status/computation/factory
+- [ ] Multi-part results return structs; must-check marking (`[[nodiscard]]` on C++17) on every status/computation/factory
 - [ ] Functions do one operation, fit a screen, keep impure effects at the edge
 - [ ] Same-shape overloads collapsed into default arguments; `noexcept` only on proven-narrow interfaces
 - [ ] Single-argument constructors `explicit` unless conversion is the design

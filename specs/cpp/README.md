@@ -54,9 +54,13 @@ specs/cpp/            →  .trellis/spec/
 | [performance.md](./cpp/performance.md) | Optimization work guided by measurement: hot paths, allocation pressure |
 | [core-guidelines-disposition.md](./cpp/core-guidelines-disposition.md) | Project stance toward the ISO C++ Core Guidelines: per-section disposition, residual ledger, deviation recording, adoption process, safety profiles |
 
-Baseline is C++17; deviations available in C++20/23 are called out where they
-matter. The guidelines are opinionated defaults, not neutral surveys — adapt
-them per project after install if your conventions differ.
+Baseline is C++14; C++17/20 additions (`std::string_view`, `std::optional`,
+`if constexpr`, `[[nodiscard]]`, `std::span`) are called out as marked
+upgrades where they matter. The guidelines are opinionated defaults, not
+neutral surveys — adapt them per project after install if your conventions
+differ. Guide snippets naming a C++17+ construct carry a `// C++17` comment
+at the fence top (`// C++20` marks C++20-only idioms); unmarked snippets
+compile at `-std=c++14`, enforced by `tools/check_snippets.py`.
 
 ---
 

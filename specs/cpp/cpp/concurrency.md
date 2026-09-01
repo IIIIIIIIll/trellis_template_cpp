@@ -20,9 +20,15 @@ Therefore the design order of preference is:
 - **CONC-4.** Where sharing survives, guard every access with a mutex co-designed with its data (`CP.50`).
 - **CONC-5.** Atomics for narrow, single-variable cases only.
 
-Baseline: C++17 (`std::thread` plus explicit join discipline). C++20's `std::jthread`, `std::stop_token`, and counting semaphores are preferred where the toolchain provides them; differences are noted inline.
-
-Coroutines are C++20-only; on the C++17 baseline the coroutine section below does not apply.
+Baseline: C++14 (`std::make_unique`, generic lambdas, relaxed `constexpr`).
+C++17 and C++20 additions appear as marked upgrades where they change the
+recommendation — `std::string_view`, `std::optional`, `if constexpr`,
+`[[nodiscard]]`, `std::span` — each with the C++14 spelling alongside, so a
+C++14 project can follow every rule as written. Threading on that baseline
+spells `std::thread` plus an explicit joining wrapper; C++20's `std::jthread`,
+`std::stop_token`, and counting semaphores are preferred where the toolchain
+provides them — differences are noted inline. Coroutines are C++20-only; the
+coroutine section below applies only on toolchains that provide them.
 
 ---
 
@@ -60,7 +66,7 @@ Right:
 class SessionCache {
 public:
     std::shared_ptr<const Session> get(int id) {
-        std::lock_guard lock(mutex_);          // C++17: lock_guard<std::mutex>
+        std::lock_guard lock(mutex_);          // C++17 CTAD; C++14: std::lock_guard<std::mutex>
         return lookup_locked(id);              // returns an immutable snapshot
     }
 private:
@@ -89,7 +95,7 @@ Caught by: review for `detach()` and unjoined `std::thread`; TSan flags races ca
 
 | Tool | Status | Notes |
 |------|--------|-------|
-| `std::jthread` (C++20) | Preferred owner | Joins in its destructor; cooperative cancellation via `stop_token` |
+| `std::jthread` (C++20; C++14: `std::thread` + joining wrapper) | Preferred owner | Joins in its destructor; cooperative cancellation via `stop_token` |
 | `std::thread` | Allowed with care | Must be joined (or moved into a pool/jthread wrapper) before every scope exit |
 | `detach()` | Forbidden in application code | Detached threads outlive every guard, logger, and config object they touch |
 | **CONC-11** Raw handles from third-party runtimes | Quarantined | Wrap immediately in an owning RAII adapter |
@@ -130,7 +136,7 @@ void start_polling(Device& dev) {
 }
 ```
 
-**CONC-15.** On C++17, wrap `std::thread` in a small joining-thread class whose destructor calls `join()` unless already joined; do not sprinkle `join()` calls through control flow — the early-return branch is how terminates happen.
+**CONC-15.** Wrap `std::thread` in a small joining-thread class whose destructor calls `join()` unless already joined; do not sprinkle `join()` calls through control flow — the early-return branch is how terminates happen.
 
 **CONC-16.** Waiting for a thread's result means `join()` (or a future), not polling a flag.
 
@@ -144,8 +150,8 @@ Caught by: TSan for the resulting races; deadlock detection tools and code revie
 
 | Situation | Tool |
 |-----------|------|
-| Guard a scope, one mutex | `std::lock_guard` (or CTAD `std::scoped_lock` on C++17) |
-| Acquire several mutexes without deadlock | `std::scoped_lock` / `std::lock` (`CP.21`) |
+| Guard a scope, one mutex | `std::lock_guard`; `std::scoped_lock` (C++17; CTAD infers the type) |
+| Acquire several mutexes without deadlock | `std::lock` + `adopt_lock` guards (`CP.21`); `std::scoped_lock` (C++17) |
 | Need condition variables, timed ops, deferred locking | `std::unique_lock` |
 | Read-mostly shared structures | `std::shared_mutex` with `shared_lock`, measured first |
 | Anything else (manual pairs, double-checked patterns) | No |
@@ -245,7 +251,7 @@ Rules:
 
 - **CONC-27.** Default to sequential-consistency ordering. Relax/acquire/release require a comment naming the exact protocol they implement and why it suffices.
 - **CONC-28.** Two variables whose relationship matters (a buffer pointer plus its length, a state plus a payload) need a mutex, a sequenced publication protocol, or a single larger atomic — never two independent atomic members.
-- **CONC-29.** `shared_ptr`'s atomic refcounts are not atomic pointer access: concurrent reads and writes of a shared `shared_ptr` member race even when every pointee is immutable. On the C++17 baseline the spellings are `std::atomic_load(&ptr_)` / `std::atomic_store(&ptr_, value)` — deprecated in C++20 in favor of `std::atomic<std::shared_ptr<T>>` — or a plain mutex; the better default remains the immutable-snapshot hand-off (`shared_ptr<const T>`) from the design section above, which leaves readers nothing to synchronize.
+- **CONC-29.** `shared_ptr`'s atomic refcounts are not atomic pointer access: concurrent reads and writes of a shared `shared_ptr` member race even when every pointee is immutable. The C++14 spellings are `std::atomic_load(&ptr_)` / `std::atomic_store(&ptr_, value)` — deprecated in C++20 in favor of `std::atomic<std::shared_ptr<T>>` — or a plain mutex; the better default remains the immutable-snapshot hand-off (`shared_ptr<const T>`) from the design section above, which leaves readers nothing to synchronize.
 - **CONC-30.** Do not write lock-free data structures by hand (`CP.100`). The standard containers, well-tested concurrent libraries, or a plain mutex cover nearly everything; a homemade queue is a research project with a bug quota. Beyond atomics and a handful of standard patterns, lock-free programming is expert-only (`CP.102`): a proposal arrives citing the literature (Williams, Herlihy & Shavit, Boehm) and survives design review, or it stays a mutex. Beware classic hazards such as A-B-A reuse of addresses if you ever must (`CP.101` territory).
 - **CONC-31.** Lazy initialization is solved by magic statics (`static local` initialization is thread-safe since C++11) or `std::call_once`. Hand-rolled double-checked locking is forbidden (`CP.110`, `CP.111`).
 
@@ -328,10 +334,10 @@ Before merging concurrency code, confirm the suite is green under a ThreadSaniti
 - [ ] New shared mutable state justified against the isolation ladder; message passing or immutability considered first
 - [ ] Every mutex defined adjacent to its data; all access routes go through it
 - [ ] All guards RAII-based and named; no manual `lock()`/`unlock()`
-- [ ] Multi-lock acquisition uses `std::scoped_lock`; global lock ordering documented where multiple mutexes meet
+- [ ] Multi-lock acquisition uses `std::scoped_lock` (C++17; C++14: `std::lock` + `adopt_lock` guards); global lock ordering documented where multiple mutexes meet
 - [ ] No unknown/callback/virtual-overridable code invoked under a held lock
 - [ ] Condition-variable waits sit in predicate loops with timeouts
-- [ ] Threads owned by `std::jthread` (or a joining wrapper on C++17); zero `detach()` calls
+- [ ] Threads owned by `std::jthread` (or a joining wrapper); zero `detach()` calls
 - [ ] Atomics limited to single-variable flags/counters; ordering relaxations commented; no `volatile` used for synchronization
 - [ ] Queues bounded with a stated overflow policy; shutdown path drains and joins deterministically
 - [ ] Concurrent paths actually exercised under a ThreadSanitizer build, findings resolved or tracked

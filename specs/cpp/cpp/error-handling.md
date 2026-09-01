@@ -6,7 +6,13 @@
 
 ## Overview
 
-Every failure path uses exactly one of four mechanisms, picked by the *kind* of failure, not by author preference. The baseline is **C++17**; deviations relevant to C++20/23 are called out inline.
+Every failure path uses exactly one of four mechanisms, picked by the *kind* of failure, not by author preference.
+
+Baseline: C++14 (`std::make_unique`, generic lambdas, relaxed `constexpr`).
+C++17 and C++20 additions appear as marked upgrades where they change the
+recommendation — `std::string_view`, `std::optional`, `if constexpr`,
+`[[nodiscard]]`, `std::span` — each with the C++14 spelling alongside, so a
+C++14 project can follow every rule as written.
 
 The core split:
 
@@ -42,6 +48,7 @@ Two design-time corollaries keep this table honest.
 **ERR-7.** Exceptions carry failures, never ordinary control flow (`E.3`): loop termination and cache misses are normal outcomes, and implementations optimize on exactly that assumption.
 
 ```cpp
+// C++17
 // compiles; UB at runtime
 // Wrong: exceptions for ordinary control flow
 Item find(const Map& m, Key k) {
@@ -106,19 +113,25 @@ Session s{cfg};   // usable, or never existed
 
 ---
 
-## C++17 Baseline: `std::expected` Is C++23
+## `std::expected` Is C++23
 
 Caught by: review — no automated detector.
 
 Default strength: hard.
 
-**ERR-15.** On a C++17 codebase, pick one of, in order of preference — centralized behind one alias so migration is mechanical:
+**ERR-15.** Expected-style results are not a C++23 luxury — on the C++14
+baseline, pick one of, in order of preference, centralized behind one alias
+so migration is mechanical:
 
-1. **`tl::expected`** — drop-in, API-compatible with `std::expected`. Preferred whenever a vetted third-party header-only dependency is acceptable.
+1. **`tl::expected`** — drop-in, API-compatible with `std::expected`, and
+   runs on C++14 toolchains. Preferred whenever a vetted third-party
+   header-only dependency is acceptable.
 2. **A local `Result<T, E>` alias** — minimal sum-type wrapper with `has_value()`, `value()`, `error()`.
-3. **Status enum + out-parameter** — mandatory at ABI/module edges regardless of dialect (see below).
+3. **Status enum + out-parameter** — the dependency-free C++14 spelling, and
+   mandatory at ABI/module edges regardless of dialect (see below).
 
 ```cpp
+// C++17
 // result.h — single point of definition
 #include <tl/expected.hpp>
 
@@ -138,6 +151,7 @@ auto make_error(E&& e) {
 ```
 
 ```cpp
+// C++17
 // Usage — inspection shape identical to std::expected; errors are built by
 // make_error in result.h, so the C++23 migration is a one-file change there
 // plus deleting the alias
@@ -156,7 +170,7 @@ use(cfg.value());
 
 Migration path: when the toolchain moves to C++23, replace `tl::expected` with `<expected>` and re-point the alias. *Inspection* call sites (`has_value()`, `value()`, `error()`, `operator*`) do not change; *error-construction* call sites do — `tl::make_unexpected` becomes `std::unexpected`/`std::unexpect`, and the monadic combinators carry different names. That is exactly why every construction routes through `make_error` in result.h: the difference lives in one function body, and the swap stays a one-file change.
 
-**ERR-17 (default).** Do **not** hand-roll monadic `.and_then()` chains in C++17 wrappers; keep the wrapper surface minimal so the future swap stays trivial.
+**ERR-17 (default).** Do **not** hand-roll monadic `.and_then()` chains in expected-style wrappers; keep the wrapper surface minimal so the future swap stays trivial.
 
 Deviation from `E.27`: the rule scopes systematic error codes to codebases that cannot throw exceptions; this project adopts them past that premise. Expected-style status results remain the standing mechanism for anticipated failures and the mandatory currency at ABI edges, centralized behind the `Result` alias above so handling stays uniform.
 
@@ -343,6 +357,7 @@ Default strength: hard.
 - **ERR-43.** Do not pass live STL objects (strings, vectors, exceptions) across the edge; pass buffers and plain structs.
 
 ```cpp
+// C++17
 // module_api.cpp — compiled inside the shared library
 extern "C" int mylib_parse(const char* bytes, size_t len, MylibDoc** out) {
     try {
