@@ -3071,7 +3071,7 @@
   {
     "id": "MEM-4",
     "strength": "default",
-    "statement": "Prefer scoped objects (R.5): locals, members, and globals cost no separate cleanup and let destructors manage members; reach for the Default owner rung only when lifetime must exceed the scope.",
+    "statement": "Prefer scoped objects (R.5): locals, members, and globals cost no separate cleanup and let destructors manage members; reach for the Default owner rung only when lifetime must exceed the scope or the object is too large for the stack.",
     "doc": "memory-and-ownership.md",
     "detector": "ASan's LeakSanitizer (leaks), static analyzer leak checkers for handle types",
     "upstream": [
@@ -3255,7 +3255,7 @@
   {
     "id": "MEM-24",
     "strength": "default",
-    "statement": "By value, then std::move into storage",
+    "statement": "By value, then std::move into storage — even when callers usually pass lvalues: the copy happens at the boundary where the compiler can prove the source is no longer needed",
     "doc": "memory-and-ownership.md",
     "detector": "clang-tidy `performance-unnecessary-value-param` (missing moves in sinks); the `const std::string&`-that-should-be-a-view case has no reliable automatic check and is a review item",
     "upstream": []

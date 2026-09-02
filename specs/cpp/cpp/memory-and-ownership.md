@@ -53,7 +53,7 @@ bool read_config(std::string_view path) {
 
 **MEM-3 (hard).** Give the result of an acquisition to its manager immediately (`R.12`): registering the guard even one line after the open leaves a window where the next allocation throws and leaks the handle. Wrapping at the acquisition site closes the window entirely.
 
-**MEM-4 (default).** Prefer scoped objects (`R.5`): locals, members, and globals cost no separate cleanup and let destructors manage members; reach for the Default owner rung only when lifetime must exceed the scope. For an oversized local, the common escape hatch stands — a `const std::unique_ptr<BigObject>` moves the bytes onto the heap while keeping the lifetime scoped.
+**MEM-4 (default).** Prefer scoped objects (`R.5`): locals, members, and globals cost no separate cleanup and let destructors manage members; reach for the Default owner rung only when lifetime must exceed the scope or the object is too large for the stack. For an oversized local, the common escape hatch stands — a `const std::unique_ptr<BigObject>` moves the bytes onto the heap while keeping the lifetime scoped.
 
 ---
 
@@ -104,7 +104,7 @@ Default strength: default.
 | **MEM-21** Read-only sequence of objects | `std::span<const T>` (C++20; C++14: `const T*` + size) |
 | **MEM-22** Read-only single object, present | `const T&` |
 | **MEM-23** Read-only single object, maybe absent | `const T*`, documented as nullable |
-| **MEM-24** Sink — the callee stores or moves the argument | By value, then `std::move` into storage |
+| **MEM-24** Sink — the callee stores or moves the argument | By value, then `std::move` into storage — even when callers usually pass lvalues: the copy happens at the boundary where the compiler can prove the source is no longer needed |
 | **MEM-25 (hard)** Out-parameter | Return value; `T&` only when a second output genuinely exists |
 | **MEM-26 (hard)** Optional result (value) | Return `std::optional<T>` (C++17; C++14: a named result struct), never a sentinel or `nullptr` |
 
@@ -141,17 +141,14 @@ void log_prefix(std::string_view prefix);
 
 Notes:
 
-- **MEM-27 (hard).** View parameters are borrow-only: if the value must outlive the call, copy it deliberately (see the pitfalls below before storing one).
+- **MEM-27 (hard).** View parameters are borrow-only: if the value must outlive the call, copy it deliberately (see the pitfalls below before storing one). A `string_view` also promises no NUL termination: `.data()` is not a C string — copy to `std::string` before handing text to a C interface (`fopen`, `exec`, sqlite...); the `std::string(path)` conversion in the RAII example exists for exactly this reason.
 
 Caught by: ASan for the use-after-free at first access; review for the store itself.
-
-- A `string_view` promises no NUL termination: `.data()` is not a C string. Copy to `std::string` before handing text to a C interface (`fopen`, `exec`, sqlite...) — the `std::string(path)` conversion in the RAII example exists for exactly this reason.
 
 - **MEM-28.** Do not maintain both a `const std::string&` and a `string_view` overload for the same parameter; one spelling wins.
 
 Caught by: review — no automated detector.
 
-- Sinks take by value even when callers usually pass lvalues: the copy happens at the boundary where the compiler can prove the source is no longer needed.
 - **MEM-29 (hard).** Array parameters decay: `void f(int[])` *is* `f(int*)` after adjustment — the length is simply gone (`R.14`). Sequences take a pointer-plus-size pair (`const T* p, std::size_t n`), matching the table above; **C++20:** `std::span`.
 - **MEM-30.** The optional-result row covers *value* results only. A finder that locates an existing object inside storage the caller already owns returns its position as a nullable `T*` (`F.42`, [Functions and Interfaces](./functions-and-interfaces.md)) — not a sentinel, and not an `optional<T>` that copies the object out of place.
 
@@ -208,7 +205,11 @@ The same trap with a temporary:
 ```cpp
 // C++17
 // compiles; UB at runtime
-std::string_view sv = make_name();   // make_name returns std::string by value: dangles immediately
+// Wrong: make_name returns std::string by value; the view dangles immediately
+std::string_view sv = make_name();
+
+// Right: keep the owner — take a copy, or return the owning string itself.
+std::string name = make_name();
 ```
 
 Caught by: GCC 13+ `-Wdangling-reference` flags simple cases but is prone to false positives — treat findings as leads, not verdicts; ASan flags the use-after-return at first access. Any view returned across a function boundary deserves a look under an ASan+UBSan build.
@@ -256,7 +257,7 @@ Caught by: ASan for the dangling use; review — no automated detector for the o
 
 Caught by: LeakSanitizer reports the unreachable cycle cluster; the leak dump pointing at both ends of a mutual `shared_ptr` is the classic signature.
 
-**MEM-44.** The adjacent double-own trap is `this` itself. Inside a member function `this` is unowned — the object already lives under whichever `shared_ptr` brought the caller here — so `std::shared_ptr<T>{this}` mints a second, independent owner of the same object, and the two control blocks destroy it twice. Types reachable as shared objects inherit `std::enable_shared_from_this<T>` and return `shared_from_this()`, which joins the existing control block; the call is legal only once a `shared_ptr` already manages the object — called earlier, it throws `std::bad_weak_ptr`.
+**MEM-44.** The adjacent double-own trap is `this` itself. Inside a member function `this` is unowned — the object already lives under whichever `shared_ptr` brought the caller here — so `std::shared_ptr<T>{this}` mints a second, independent owner of the same object, and the two control blocks destroy it twice. Types reachable as shared objects inherit `std::enable_shared_from_this<T>` and return `shared_from_this()`, which joins the existing control block; the call is legal only once a `shared_ptr` already manages the object — called earlier, the behavior is undefined at the C++14 baseline (**C++17:** it throws `std::bad_weak_ptr`).
 
 Caught by: ASan catches the resulting double-free; a `shared_ptr` constructed directly from `this` is a review item.
 
