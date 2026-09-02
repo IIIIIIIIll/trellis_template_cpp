@@ -105,6 +105,8 @@ Caught by: review — no automated detector.
 
 Caught by: heap profilers (allocation counts and byte totals); allocator statistics from sanitizer builds during correctness runs.
 
+Error signaling sits under the same gate: a non-throwing path is effectively free under table-driven unwinding, but a thrown exception costs orders of magnitude more than a status check — the mechanism split keeping throws off foreseeable per-iteration failures is owned by `ERR-7` in [Error Handling](./error-handling.md).
+
 ---
 
 ## Move Semantics Economics

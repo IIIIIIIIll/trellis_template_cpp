@@ -1,0 +1,4 @@
+{"_example": "Fill with {\"file\": \"<path>\", \"reason\": \"<why>\"}. Put spec/research files only — no code paths. Run `python3 .trellis/scripts/get_context.py --mode packages` to list available specs. Delete this line once real entries are added."}
+{"file": "specs/cpp/cpp/error-handling.md", "reason": "ERR-7 block gets the cost-model rationale paragraph"}
+{"file": "specs/cpp/cpp/performance.md", "reason": "PERF-14 area gets the cost-rationale pointer sentence"}
+{"file": ".trellis/spec/registry/guideline-authoring.md", "reason": "Authoring conventions governing the edit"}

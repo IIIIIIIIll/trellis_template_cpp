@@ -47,6 +47,8 @@ Two design-time corollaries keep this table honest.
 
 **ERR-7.** Exceptions carry failures, never ordinary control flow (`E.3`): loop termination and cache misses are normal outcomes, and implementations optimize on exactly that assumption.
 
+The cost shape justifies the split: a non-throwing path is effectively free under table-driven unwinding, while a thrown exception typically costs three to four orders of magnitude more than a status check. On a hot loop a throw on any foreseeable failure dominates the budget — [Performance](./performance.md)'s measurement discipline (`PERF-1`) decides where that cost is acceptable.
+
 ```cpp
 // C++17
 // compiles; UB at runtime
