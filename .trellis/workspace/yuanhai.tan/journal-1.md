@@ -75,3 +75,24 @@ Task 08-31-cpp14-baseline: baseline of the shipped cpp guideline set lowered fro
 ### Status
 
 [OK] **Completed**
+
+
+## Session 4: Quality-guidelines review fixes
+
+**Date**: 2026-09-05
+**Task**: Quality-guidelines review fixes
+**Branch**: `main`
+
+### Summary
+
+Reviewed specs/cpp/cpp/quality-guidelines.md against guideline-authoring spec: all validators green; blessed // Good:// Bad: as encoding 4 (style-only anti-patterns); dropped redundant comment-discipline sentence; added Enumerations default-strength line; folded QUAL-48 third segment into Right; rephrased QUAL-57 annotation. Full gate re-run green; digest unchanged.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `ee05bc2` | (see git log) |
+
+### Status
+
+[OK] **Completed**
