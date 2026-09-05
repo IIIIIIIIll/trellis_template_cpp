@@ -2494,7 +2494,7 @@
   {
     "id": "FN-15",
     "strength": "default",
-    "statement": "std::string_view (C++17; C++14: const std::string&) by value (SL.str.12); Literals and substrings arrive without conversion",
+    "statement": "std::string_view (C++17; C++14: const std::string&) by value (SL.str.2); Literals and substrings arrive without conversion",
     "doc": "functions-and-interfaces.md",
     "detector": "clang-tidy `performance-unnecessary-value-param` catches sinks missing their move; needless `const T&` on scalars is a review item",
     "upstream": []
@@ -2570,7 +2570,7 @@
   {
     "id": "FN-23",
     "strength": "default",
-    "statement": "Read-only text and sequences enter without copying caller data — on C++14 as const std::string& (or const char*) and pointer-plus-size pairs; C++17: std::string_view / std::span<const T> spell the borrow in the type (SL.str.12, F.24).",
+    "statement": "Read-only text and sequences enter without copying caller data — on C++14 as const std::string& (or const char*) and pointer-plus-size pairs; C++17: std::string_view / std::span<const T> spell the borrow in the type (SL.str.2, F.24).",
     "doc": "functions-and-interfaces.md",
     "detector": "ASan flags use-after-free when a stored view outlives its owner; review catches the boundary case earlier",
     "upstream": [

@@ -68,7 +68,7 @@ Caught by: clang-tidy `performance-unnecessary-value-param` catches sinks missin
 |--------------------|------|-----|
 | **FN-13** Scalar or two-word trivial type | By value | Copy beats aliasing machinery |
 | **FN-14** Class instance, read-only | `const T&` | Skips an expensive copy |
-| **FN-15** Text, read-only | `std::string_view` (C++17; C++14: `const std::string&`) by value (`SL.str.12`) | Literals and substrings arrive without conversion |
+| **FN-15** Text, read-only | `std::string_view` (C++17; C++14: `const std::string&`) by value (`SL.str.2`) | Literals and substrings arrive without conversion |
 | **FN-16** Sequence, read-only | `std::span<const T>` (`F.24`; C++20; C++14: `const T*` + size) | One spelling for arrays, vectors, slices |
 | **FN-17** Sink storing the argument | By value, then `std::move` | One copy at the provable last use |
 | **FN-18** Consumed inside generic code | `T&&` plus `std::move` (`F.18`) | Consumption stated explicitly |
@@ -111,7 +111,7 @@ Default strength: default.
 
 Caught by: ASan flags use-after-free when a stored view outlives its owner; review catches the boundary case earlier.
 
-**FN-23.** Read-only text and sequences enter without copying caller data — on C++14 as `const std::string&` (or `const char*`) and pointer-plus-size pairs; **C++17:** `std::string_view` / `std::span<const T>` spell the borrow in the type (`SL.str.12`, `F.24`). A view is a borrow: read it during the call; copy anything kept.
+**FN-23.** Read-only text and sequences enter without copying caller data — on C++14 as `const std::string&` (or `const char*`) and pointer-plus-size pairs; **C++17:** `std::string_view` / `std::span<const T>` spell the borrow in the type (`SL.str.2`, `F.24`). A view is a borrow: read it during the call; copy anything kept.
 
 ```cpp
 // C++17
