@@ -74,8 +74,6 @@ The `Right` class above also demonstrates the conventional member declaration or
 
 **QUAL-13.** Keep comments crisp, grammatical, and professional: verbosity spreads understanding thin, SMS spelling ages badly (`NL.3`).
 
-Purely a review matter — no tool can catch a bad comment.
-
 ### House Style Beyond the Table
 
 - **QUAL-14.** No Hungarian-style type warts (`NL.5`): names describe functionality, and overloading matches types automatically. Role prefixes stay legal (`size_`, `cnt_hits`) because they encode purpose, not type — exactly what the table above permits.
@@ -372,7 +370,7 @@ Registry& registry() {
     return instance;
 }
 
-// Best when expressible: compile-time init removes the question entirely
+// even better when expressible: compile-time init removes the question entirely
 inline constexpr Config kDefaults{/* ... */};
 ```
 
@@ -453,6 +451,8 @@ Review gate: a dependency proposal states what it beats in the standard library 
 
 ## Enumerations
 
+Default strength: default.
+
 Caught by: review — no automated detector.
 
 **QUAL-57 (hard).** Scoped `enum class` everywhere (`Enum.3`): plain enums convert to `int` too readily, and unrelated enumerations collide on shared enumerator names.
@@ -466,7 +466,7 @@ int x = RED;
 // Right: scoped, quiet names, no implicit conversion
 enum class Color { kRed, kGreen };
 Color c = Color::kRed;
-// int x = Color::kRed;   // does not compile
+// int x = Color::kRed;   // rejected: no implicit conversion to int
 ```
 
 Enumerators take constant naming — `k` prefix, `PascalCase` — never `ALL_CAPS`, which stays reserved for macros (`Enum.5`; see the scoped-enum row in the naming table).

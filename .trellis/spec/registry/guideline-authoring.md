@@ -75,15 +75,21 @@ Caught by: `cppcoreguidelines-pro-type-cstyle-cast`
   own line inherits the nearest preceding `Caught by:` line within the same
   section; a section-level line covers every rule below it that lacks its
   own.
-- **Wrong/Right encodings** — all three are valid; pairing is judged per rule
+- **Wrong/Right encodings** — all four are valid; pairing is judged per rule
   block, exactly one Wrong and one Right per example group:
   1. one fence holding both, split by `// Wrong:` / `// Right:` comments;
   2. two fences, each opening with its comment;
-  3. two fences under prose lead lines (`**Wrong**` / `**Right**`).
+  3. two fences under prose lead lines (`**Wrong**` / `**Right**`);
+  4. one fence labeled `// Good:` / `// Bad:` (several Good segments may
+     share one Bad) — reserved for style-only anti-patterns.
 
   Wrong examples that compile but misbehave at runtime carry the
   `// compiles; UB at runtime` marker; Wrong examples whose point is a failed
-  compilation carry `// compile-error` on the offending construct.
+  compilation carry `// compile-error` on the offending construct. Every
+  Wrong block must declare a mechanical class — a style-only anti-pattern
+  (compiles, misbehaves at no runtime, fails no tool) has none to declare,
+  which is why it takes encoding 4 instead of `// Wrong:`
+  (`check_snippets.py` treats Good/Bad fences as clean/illustrative).
 - **Dialect markers**: a fence naming a C++17-or-later symbol or syntax
   (`std::string_view`, `std::optional`, `if constexpr`, `[[nodiscard]]`,
   structured bindings) keeps that spelling and opens with a `// C++17`
