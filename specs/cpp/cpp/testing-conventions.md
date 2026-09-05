@@ -57,12 +57,11 @@ A test that exists but is not registered does not exist — nothing ever execute
 
 ```cpp
 // C++17
-// compiles; UB at runtime
-// Wrong: unregistered "temporary" test living in src/, still there two years later
+// Bad: unregistered "temporary" test living in src/, still there two years later
 // src/net/http/manual_check.cpp
 int main() { assert(parse("") == nullopt); }
 
-// Right: registered suite next to its siblings
+// Good: registered suite next to its siblings
 // tests/net/http/parser.test.cpp
 TEST(HttpParser, Test_Parse_EmptyInput_ReturnsError) { /* ... */ }
 ```
@@ -88,8 +87,8 @@ The name must read as a sentence describing the contract, so a red test communic
 
 ```cpp
 // Good
-TEST(HttpParser, Test_Parse_TruncatedHeader_ReturnsTruncatedError);
-TEST(RingBuffer, Test_Push_AtCapacity_DropsOldest);
+TEST(HttpParser, Test_Parse_TruncatedHeader_ReturnsTruncatedError) { /* ... */ }
+TEST(RingBuffer, Test_Push_AtCapacity_DropsOldest) { /* ... */ }
 
 // Bad: tells you nothing when red
 TEST(HttpParser, Test1);
@@ -108,10 +107,12 @@ Caught by: review — no automated detector.
 | Principle | Meaning here |
 |-----------|--------------|
 | **TEST-7** Fast | Whole unit suite finishes in seconds; any test over ~100 ms belongs in the integration tier — the budget is declared on the default **ASan + UBSan** run, so the ~2x sanitizer cost is inside it (the plain build is roughly half the cost, which only helps) |
-| **TEST-8** Isolated | No ordering dependence, no shared mutable globals; every test runs alone via `--gtest_filter`, and the suite passes `--gtest_shuffle --gtest_repeat=2` (or the framework's equivalent shuffle mode) — passing alone verifies independence, only shuffling exposes order dependence. Caught by: the `--gtest_shuffle --gtest_repeat=2` gate (or the framework's equivalent shuffle mode). |
+| **TEST-8** Isolated | No ordering dependence, no shared mutable globals; every test runs alone via `--gtest_filter`, and the suite passes `--gtest_shuffle --gtest_repeat=2` (or the framework's equivalent shuffle mode). Caught by: the `--gtest_shuffle --gtest_repeat=2` gate (or the framework's equivalent shuffle mode). |
 | **TEST-9** Repeatable | Same verdict on every machine and run: no wall-clock reads, sleeps, network, or unseeded randomness |
 | **TEST-10** Self-validating | Assertions decide pass/fail; a test requiring human inspection of output is not a test |
 | **TEST-11 (default)** Timely | Written with the change it protects, not scheduled "later" |
+
+TEST-8's gate is the point: passing alone verifies independence; only shuffling exposes order dependence.
 
 **TEST-12.** **Integration tier.** Anything over the 100 ms gate — process spawns, network or filesystem fixtures, end-to-end runs — goes to a separate integration suite: its own binary or tag, excluded from the fast default pass, so the everyday gate stays in seconds. Same FIRST rules apply; only the run schedule differs.
 
@@ -186,10 +187,26 @@ EXPECT_EQ(parser.parse("GET /\r\n").error(), ParseErr::kIncomplete);
 
 // Bad: mirrors implementation steps; breaks on any refactor that preserves behavior
 EXPECT_CALL(mock_internal_scanner, scan_token_times(3));
-EXPECT_EQ(parser.state_, State::kHeaderDone);     // private member poking
 ```
 
 **TEST-23.** White-box access to privates — `friend class ...Test`, `#define private public`, testing free functions that exist only to serve internals — is forbidden. If a private piece is complex enough to need direct tests, it wants to be extracted behind its own interface and tested through it.
+
+```cpp
+// Wrong: white-box access to a private member
+class Parser {
+public:
+    void parse(const char* raw);
+private:
+    State state_ = State::kHeaderDone;
+};
+TEST(HttpParser, Test_Parse_SetsHeaderState) {
+    Parser p;
+    EXPECT_EQ(p.state_, State::kHeaderDone);   // compile-error: `state_` is private
+}
+
+// Right: the complex piece extracted; its own suite pins behavior through the interface
+TEST(HeaderScanner, Test_Scan_TruncatedHeader_ReturnsTruncatedError) { /* ... */ }
+```
 
 Caught by: the compiler for direct private-member access; review for `friend` and macro end-runs.
 

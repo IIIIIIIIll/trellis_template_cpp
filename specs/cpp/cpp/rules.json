@@ -4876,7 +4876,7 @@
   {
     "id": "TEST-8",
     "strength": "hard",
-    "statement": "No ordering dependence, no shared mutable globals; every test runs alone via --gtest_filter, and the suite passes --gtest_shuffle --gtest_repeat=2 (or the framework's equivalent shuffle mode) — passing alone verifies independence, only shuffling exposes order dependence.",
+    "statement": "No ordering dependence, no shared mutable globals; every test runs alone via --gtest_filter, and the suite passes --gtest_shuffle --gtest_repeat=2 (or the framework's equivalent shuffle mode).",
     "doc": "testing-conventions.md",
     "detector": "the `--gtest_shuffle --gtest_repeat=2` gate (or the framework's equivalent shuffle mode)",
     "upstream": []
