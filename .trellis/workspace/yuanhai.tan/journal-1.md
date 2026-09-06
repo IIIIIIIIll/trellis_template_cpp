@@ -117,3 +117,25 @@ Review-fix pass over specs/cpp/cpp/expressions-and-flow.md: gave EXPR-26 its own
 ### Status
 
 [OK] **Completed**
+
+
+## Session 6: Phase-oriented restructuring of cpp guidelines
+
+**Date**: 2026-09-06
+**Task**: Phase-oriented restructuring of cpp guidelines
+**Branch**: `main`
+
+### Summary
+
+Restructured specs/cpp/cpp from 12 flat docs to 19 phase-organized files: 14 topic guides filed one-phase-each under design/, implement/, verification/ (ERR, MEM, QUAL split at self-contained seams; ERR/MEM/QUAL prefix rows now span 2/2/3 docs), three zero-rule phase routers, index + disposition unmoved. Every content doc carries description+paths frontmatter for spec_match injection (consumer-sim: 18 docs selected, index excluded). Tools rebound: rglob walkers in validate/extract/check_snippets, DOC_PREFIX/PREFIX_ALLOCATION map (review caught it silently disabling prefix+footer checks on 7 split docs), exempt routers in rules_grammar, stub labels. rules.json regenerated: 539 rules, ID set byte-identical to HEAD. Sync surfaces updated (index tables, both READMEs, USAGE orphan-cleanup wording, disposition retargets, registry/index counts). Lessons captured into guideline-authoring.md: frontmatter contract, blind-validator warning, tool-binding sync obligations. Verified by three trellis-check agents; final gates: validate 14/0, digest deterministic, snippets 122 blocks 0 violations, links clean. cb624ae = user's static_assert message fix absorbed on the way.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `a5514b2` | (see git log) |
+| `cb624ae` | (see git log) |
+
+### Status
+
+[OK] **Completed**

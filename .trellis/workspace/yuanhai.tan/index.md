@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 5
+- **Total Sessions**: 6
 - **Last Active**: 2026-09-06
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~119 | Active |
+| `journal-1.md` | ~141 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 6 | 2026-09-06 | Phase-oriented restructuring of cpp guidelines | `a5514b2`, `cb624ae` | `main` |
 | 5 | 2026-09-06 | Fix expressions-and-flow review findings | `16469ca` | `main` |
 | 4 | 2026-09-05 | Quality-guidelines review fixes | `ee05bc2` | `main` |
 | 3 | 2026-09-01 | Lower C++ guideline baseline to C++14 | `7b9c7be`, `634902d`, `8c95c10` | `main` |
