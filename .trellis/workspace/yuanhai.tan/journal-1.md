@@ -96,3 +96,24 @@ Reviewed specs/cpp/cpp/quality-guidelines.md against guideline-authoring spec: a
 ### Status
 
 [OK] **Completed**
+
+
+## Session 5: Fix expressions-and-flow review findings
+
+**Date**: 2026-09-06
+**Task**: Fix expressions-and-flow review findings
+**Branch**: `main`
+
+### Summary
+
+Review-fix pass over specs/cpp/cpp/expressions-and-flow.md: gave EXPR-26 its own Caught-by line (digest had paired it with EXPR-25's modernize-use-nullptr), marked EXPR-40's [[fallthrough]] as a C++17 upgrade over the C++14 comment spelling, made EXPR-3's Wrong exhibit the UB it claims, re-encoded the style-only EXPR-10/16/37 examples as Good/Bad fences with per-half names, fixed ES.74/ES.41/EXPR-26/EXPR-42 citation precision, moved EXPR-27's 240-char inline comment into preceding lines, and regenerated rules.json. Added a caught-by inheritance gotcha to the registry authoring spec. All gates green: validate_rules 10 docs 0 violations, check_snippets 122 blocks 0 violations, digest byte-identical; trellis-check PASS.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `16469ca` | (see git log) |
+
+### Status
+
+[OK] **Completed**
