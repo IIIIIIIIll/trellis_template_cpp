@@ -79,6 +79,7 @@ Defaults:
 - **PERF-11.** Building text appends into one reserved buffer; chained `+` in a loop is forbidden.
 
 ```cpp
+// PERF-11: one reserved buffer, appends only
 // compiles; UB at runtime
 // Wrong: O(log n) reallocations, each copying everything accumulated so far
 std::string report;
@@ -124,6 +125,7 @@ Three rules:
 - **PERF-16.** A moved-from object is destructible and assignable; everything else about its state is unspecified. Never read one expecting its old value.
 
 ```cpp
+// PERF-15: move the non-const source once finished
 // compiles; UB at runtime
 // Wrong: moving a const source silently falls back to a copy
 void store(const std::string& name) {
@@ -164,6 +166,7 @@ The signature policy itself is owned by [Functions and Interfaces](./functions-a
 
 ```cpp
 // C++17
+// PERF-18: read-only text arrives as string_view
 // compiles; UB at runtime
 // Wrong: every caller holding a literal or a slice pays for a std::string
 Host parse_host(const std::string& url);
@@ -197,6 +200,7 @@ Caught by: review — no automated detector.
 
 ```cpp
 // C++17
+// PERF-23: constexpr table built at compile time
 // compiles; UB at runtime
 // Wrong when the table could be constexpr: the static is thread-safe and free
 // of init-order questions, but first use pays the build and every access pays a guard check
@@ -230,6 +234,7 @@ Data layout decides whether the memory subsystem feeds the CPU or starves it:
   Caught by: `perf c2c` or cache-miss profiling — the program stays correct, so TSan reports nothing.
 
 ```cpp
+// PERF-25: largest-first ordering closes padding holes
 // compiles; UB at runtime
 // Wrong: flags interleaved between doubles widen the struct with padding
 struct Particle {

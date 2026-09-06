@@ -42,6 +42,7 @@ Right:
 
 ```cpp
 // C++17
+// MEM-1: destructor releases the owned file
 bool read_config(std::string_view path) {
     std::ifstream f{std::string(path)};
     if (!parse(f)) return false;      // destructor closes
@@ -126,6 +127,7 @@ Right:
 
 ```cpp
 // C++17
+// MEM-24: by-value sink moves into storage
 class Parser {
 public:
     // Sink: takes its copy exactly once, moves into place.
@@ -204,6 +206,7 @@ The same trap with a temporary:
 
 ```cpp
 // C++17
+// MEM-38: keep the owner instead of viewing a temporary
 // compiles; UB at runtime
 // Wrong: make_name returns std::string by value; the view dangles immediately
 std::string_view sv = make_name();

@@ -1023,10 +1023,13 @@
   {
     "id": "CONC-10",
     "strength": "hard",
-    "statement": "A running thread is a resource like a file descriptor: someone must own it and wait for its completion exactly once.",
+    "statement": "A running thread is a resource like a file descriptor: someone must own it and wait for its completion exactly once — the join behaves like a destructor: automatic, unconditional, exception-safe (CP.23), delivered by a joining abstraction rather than bare std::thread (CP.25).",
     "doc": "concurrency.md",
     "detector": "review for `detach()` and unjoined `std::thread`; TSan flags races caused by threads outliving their data",
-    "upstream": []
+    "upstream": [
+      "CP.23",
+      "CP.25"
+    ]
   },
   {
     "id": "CONC-11",
@@ -1035,17 +1038,6 @@
     "doc": "concurrency.md",
     "detector": "review for `detach()` and unjoined `std::thread`; TSan flags races caused by threads outliving their data",
     "upstream": []
-  },
-  {
-    "id": "CONC-12",
-    "strength": "hard",
-    "statement": "The guideline phrasing that joins should behave like destructors — automatic, unconditional, exception-safe (CP.23) — and the preference for a joining thread abstraction over bare std::thread (CP.25) land on std::jthread in C++20 code.",
-    "doc": "concurrency.md",
-    "detector": "review for `detach()` and unjoined `std::thread`; TSan flags races caused by threads outliving their data",
-    "upstream": [
-      "CP.23",
-      "CP.25"
-    ]
   },
   {
     "id": "CONC-13",

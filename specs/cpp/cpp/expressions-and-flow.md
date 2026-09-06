@@ -64,6 +64,7 @@ Status process(const Request& req) {
 **Right**
 
 ```cpp
+// EXPR-3: every object is born holding its value
 Status process(const Request& req) {
     if (!authorize(req)) {
         return Status::Denied;
@@ -97,6 +98,7 @@ Caught by: review — no automated detector.
 Caught by: `-Wshadow`.
 
 ```cpp
+// EXPR-10: inner scope renames instead of shadowing
 // compiles; UB at runtime
 // Wrong: the inner count hides the outer one -- which count reaches the log?
 std::size_t count = pending();
@@ -128,6 +130,7 @@ Naming conventions themselves — length by scope (`ES.7`), confusable look-alik
 Caught by: the narrowing error the `{}` form raises at compile time; `-Wconversion` for `=`-initialized conversions the discipline misses.
 
 ```cpp
+// EXPR-12: brace init turns narrowing into a compile error
 // Wrong: compiles, loses data
 int samples = collect();
 uint8_t quantized = samples;        // silent truncation
@@ -166,6 +169,7 @@ private:
 ```
 
 ```cpp
+// EXPR-14: initializer list mirrors declaration order
 // Right: members declared in dependency order; the list mirrors that order
 class Window {
 public:
@@ -204,6 +208,7 @@ Caught by: review — no automated detector.
 | Lambda parameters and expression templates nobody could spell | Conversions you want checked — `auto` hides truncation |
 
 ```cpp
+// EXPR-16: spell the type when it is the contract
 // compiles; UB at runtime
 // Wrong: the reader must resolve the whole call chain to know what `r` is
 auto r = service.rate(id);
@@ -237,6 +242,7 @@ Caught by: review — no automated detector.
 Caught by: clang-tidy `cppcoreguidelines-pro-type-cstyle-cast`.
 
 ```cpp
+// EXPR-23: C-style casts forbidden; fix the const contract
 // compiles; UB at runtime
 // Wrong: what does this even do? (strips const AND mutates -- UB if the object is truly const)
 void tick(const Frame* frame) {
@@ -283,6 +289,7 @@ Caught by: the sign-comparison and sign-conversion warnings enabled by default i
 **EXPR-27 (hard).** An expression commits to one signedness and keeps it (`ES.100`): signed types do arithmetic (`ES.102`), unsigned types do bit manipulation (`ES.101`). The classic failure is choosing unsigned "because counts are never negative" (`ES.106`):
 
 ```cpp
+// EXPR-27: reverse iterators instead of unsigned countdown
 // compiles; UB at runtime
 // Wrong: unsigned wraps instead of going negative
 std::vector<Item> pending = remaining();
@@ -339,6 +346,7 @@ Caught by: review — no automated detector.
 **EXPR-37.** Functions read top-down: guard clauses first, main path last. Early returns are the default; single-exit is not a goal — one extra `return` that removes three indent levels is a win. The real budget is nesting depth: past two levels of compound conditionals, extract named predicates and delete cleverness.
 
 ```cpp
+// EXPR-37: guard clauses first, main path last
 // compiles; UB at runtime
 // Wrong: the happy path is buried; every branch doubles the state space
 bool submit(const Order& order) {
@@ -386,6 +394,7 @@ Loop and branch rules:
 - **EXPR-45 (hard).** Range-for extends only the final range expression's temporary to the loop: a direct value-returning init such as `make_rows()` is safe, but in a chained init like `connection_pool().acquire().rows()` the intermediate temporaries die at the end of the full-expression, leaving the extended range viewing destroyed owners — own the outer object. (C++23 extends every temporary in the range-init and closes this trap; pre-C++23 dialects do not.) The invalidation table lives in [Memory and Ownership](./memory-and-ownership.md).
 
 ```cpp
+// EXPR-45: own the outer object of a chained range-init
 // compiles; UB at runtime
 // Wrong: only the final range expression is lifetime-extended -- the pool and
 // connection temporaries die at the end of the full-expression, so rows() views dead owners

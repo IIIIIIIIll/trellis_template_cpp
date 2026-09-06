@@ -57,6 +57,7 @@ A test that exists but is not registered does not exist — nothing ever execute
 
 ```cpp
 // C++17
+// TEST-3: every test file registered with the runner
 // Bad: unregistered "temporary" test living in src/, still there two years later
 // src/net/http/manual_check.cpp
 int main() { assert(parse("") == nullopt); }
@@ -86,6 +87,7 @@ The name must read as a sentence describing the contract, so a red test communic
 **TEST-6.** Deviation-style caveat on underscores in the `TEST` arguments: GoogleTest documents that underscores there can generate colliding fixture classes — `TEST(Time, Flies_Like_An_Arrow)` and `TEST(Time_Flies, Like_An_Arrow)` both expand to a class named `Time_Flies_Like_An_Arrow` — and may break across gTest versions. The grammar above stays; the mitigation is structural: keep the `<Suite>` argument underscore-free, so an underscore can never blur the suite boundary.
 
 ```cpp
+// TEST-5: names read as sentences describing the contract
 // Good
 TEST(HttpParser, Test_Parse_TruncatedHeader_ReturnsTruncatedError) { /* ... */ }
 TEST(RingBuffer, Test_Push_AtCapacity_DropsOldest) { /* ... */ }
@@ -124,6 +126,7 @@ Determinism mechanics:
 
 ```cpp
 // C++17
+// TEST-15: advance the injected clock instead of sleeping
 // compiles; UB at runtime
 // Wrong: flaky by construction
 TEST(Cache, Test_Expiry_EntriesVanish) {
@@ -181,6 +184,7 @@ Caught by: review — no automated detector.
 
 ```cpp
 // C++17
+// TEST-19: assert the public contract through public API
 // Good: contract-level assertions
 EXPECT_EQ(router.route("/users/42").handler(), &handle_user);
 EXPECT_EQ(parser.parse("GET /\r\n").error(), ParseErr::kIncomplete);
@@ -192,6 +196,7 @@ EXPECT_CALL(mock_internal_scanner, scan_token_times(3));
 **TEST-23.** White-box access to privates — `friend class ...Test`, `#define private public`, testing free functions that exist only to serve internals — is forbidden. If a private piece is complex enough to need direct tests, it wants to be extracted behind its own interface and tested through it.
 
 ```cpp
+// TEST-23: extracted piece tested through its own interface
 // Wrong: white-box access to a private member
 class Parser {
 public:
@@ -232,6 +237,7 @@ Caught by: review — no automated detector.
 - **TEST-28.** No cross-test data files with hidden coupling; each test constructs the inputs it needs.
 
 ```cpp
+// TEST-25: fresh fixture state instead of shared globals
 // compiles; UB at runtime
 // Right: fresh state per test, deterministic seed
 class RingBufferTest : public ::testing::Test {
@@ -271,6 +277,7 @@ Skip these; they cost review time and rot without catching defects:
 
 ```cpp
 // C++17
+// TEST-30: test the adapter seam, not the vendor
 // Bad: tests the compiler, not the design
 TEST(Name, Test_Name_GetterReturnsName) {
     User u{"ada"};

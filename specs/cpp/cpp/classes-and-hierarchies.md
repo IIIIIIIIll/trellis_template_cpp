@@ -40,6 +40,7 @@ Caught by: review; over-design surfaces later as maintenance drag, not as warnin
 
 ```cpp
 // C++17
+// CLS-7: closed variation uses a tag, not a hierarchy
 // compiles; UB at runtime
 // Wrong: a hierarchy for a closed set of two — vtables, heap copies, clone plumbing.
 class Shape { public: virtual ~Shape() = default; virtual double area() const = 0; };
@@ -91,6 +92,7 @@ Caught by: review — no automated detector.
 **CLS-22.** `using Rec::Rec;` imports constructors into a derived class adding no data of its own, instead of reimplementing tricky ones — but every derived member still needs an initializer, or the inherited constructor silently leaves it unconstructed (`C.52`).
 
 ```cpp
+// CLS-15: constructor delivers a fully initialized object
 // compiles; UB at runtime
 // Wrong: two-stage construction; users forget initialize(), and the object
 // spends its life half-built.
@@ -116,6 +118,7 @@ Caught by: clang-tidy `cppcoreguidelines-special-member-functions`; review for h
 **CLS-25.** A type managing no resources by hand declares **none** of the five special members (`C.21` — the stance its rationale calls the Rule of Zero). RAII members and in-class initializers supply correct copy, move, and destruction semantics for free.
 
 ```cpp
+// CLS-25: Rule of Zero declares no special members
 // compiles; UB at runtime
 // Wrong: members written to do exactly what the compiler would have done.
 class Settings {
@@ -210,6 +213,7 @@ Caught by: clang-tidy `cppcoreguidelines-special-member-functions`; `-Wdeprecate
 **CLS-35.** Want behavior not to exist? `=delete` — on any function, not just special members (`C.81`).
 
 ```cpp
+// CLS-36: decide all five special members together
 // compiles; UB at runtime
 // Wrong: deleted copy silently suppresses move too — SessionBad is immovable,
 // and nothing in this header says so.
@@ -302,6 +306,7 @@ Caught by: clang-tidy `cppcoreguidelines-virtual-class-destructor`; ASan reports
 | **CLS-58** Mixin, never deleted through base pointer | `protected`, non-virtual | `=delete` |
 
 ```cpp
+// CLS-57: interface base deletes copies, public virtual destructor
 // compiles; UB at runtime
 struct Base {
     ~Base();                          // Wrong: public, non-virtual
@@ -346,6 +351,7 @@ Caught by: review — no automated detector.
 
 ```cpp
 // C++17
+// CLS-64: flatten helper-only base into free functions
 // compiles; UB at runtime
 // Wrong: three layers whose only job is sharing format_timestamp().
 class Logger {
@@ -424,6 +430,7 @@ Caught by: review — no automated detector.
 
 ```cpp
 // C++17
+// CLS-79: guard invariants behind methods, never protected fields
 // compiles; UB at runtime
 class RingBuffer {
 protected:
@@ -459,6 +466,7 @@ Caught by: review — no automated detector.
 **CLS-80.** Seal classes whose hierarchy is deliberately closed (`C.128`): reviewers get warned before extending what was designed shut, and the compiler may de-virtualize hot calls.
 
 ```cpp
+// CLS-80: seal deliberately closed hierarchies with final
 // compiles; UB at runtime
 class HttpTransport : public Transport {};   // Wrong: open by omission — subclasses can
                                              // later bypass the timeout invariants
@@ -481,6 +489,7 @@ Caught by: review — no automated detector.
 
 ```cpp
 // C++17
+// CLS-84: symmetric operators are non-members found by ADL
 // compiles; UB at runtime
 // Wrong: member == converts the right side only — p == "p" compiles,
 // "p" == p does not; symmetry silently depends on operand order.

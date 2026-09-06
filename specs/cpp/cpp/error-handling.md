@@ -51,6 +51,7 @@ The cost shape justifies the split: a non-throwing path is effectively free unde
 
 ```cpp
 // C++17
+// ERR-7: exceptions never carry ordinary control flow
 // compiles; UB at runtime
 // Wrong: exceptions for ordinary control flow
 Item find(const Map& m, Key k) {
@@ -68,6 +69,7 @@ std::optional<Item> find(const Map& m, Key k) { return m.lookup(k); }
 **ERR-8.** Never validate external input with `assert`: under `NDEBUG` the check vanishes and malformed input walks straight into memory-unsafe code.
 
 ```cpp
+// ERR-8: assert internal invariants, never external input
 // compiles; UB at runtime
 // Wrong: error codes for genuine invariants
 int slot = table_index(key);        // returns -1 on "impossible" state
@@ -100,6 +102,7 @@ Default strength: hard.
 **ERR-12.** A constructor either establishes the class invariant or throws (`E.5`); there are no half-built objects callers must remember to check. The class-design side of invariant discipline lives in [Classes and Hierarchies](./classes-and-hierarchies.md).
 
 ```cpp
+// ERR-12: constructor establishes the invariant or throws
 // compiles; UB at runtime
 // Wrong: a half-built object the caller must remember to check
 Session s;
@@ -189,6 +192,7 @@ Default strength: hard.
 **ERR-18.** Throw temporaries, catch by `const&` (`E.15`). Catching by value slices derived types down to the handler's static type; catching by pointer invites lifetime questions and leaks. Rethrow with bare `throw;` so the original dynamic type survives — `throw e;` slices.
 
 ```cpp
+// ERR-18: catch by const reference avoids slicing
 // compiles; UB at runtime
 // Wrong: slicing — handler sees only ValidationError, loses SqlError fields
 try {
@@ -210,6 +214,7 @@ try {
 The pointer form:
 
 ```cpp
+// ERR-18: catch by reference, never by pointer
 // compiles; UB at runtime
 // Wrong: pointer ownership ambiguity
 try {
@@ -260,6 +265,7 @@ Caught by: clang-tidy `performance-noexcept-move` (moves and swap); review elsew
 **ERR-29.** Types stored in containers must have `noexcept` move operations. `std::vector` growth moves elements only when the move constructor is `noexcept`; otherwise it falls back to copying — a silent, per-type performance cliff.
 
 ```cpp
+// ERR-29: mark move operations noexcept for reallocation
 // compiles; UB at runtime
 // Wrong: vector<Buffer> will COPY on reallocation
 class Buffer {
@@ -311,6 +317,7 @@ Default strength: hard.
 **ERR-38.** Before marking, walk the callee tree mentally: a `noexcept` function that calls one logging helper that allocates is a latent crash. If unsure, leave it off — correctness first, then measure.
 
 ```cpp
+// ERR-38: reserve noexcept for functions that cannot throw
 // compiles; UB at runtime
 // Wrong: terminate() at runtime — push_back can throw bad_alloc
 std::vector<int> snapshot() noexcept {          // NO
@@ -420,6 +427,7 @@ try {
 **ERR-47 (hard).** Logging *and then* swallowing is forbidden: it reports failure to whoever reads logs while telling the caller (via return value) that everything succeeded.
 
 ```cpp
+// ERR-47: handle failures, never log and swallow
 // compiles; UB at runtime
 // Wrong: log-and-swallow — caller sees success, ops sees a scary line
 try {
@@ -445,6 +453,7 @@ try {
 **ERR-51 (hard).** Use bare `throw;` to rethrow; `throw_with_nested` (not manual nested-type conventions) to wrap.
 
 ```cpp
+// ERR-51: bare throw rethrows, throw_with_nested wraps
 // compiles; UB at runtime
 // Wrong: rethrow by value — slices and loses the derived type
 try {

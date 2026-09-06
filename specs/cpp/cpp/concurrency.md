@@ -62,11 +62,13 @@ private:
 Right:
 
 ```cpp
+// C++17: CTAD on lock_guard (C++14: std::lock_guard<std::mutex>)
+// CONC-6: all access crosses the mutex; readers get immutable snapshots
 // The mutex is part of the type's contract: all access goes through it.
 class SessionCache {
 public:
     std::shared_ptr<const Session> get(int id) {
-        std::lock_guard lock(mutex_);          // C++17 CTAD; C++14: std::lock_guard<std::mutex>
+        std::lock_guard lock(mutex_);
         return lookup_locked(id);              // returns an immutable snapshot
     }
 private:
@@ -89,7 +91,7 @@ Notes:
 
 Default strength: hard.
 
-**CONC-10.** A running thread is a resource like a file descriptor: someone must own it and wait for its completion exactly once.
+**CONC-10.** A running thread is a resource like a file descriptor: someone must own it and wait for its completion exactly once — the join behaves like a destructor: automatic, unconditional, exception-safe (`CP.23`), delivered by a joining abstraction rather than bare `std::thread` (`CP.25`).
 
 Caught by: review for `detach()` and unjoined `std::thread`; TSan flags races caused by threads outliving their data.
 
@@ -99,12 +101,6 @@ Caught by: review for `detach()` and unjoined `std::thread`; TSan flags races ca
 | `std::thread` | Allowed with care | Must be joined (or moved into a pool/jthread wrapper) before every scope exit |
 | `detach()` | Forbidden in application code | Detached threads outlive every guard, logger, and config object they touch |
 | **CONC-11** Raw handles from third-party runtimes | Quarantined | Wrap immediately in an owning RAII adapter |
-
-**CONC-12.** The guideline phrasing that joins should behave like destructors — automatic, unconditional, exception-safe (`CP.23`) — and the preference for a joining thread abstraction over bare `std::thread` (`CP.25`) land on `std::jthread` in C++20 code.
-
-**CONC-13.** Never detach (`CP.26`).
-
-**CONC-14.** Think of a thread as a global container (`CP.24`): anything reachable from it must provably outlive every possible use, and a thread that might detach is assumed to outlive its constructing scope — including racing static-object teardown at program exit. The detach ban and joining owners subsume most of the risk, yet the framing stays load-bearing for third-party runtimes, which the table above quarantines behind owning RAII adapters.
 
 Wrong:
 
@@ -121,6 +117,7 @@ Right:
 
 ```cpp
 // C++20: jthread + stop_token cancellation
+// CONC-10: the joining owner joins itself at scope exit and cancels cooperatively
 #include <thread>
 
 void poll_device(std::stop_token stop, Device& dev) {
@@ -135,6 +132,10 @@ void start_polling(Device& dev) {
     request_shutdown(worker.get_stop_token());         // cancellation is cooperative
 }
 ```
+
+**CONC-13.** Never detach (`CP.26`).
+
+**CONC-14.** Think of a thread as a global container (`CP.24`): anything reachable from it must provably outlive every possible use, and a thread that might detach is assumed to outlive its constructing scope — including racing static-object teardown at program exit. The detach ban and joining owners subsume most of the risk, yet the framing stays load-bearing for third-party runtimes, which the table above quarantines behind owning RAII adapters.
 
 **CONC-15.** Wrap `std::thread` in a small joining-thread class whose destructor calls `join()` unless already joined; do not sprinkle `join()` calls through control flow — the early-return branch is how terminates happen.
 
@@ -161,9 +162,16 @@ Rules:
 - **CONC-18 (hard).** Define each mutex next to the data it guards, with names that pair visibly (`state_` / `stateMutex_`) (`CP.50`). A mutex guarding three distant fields is a distributed invariant waiting to break.
 - **CONC-19 (hard).** Name every guard (`CP.44`). The brace spelling compiles, runs, and protects nothing — an unnamed temporary that destroys the lock at the end of the statement. The paren spelling of the same line is not the safer alternative: it is a most-vexing-parse declaration of a default-initialized guard, and `std::lock_guard` has no default constructor, so it fails to compile. The silent sibling is the paren spelling of `unique_lock`, which *is* default-constructible:
    ```cpp
-   std::lock_guard<std::mutex>{queueMutex_};         // WRONG: unnamed temporary, destroyed at end of statement
-   std::unique_lock<std::mutex>(m1);                 // WRONG: vexing parse — default-constructed local named `m1`, never locks
-   std::lock_guard<std::mutex> guard(queueMutex_);   // RIGHT: named, lives to scope end
+   // CONC-19: guards must be named; both wrong spellings compile and protect nothing
+   // Wrong: unnamed temporary (brace) and a most-vexing-parse declaration of a
+   // default-constructed local named m1 (paren of unique_lock) — neither locks.
+   // compiles; UB at runtime
+   void enqueue(std::mutex& queueMutex_) {
+       std::lock_guard<std::mutex>{queueMutex_};
+       std::unique_lock<std::mutex>(m1);
+       // Right: named guard lives to scope end.
+       std::lock_guard<std::mutex> guard(queueMutex_);
+   }
    ```
 - **CONC-20 (default).** Hold locks for the shortest region that keeps the invariant (`CP.43`): copy what you need out under the lock, then work on the copy. I/O, allocation-heavy formatting, and logging stay outside critical sections.
 - **CONC-21 (hard).** Never call unknown code while holding a lock (`CP.22`) — callbacks, virtual functions on overridable interfaces, `std::function` parameters, anything that can re-enter. The callee that takes another lock (or the same one) deadlocks; the callee that runs long serializes the whole system. Copy inputs out, release, then invoke.
@@ -185,6 +193,7 @@ void broadcast(const Event& ev, const std::vector<Listener*>& listeners) {
 Right:
 
 ```cpp
+// CONC-21: copy under the lock, release, then invoke unknown code
 void broadcast(const Event& ev, const std::vector<Listener*>& listeners) {
     std::vector<Listener*> snapshot;
     {
@@ -235,6 +244,7 @@ while (!ready) {}                       // spin the CPU at 100%
 Right:
 
 ```cpp
+// CONC-26: atomics for single flags and counters; relaxed ordering only for statistics
 #include <atomic>
 
 std::atomic<bool> ready{false};

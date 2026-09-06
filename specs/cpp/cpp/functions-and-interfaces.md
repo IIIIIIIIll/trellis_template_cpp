@@ -37,6 +37,7 @@ Caught by: review — hidden `inout` behavior has no dependable static check; th
 
 ```cpp
 // C++17
+// FN-1: parameter roles readable from the signature
 // compiles; UB at runtime
 // Wrong: three behaviors behind one signature; every call site is a guess.
 void process(std::string text, std::vector<int>& items, Stats& stats);
@@ -89,6 +90,7 @@ double apply(const double rate);  // reference-to-scalar: pure indirection
 Right:
 
 ```cpp
+// FN-17: sink takes by value, then moves
 void add_user(User u) {           // sink: one copy, moved into place
     users_.push_back(std::move(u));
 }
@@ -115,6 +117,7 @@ Caught by: ASan flags use-after-free when a stored view outlives its owner; revi
 
 ```cpp
 // C++17
+// FN-23: views borrow text instead of copying
 #include "result.h"
 
 // compiles; UB at runtime
@@ -126,6 +129,7 @@ Arrays never arrive as a bare decayed pointer — size travels with the elements
 
 ```cpp
 // C++20: std::span
+// FN-23: span carries length with the bytes
 // compiles; UB at runtime
 void checksum(const uint8_t* data, size_t len);   // Wrong: pointer and length drift apart
 void checksum(std::span<const uint8_t> data); // Right: length travels with the bytes
@@ -135,6 +139,7 @@ void checksum(std::span<const uint8_t> data); // Right: length travels with the 
 
 ```cpp
 // C++17
+// FN-24: boundary storage re-owns borrowed views
 // compiles; UB at runtime
 class Cache {                                 // Wrong: stored view dangles when caller dies
 public:
@@ -177,6 +182,7 @@ std::vector<Token> tokenize(std::string_view src) {
 
 ```cpp
 // C++17
+// FN-26: return the local; NRVO builds in place
 std::vector<Token> tokenize(std::string_view src) {
     std::vector<Token> out;
     // ...
@@ -197,6 +203,7 @@ std::string_view trim_prefix(std::string_view s) {
 
 ```cpp
 // C++17
+// FN-27: return a view into caller memory
 std::string_view trim_prefix(std::string_view s) {
     return s.substr(PREFIX_LEN);  // Right: view into the caller's argument, which outlives the call
 }
@@ -208,6 +215,7 @@ std::string_view trim_prefix(std::string_view s) {
 
 ```cpp
 // C++17
+// FN-29: multiple results travel as a struct
 // compiles; UB at runtime
 void parse(std::string_view src, AST& ast, size_t& consumed);   // Wrong: results stacked as out-params
 
@@ -225,6 +233,7 @@ Amount& ledger_total(Ledger& l);  // Fine: referent is a member that outlives th
 - **FN-31.** Assignment operators assign and return non-`const` `*this`, as the ints do and the standard library does; the historical `const T&` advice solved a problem nobody had (`F.47`).
 
 ```cpp
+// FN-31: assignment returns non-const *this
 // compiles; UB at runtime
 class BufferBad {
 public:
@@ -240,6 +249,7 @@ public:
 - **FN-32.** Do not return `const T`: the top-level qualifier blocks a rare accidental temporary write but suppresses move semantics on every extraction (`F.49`).
 
 ```cpp
+// FN-32: plain return type keeps move semantics
 // compiles; UB at runtime
 const std::string render_name();   // Wrong: top-level const suppresses move-out (F.49)
 std::string render_title();        // Right: movable, writable result
@@ -248,6 +258,7 @@ std::string render_title();        // Right: movable, writable result
 - **FN-33.** `main` returns `int` and may omit the `return`; `void main()` is a compiler extension, not C++, and costs portability (`F.46`).
 
 ```cpp
+// FN-33: main returns int; return optional
 void main();                       // Wrong: a compiler extension, not C++ (F.46)
 // compile-error: '::main' must return 'int'
 int main();                        // Right: int; the return statement is optional (F.46)
@@ -273,6 +284,7 @@ Caught by: `-Wunused-result` via the attribute (C++17; the C++14 comment marking
 
 ```cpp
 // C++17
+// FN-34: nodiscard keeps status results checked
 #include "result.h"
 
 // compiles; UB at runtime
@@ -305,6 +317,7 @@ Caught by: review — no automated detector.
 
 ```cpp
 // C++20: std::span
+// FN-38: effectful shell around testable cores
 // compiles; UB at runtime
 // Wrong: one name, four jobs — decode, validate, mutate globals, emit.
 void handle_message(const uint8_t* data, size_t len) {
@@ -335,6 +348,7 @@ Guard clauses, early returns, and merged compound conditions are flow style owne
 
 ```cpp
 // C++20: std::span
+// FN-40: default arguments replace same-behavior overloads
 // compiles; UB at runtime
 // Wrong: three spellings, one behavior.
 std::string join(const std::vector<std::string>& parts);
@@ -348,6 +362,7 @@ std::string join(std::span<const std::string> parts, std::string_view sep = ", "
 
 ```cpp
 // C++20: std::span
+// FN-41: options struct when knobs multiply
 // compiles; UB at runtime
 // Wrong: knobs multiplied onto one signature — every call site repeats them.
 std::string join(std::span<const std::string> parts, std::string_view sep = ", ", bool dedupe = false);
@@ -400,6 +415,7 @@ Caught by: review — no automated detector.
 **FN-47.** Reach for a lambda only where a plain function will not do — capturing locals, or definition genuinely at local scope (`F.50`); lambdas cannot overload, and generic lambdas are the one concise exception. A simple function object needed in exactly one place stays an unnamed lambda at the call site; identical or near-identical lambdas graduate into a named function, because an operation worth reusing earns a name (`F.10`, `F.11`).
 
 ```cpp
+// FN-47: named function over duplicated lambda policy
 // compiles; UB at runtime
 // Wrong: a comparison policy living inline — and duplicated at the next call site.
 auto cmp = [](const Entry& a, const Entry& b) {
@@ -418,6 +434,7 @@ bool entry_less(const Entry& a, const Entry& b);
 
 ```cpp
 // C++17
+// FN-50: queued lambda snapshots instead of borrowing this
 // compiles; UB at runtime
 class Poller {
 public:
@@ -434,6 +451,7 @@ private:
 
 ```cpp
 // C++17
+// FN-51: explicit captures, never implicit this
 // compiles; UB at runtime
 class Poller {
 public:
@@ -459,6 +477,7 @@ Caught by: review — no automated detector.
 **FN-52 (hard).** Single-argument constructors are `explicit` by default (`C.46`); implicit conversion is reserved for value types where it reads naturally, decided deliberately.
 
 ```cpp
+// FN-52: single-argument constructors are explicit
 // compiles; UB at runtime
 // Wrong: any integer silently becomes a Port
 class Port {
@@ -484,6 +503,7 @@ private:
 **FN-53.** Meaningful literals get names (`Enum.2`): `constexpr` for single constants (`Con.5`), `enum class` for related sets (`Enum.1`). Loose booleans cluster into `enum class` parameters — `open(file, true, false)` is unreadable.
 
 ```cpp
+// FN-53: named constants replace magic numbers
 // compiles; UB at runtime
 if (attempts > 3) return false;                        // Wrong: what is 3?
 std::this_thread::sleep_for(std::chrono::milliseconds(500));
@@ -530,6 +550,7 @@ Caught by: review — no automated detector.
 
 ```cpp
 // C++20: std::span
+// FN-59: const spans separate source from sink
 // compiles; UB at runtime
 void copy_n(char* p, char* q, size_t n);   // Wrong: which is source, which is sink?
 

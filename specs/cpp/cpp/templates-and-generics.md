@@ -57,6 +57,7 @@ median(words);   // deduction succeeds (T = std::string); 40 lines of errors end
 Right:
 
 ```cpp
+// TPL-1: constrain every public template up front
 // The C++14 default spelling: the same contract as a `static_assert` over
 // standard traits. (C++17 adds the `_v` trait aliases for a shorter form.)
 #include <type_traits>
@@ -72,6 +73,7 @@ T median(const std::vector<T>& values) {
 
 ```cpp
 // C++20 spelling: the same contract as a named concept.
+// TPL-1: constrain every public template up front
 #include <concepts>
 
 template <typename T>
@@ -140,6 +142,7 @@ Right:
 
 ```cpp
 // C++17
+// TPL-15: smallest parameter list, variant policy split out
 // Common case carries no extra parameter.
 template <typename K, typename V>
 class LruCache {
@@ -176,6 +179,7 @@ Caught by: review — no automated detector.
 - **TPL-23 (default).** Do not write unintentionally non-generic code (`T.143`): compare iterators with `!=` not `<`, test emptiness with `empty()`, accept the least-derived type providing what you use — or skip the ceremony entirely with range-`for` where it applies.
 
 ```cpp
+// TPL-23: iterator-friendly comparisons and qualified helper calls
 // compiles; UB at runtime
 // Wrong: `last - first` demands random-access iterators; unqualified helper invites ADL surprises.
 template <typename It>
@@ -209,6 +213,7 @@ Caught by: review — no automated detector.
 | Algorithm over many numeric/container types | Template, constrained per the previous section |
 
 ```cpp
+// TPL-24: concrete type over premature generic ceremony
 // compiles; UB at runtime
 // Wrong: generic ceremony around exactly one type and one caller.
 template <typename T>
@@ -293,6 +298,7 @@ Right:
 
 ```cpp
 // C++17
+// TPL-27: if constexpr replaces tag dispatch scaffolding
 template <typename It>
 auto distance(It first, It last) {
     if constexpr (std::is_base_of_v<std::random_access_iterator_tag,
@@ -315,6 +321,7 @@ Guidance:
 - **TPL-32 (default).** Deviation from `T.65`: tag dispatch — selecting function implementations from type properties at compile time — is the C++14 default spelling for that selection. **C++17:** `if constexpr` (and constrained overloads on C++20) express it more readably, so tag machinery demotes to the cases those cannot express.
 
 ```cpp
+// TPL-31: overload instead of specializing function templates
 // compiles; UB at runtime
 // Wrong: function template specialization
 template <typename T>

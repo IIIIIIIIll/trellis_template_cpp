@@ -41,6 +41,7 @@ Caught by: review — no automated detector.
 **QUAL-10.** Do not use `m_` or plain names plus setter/getter gymnastics.
 
 ```cpp
+// QUAL-10: conforming names replace the four mixed styles
 // compiles; UB at runtime
 // Wrong: four styles in ten lines
 class PacketReader {
@@ -142,6 +143,7 @@ Enable first — low noise, direct defect yield:
 Slicing deserves the example: the compiler stays happy while behavior vanishes:
 
 ```cpp
+// QUAL-26: borrow by const reference avoids slicing
 // compiles; UB at runtime
 // Wrong: HttpHandler sliced into Base on the way in; dispatch and fields gone.
 void install(Base handler);
@@ -198,6 +200,7 @@ Caught by: review — no automated detector.
 **QUAL-30.** Every header must be **self-contained** (`SF.11`): it includes everything its own code names — include what you name (`SF.10`), never depending on what a transitively included header happens to drag in; deliberate aggregation headers remain acceptable.
 
 ```cpp
+// QUAL-30: header includes everything its own code names
 // compiles; UB at runtime
 // Wrong: compiles today because <vector> happens to pull in <cstdint>
 // widget.h
@@ -233,6 +236,7 @@ Caught by: review — no automated detector.
 **QUAL-35.** Forward-declare only what you can: parameters, references, pointers, and return-pointer types in declarations. Anything requiring size, members, or base classes needs the full type.
 
 ```cpp
+// QUAL-35: forward-declare where incomplete types suffice
 // Right: incomplete types suffice for these declarations
 class Engine;
 class Widget {
@@ -251,6 +255,7 @@ Rules of thumb:
 - **QUAL-36.** Never forward-declare `std::` types — it is UB. Include `<string>` etc.
 
 ```cpp
+// QUAL-36: include the real header, never forward-declare std
 // Wrong: forward-declaring anything in namespace std
 namespace std { class string; }             // compiles; UB per [namespace.std]
 
@@ -308,6 +313,7 @@ Caught by: review — no automated detector.
 **QUAL-46.** Anonymous namespaces in headers are forbidden (`SF.21`): every including translation unit gets its own private copies, silently duplicating code and data and tripping ODR-sensitive tools.
 
 ```cpp
+// QUAL-45: anonymous namespace keeps file-local helpers internal
 // parser.cpp
 
 // Right: helpers invisible outside this translation unit
@@ -338,6 +344,7 @@ Caught by: review — no automated detector.
 
 ```cpp
 // C++17
+// QUAL-47: inline constexpr gives one program-wide object
 // config.h — included everywhere
 
 // Right: one object program-wide, safe to take addresses of
@@ -355,6 +362,7 @@ static const int kMaxConnections = 128;
 
 ```cpp
 // C++17
+// QUAL-48: function-local statics order cross-TU initialization
 // compiles; UB at runtime
 // Wrong: g_registry may initialize before g_logger exists
 Registry g_registry(&g_logger);
@@ -406,6 +414,7 @@ The destructor and move operations are defined in the `.cpp`, where `Impl` is co
 **QUAL-50.** `dynamic_cast` and `typeid` require identical RTTI representations on both sides of a module boundary. Independently built modules (different compiler versions or flags) cannot rely on them; use explicit interface virtuals, enum kind tags, or visitor patterns instead.
 
 ```cpp
+// QUAL-50: kind-tag dispatch replaces cross-module RTTI
 // compiles; UB at runtime
 // Wrong: works in unit tests, returns nullptr across mismatched modules
 if (auto* http = dynamic_cast<const HttpEvent*>(&ev)) { /*...*/ }
@@ -458,6 +467,7 @@ Caught by: review — no automated detector.
 **QUAL-57 (hard).** Scoped `enum class` everywhere (`Enum.3`): plain enums convert to `int` too readily, and unrelated enumerations collide on shared enumerator names.
 
 ```cpp
+// QUAL-57: scoped enum class prevents implicit conversions
 // compiles; UB at runtime
 // Wrong: implicit conversion to int, shouting names, collision-prone
 enum Color { RED, GREEN };
@@ -497,6 +507,7 @@ Caught by: review — no automated detector.
 
 ```cpp
 // C++17
+// QUAL-64: readable constexpr branches replace obfuscated metaprogramming
 // Good: free win — table computed at build time, zero startup cost
 constexpr std::array<uint8_t, 256> kReverseBits = [] {
     std::array<uint8_t, 256> t{};
