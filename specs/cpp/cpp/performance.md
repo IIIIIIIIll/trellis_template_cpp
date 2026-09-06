@@ -253,7 +253,7 @@ struct Particle {
     bool active;
     bool tagged;
 };
-static_assert(sizeof(Particle) == 56);   // layout regressions break the build
+static_assert(sizeof(Particle) == 56, "Particle layout regressed");
 ```
 
 **PERF-30.** When profiles show scan-heavy numeric loops starving on strided access, restructure hot data from array-of-structs to struct-of-arrays: one contiguous array per field lets each pass stream exactly the fields it touches. That is an invasive change — hide it behind the interface of the module owning the data, and do it only with profile evidence.
