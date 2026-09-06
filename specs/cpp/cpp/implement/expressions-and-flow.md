@@ -1,3 +1,8 @@
+---
+description: Expression-level correctness, initialization, conversions, control flow
+paths: [**/*.cpp, **/*.cc, **/*.cxx, **/*.hpp, **/*.hh, **/*.h, **/*.inl, **/*.ipp]
+---
+
 # Expressions and Flow
 
 > Expression-level discipline for C++ in this project: initialization that cannot fail, `auto` where it helps, casts that announce themselves, consistent signedness, and control flow that stays flat enough to review.
@@ -13,8 +18,8 @@ C++17 and C++20 additions appear as marked upgrades where they change the
 recommendation — `std::string_view`, `std::optional`, `if constexpr`,
 `[[nodiscard]]`, `std::span` — each with the C++14 spelling alongside, so a
 C++14 project can follow every rule as written. Ownership and lifetime
-questions live in [Memory and Ownership](./memory-and-ownership.md); failure
-paths in [Error Handling](./error-handling.md).
+questions live in [Ownership Design](../design/ownership-design.md); failure
+paths in [Error Contracts](../design/error-contracts.md).
 
 Default strength: default.
 
@@ -22,7 +27,7 @@ Caught by: review — no automated detector.
 
 At expression level the defaults come before the micro-decisions.
 
-**EXPR-1.** Reach for suitable abstractions (`ES.2`) — library types and classes sit closer to the problem than bare language features and give shorter, clearer, better-tested code — and reach for the standard library before any third-party library or hand-written loop (`ES.1`); allocation-restricted contexts are the sole carve-out, escalating to the arena and pool patterns in [Memory and Ownership](./memory-and-ownership.md).
+**EXPR-1.** Reach for suitable abstractions (`ES.2`) — library types and classes sit closer to the problem than bare language features and give shorter, clearer, better-tested code — and reach for the standard library before any third-party library or hand-written loop (`ES.1`); allocation-restricted contexts are the sole carve-out, escalating to the arena and pool patterns in [Memory Discipline](./memory-discipline.md).
 
 **EXPR-2.** Repeated expressions hoist into one function or collapse into a standard algorithm (`ES.3`) — duplicated logic obscures intent and diverges silently under maintenance; review plus static analysis catch what slips through.
 
@@ -120,7 +125,7 @@ report(pending_count);
 
 Caught by: review — no automated detector.
 
-Naming conventions themselves — length by scope (`ES.7`), confusable look-alikes such as `l1`/`I0` (`ES.8`), and `ALL_CAPS` reserved for macros so constants cannot collide with preprocessor substitution (`ES.9`, see `Enum.5`) — are owned by the naming rules in [Quality Guidelines](./quality-guidelines.md).
+Naming conventions themselves — length by scope (`ES.7`), confusable look-alikes such as `l1`/`I0` (`ES.8`), and `ALL_CAPS` reserved for macros so constants cannot collide with preprocessor substitution (`ES.9`, see `Enum.5`) — are owned by the naming rules in [Naming and Constants](./naming-and-constants.md).
 
 ### Braces Prevent Narrowing
 
@@ -185,7 +190,7 @@ private:
 
 ### Named Constants
 
-**EXPR-15.** Unnamed literals beyond the trivial set — `0`, `1`, `nullptr`, `'\n'`, `""` — become named `constexpr` constants (`ES.45`); a number needing a comment deserves a name. Wider compile-time-constant conventions live in [Quality Guidelines](./quality-guidelines.md).
+**EXPR-15.** Unnamed literals beyond the trivial set — `0`, `1`, `nullptr`, `'\n'`, `""` — become named `constexpr` constants (`ES.45`); a number needing a comment deserves a name. Wider compile-time-constant conventions live in [Naming and Constants](./naming-and-constants.md).
 
 Caught by: review — no automated detector.
 
@@ -276,7 +281,7 @@ Caught by: clang-tidy `modernize-use-nullptr`.
 
 Caught by: review — no automated detector.
 
-Everything else about pointers is owned by sibling guides. Owning pointers travel in smart pointers, `unique_ptr<T>` by default (`ES.24`), and neither naked `new` nor naked `delete` appears outside resource-management code (`ES.60`) — the ownership ladder in [Memory and Ownership](./memory-and-ownership.md) owns both end to end, and dissolves the `delete[]` mismatch question by removing owning raw pointers entirely (`ES.61`). Never dereferencing an invalid pointer — null, dangling, or invalidated — is that guide's lifetime-safety core, container-invalidation table included (`ES.65`). Pointer simplicity itself — no pointer arithmetic, sequences as spans — lives there too (`ES.42`), with spans at API boundaries per [Performance](./performance.md). Slicing is prevented structurally at the class level (`ES.63`) per [Classes and Hierarchies](./classes-and-hierarchies.md).
+Everything else about pointers is owned by sibling guides. Owning pointers travel in smart pointers, `unique_ptr<T>` by default (`ES.24`), and neither naked `new` nor naked `delete` appears outside resource-management code (`ES.60`) — the ownership ladder in [Ownership Design](../design/ownership-design.md) owns both end to end, and dissolves the `delete[]` mismatch question by removing owning raw pointers entirely (`ES.61`). Never dereferencing an invalid pointer — null, dangling, or invalidated — is that guide's lifetime-safety core, container-invalidation table included (`ES.65`). Pointer simplicity itself — no pointer arithmetic, sequences as spans — lives there too (`ES.42`), with spans at API boundaries per [Performance](./performance.md). Slicing is prevented structurally at the class level (`ES.63`) per [Classes and Hierarchies](../design/classes-and-hierarchies.md).
 
 ---
 
@@ -316,7 +321,7 @@ Rules:
 
   Caught by: review — no automated detector.
 
-- **EXPR-32 (hard).** Integer `/` and `%` by a possibly-zero divisor take an explicit precondition at the boundary (`ES.105`); the undefined crash is never left implicit. Precondition mechanics live in [Functions and Interfaces](./functions-and-interfaces.md); floating-point division by zero is a separate domain decision.
+- **EXPR-32 (hard).** Integer `/` and `%` by a possibly-zero divisor take an explicit precondition at the boundary (`ES.105`); the undefined crash is never left implicit. Precondition mechanics live in [Functions and Interfaces](../design/functions-and-interfaces.md); floating-point division by zero is a separate domain decision.
 
   Caught by: review — no automated detector.
 
@@ -393,7 +398,7 @@ Loop and branch rules:
 - **EXPR-42.** Range-based `for` is the default loop (`ES.71`): it cannot mis-index and states intent. Index-based `for` survives only when the body truly needs the index — neighbor elements, strides, deliberate counter work — and reads its elements through a reference, never a per-iteration copy.
 - **EXPR-43.** Prefer constructs that cannot go out of range (`ES.55`) — range-`for`, position-returning algorithms — over indexed access wrapped in checks; an explicit bounds check is usually the tell that the wrong abstraction was picked.
 - **EXPR-44 (hard).** Never mutate a container's structure while iterating it — reallocation invalidates the iterator.
-- **EXPR-45 (hard).** Range-for extends only the final range expression's temporary to the loop: a direct value-returning init such as `make_rows()` is safe, but in a chained init like `connection_pool().acquire().rows()` the intermediate temporaries die at the end of the full-expression, leaving the extended range viewing destroyed owners — own the outer object. (C++23 extends every temporary in the range-init and closes this trap; pre-C++23 dialects do not.) The invalidation table lives in [Memory and Ownership](./memory-and-ownership.md).
+- **EXPR-45 (hard).** Range-for extends only the final range expression's temporary to the loop: a direct value-returning init such as `make_rows()` is safe, but in a chained init like `connection_pool().acquire().rows()` the intermediate temporaries die at the end of the full-expression, leaving the extended range viewing destroyed owners — own the outer object. (C++23 extends every temporary in the range-init and closes this trap; pre-C++23 dialects do not.) The invalidation table lives in [Memory Discipline](./memory-discipline.md).
 
 ```cpp
 // EXPR-45: own the outer object of a chained range-init

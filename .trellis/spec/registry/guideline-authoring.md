@@ -14,8 +14,16 @@ paths: [specs/**]
 ## Document Shape
 
 Every guide under `specs/cpp/cpp/` follows the same skeleton. Real reference:
-`specs/cpp/cpp/index.md`, `specs/cpp/cpp/quality-guidelines.md`.
+`specs/cpp/cpp/index.md`, `specs/cpp/cpp/design/classes-and-hierarchies.md`.
 
+0. Frontmatter (every file except `index.md`): a `---` block carrying
+   `description:` — one line, it becomes the injected index line when the
+   FULL-block budget degrades — and `paths:` globs selecting the repo paths
+   the guide governs: the shared C++ list `**/*.cpp, **/*.cc, **/*.cxx,
+   **/*.hpp, **/*.hh, **/*.h, **/*.inl, **/*.ipp`, plus test-scoped extras
+   (`**/test*/**, **/tests/**, **/*_test.*, **/*Test.*`) on the testing
+   docs. `spec_match.py` selects injections on `paths:` — no frontmatter,
+   no injection.
 1. `# Title` immediately followed by a one-paragraph `>` blockquote summary.
 2. `## Overview` stating the guide's stance and scope — what it decides, not a
    table of contents restated.
@@ -81,7 +89,7 @@ Caught by: `cppcoreguidelines-pro-type-cstyle-cast`
   > line appears. A rule that follows one with its own detector and is
   > caught by nothing must restate
   > `Caught by: review — no automated detector.` — EXPR-26 in
-  > `expressions-and-flow.md` silently recorded EXPR-25's
+  > `implement/expressions-and-flow.md` silently recorded EXPR-25's
   > `modernize-use-nullptr` this way. After any Caught-by edit, check the
   > `detector` column in the regenerated `rules.json`, not just the
   > markdown.
@@ -125,24 +133,38 @@ Caught by: `cppcoreguidelines-pro-type-cstyle-cast`
 
 ### Rule IDs
 
-| Doc | Prefix | Doc | Prefix |
-|-----|--------|-----|--------|
-| memory-and-ownership | `MEM-` | classes-and-hierarchies | `CLS-` |
-| error-handling | `ERR-` | templates-and-generics | `TPL-` |
-| quality-guidelines | `QUAL-` | concurrency | `CONC-` |
-| testing-conventions | `TEST-` | expressions-and-flow | `EXPR-` |
-| functions-and-interfaces | `FN-` | performance | `PERF-` |
+| Prefix | Doc(s) |
+|--------|--------|
+| `FN-` | `design/functions-and-interfaces.md` |
+| `CLS-` | `design/classes-and-hierarchies.md` |
+| `TPL-` | `design/templates-and-generics.md` |
+| `ERR-` | `design/error-contracts.md`, `implement/error-propagation.md` |
+| `MEM-` | `design/ownership-design.md`, `implement/memory-discipline.md` |
+| `QUAL-` | `design/headers-and-dependencies.md`, `implement/naming-and-constants.md`, `verification/static-analysis.md` |
+| `EXPR-` | `implement/expressions-and-flow.md` |
+| `CONC-` | `implement/concurrency.md` |
+| `PERF-` | `implement/performance.md` |
+| `TEST-` | `verification/testing-conventions.md` |
 
 Numbering is **stable and append-only**: retired rules leave gaps and are
 never renumbered; IDs are unique repo-wide.
 
-`tools/validate_rules.py` binds the 10 topic guides; `index.md` and
-`core-guidelines-disposition.md` are exempt (disposition rows are stances,
-not rules). Any rule add, change, or delete re-runs `tools/extract_rules.py`
-in the same change to regenerate the `rules.json` digest — the digest is
-derived from the markdown and is never hand-edited. `rules.json` itself is
-footer-exempt and validator-exempt: it is generated output, not an authored
-document.
+`tools/validate_rules.py` binds the 14 topic guides; `index.md`, the three
+phase routers, and `core-guidelines-disposition.md` are exempt (disposition
+rows are stances, not rules). Any rule add, change, or delete re-runs
+`tools/extract_rules.py` in the same change to regenerate the `rules.json`
+digest — the digest is derived from the markdown and is never hand-edited.
+`rules.json` itself is footer-exempt and validator-exempt: it is generated
+output, not an authored document.
+
+> **Warning — the validator can go blind silently**: `DOC_PREFIX` /
+> `PREFIX_ALLOCATION` in `tools/rules_grammar.py` map doc basenames to
+> rule prefixes, and `validate_rules.py` skips prefix-binding **and**
+> footer checks for any non-exempt doc absent from that map — while still
+> printing `0 violations`. The phase restructure split three guides and
+> shipped a green gate with seven docs unchecked until review caught it.
+> After any file-set change, confirm every non-exempt basename is mapped
+> and the validator's checked-doc count equals the file count.
 
 ---
 
@@ -189,6 +211,18 @@ the same change:
 4. `specs/cpp/cpp/core-guidelines-disposition.md` — its disposition and
    residual-ledger tables route rules to guides by link; retarget those
    links when a guide is added, renamed, or re-titled.
+5. Tool bindings — the `DOC_PREFIX`/`PREFIX_ALLOCATION` basename map in
+   `tools/rules_grammar.py`; the doc walkers in `tools/validate_rules.py`,
+   `tools/extract_rules.py`, and `tools/check_snippets.py` (guides live in
+   `design/`, `implement/`, `verification/` subdirectories — a
+   `glob("*.md")` walker silently skips them all; use `rglob`); the
+   `tools/stubs/per-doc/<doc>.hpp` names and the section labels in
+   `tools/stubs/stubs.hpp`. Then regenerate `rules.json` via
+   `tools/extract_rules.py`.
+6. Consumer-update wording — renames and moves install additively into
+   consumer projects; old paths are never deleted for them, so
+   `USAGE.md`'s update section documents the orphan cleanup that any
+   file-set change obligates. Keep that wording true.
 
 Anti-patterns seen in template-driven repos, all rejected here: empty
 headings kept "for later", aspirational rules the tooling cannot check,

@@ -1,3 +1,8 @@
+---
+description: Optimization work guided by measurement: hot paths, allocation pressure
+paths: [**/*.cpp, **/*.cc, **/*.cxx, **/*.hpp, **/*.hh, **/*.h, **/*.inl, **/*.ipp]
+---
+
 # Performance
 
 > Performance practice for C++ in this project: measurement before change, allocation and move discipline by default, and data layouts that respect how caches actually behave.
@@ -96,7 +101,7 @@ for (const Entry& e : entries) {
 }
 ```
 
-**PERF-12.** Where a profile shows allocator pressure that `reserve()` cannot fix, arenas and object pools are the escalation path — under the ownership and ASan-annotation rules in [Memory and Ownership](./memory-and-ownership.md).
+**PERF-12.** Where a profile shows allocator pressure that `reserve()` cannot fix, arenas and object pools are the escalation path — under the ownership and ASan-annotation rules in [Memory Discipline](./memory-discipline.md).
 
 **PERF-13 (hard).** An arena introduced without a profile is complexity debt, not performance work (`Per.2`).
 
@@ -106,7 +111,7 @@ Caught by: review — no automated detector.
 
 Caught by: heap profilers (allocation counts and byte totals); allocator statistics from sanitizer builds during correctness runs.
 
-Error signaling sits under the same gate: a non-throwing path is effectively free under table-driven unwinding, but a thrown exception costs orders of magnitude more than a status check — the mechanism split keeping throws off foreseeable per-iteration failures is owned by `ERR-7` in [Error Handling](./error-handling.md).
+Error signaling sits under the same gate: a non-throwing path is effectively free under table-driven unwinding, but a thrown exception costs orders of magnitude more than a status check — the mechanism split keeping throws off foreseeable per-iteration failures is owned by `ERR-7` in [Error Contracts](../design/error-contracts.md).
 
 ---
 
@@ -116,11 +121,11 @@ Default strength: hard.
 
 Caught by: review — no automated detector.
 
-Moves exist so expensive values can change hands without copying. The economics only pay when the type cooperates: move construction must be `noexcept`, or containers copy instead (see [Error Handling](./error-handling.md)).
+Moves exist so expensive values can change hands without copying. The economics only pay when the type cooperates: move construction must be `noexcept`, or containers copy instead (see [Error Propagation](./error-propagation.md)).
 
 Three rules:
 
-- Sink parameters take by value and `std::move` into storage once, at the last moment — the pass-by table in [Memory and Ownership](./memory-and-ownership.md).
+- Sink parameters take by value and `std::move` into storage once, at the last moment — the pass-by table in [Memory Discipline](./memory-discipline.md).
 - **PERF-15.** `std::move` appears exactly where the source's value is finished, typically at a return or hand-off (`ES.56`). Moving earlier leaves the rest of the function reading a husk.
 - **PERF-16.** A moved-from object is destructible and assignable; everything else about its state is unspecified. Never read one expecting its old value.
 
@@ -162,7 +167,7 @@ pointer-plus-size pair — `(const T* data, std::size_t size)`, or
 `gsl::span<const T>` where GSL is adopted — until **C++20:** `std::span`
 takes over the spelling.
 
-The signature policy itself is owned by [Functions and Interfaces](./functions-and-interfaces.md) — View Inputs Borrow, Never Store; what stays here is the cost rationale.
+The signature policy itself is owned by [Functions and Interfaces](../design/functions-and-interfaces.md) — View Inputs Borrow, Never Store; what stays here is the cost rationale.
 
 ```cpp
 // C++17
@@ -178,7 +183,7 @@ Host parse_host(std::string_view url);
 Two obligations come with views:
 
 - **PERF-19.** Inside the callee, slicing is free — `remove_prefix` and `substr` on views allocate nothing. Reach for them before any `.str()` or `std::string` round trip.
-- **PERF-20 (hard).** Views borrow. The moment a value must outlive the call — stored, shipped across threads, put into a container — convert once to an owning type at the storage boundary. Lifetime rules live in [Memory and Ownership](./memory-and-ownership.md).
+- **PERF-20 (hard).** Views borrow. The moment a value must outlive the call — stored, shipped across threads, put into a container — convert once to an owning type at the storage boundary. Lifetime rules live in [Memory Discipline](./memory-discipline.md).
 
   Caught by: review — no automated detector; ASan flags the use-after-free when a borrowed view actually outlives its owner.
 

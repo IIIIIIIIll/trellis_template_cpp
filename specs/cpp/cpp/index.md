@@ -6,30 +6,78 @@
 
 ## Overview
 
-This directory contains the guidelines for C++ development. They are
-opinionated defaults targeting a C++14 baseline, with C++17/20 additions
-(`std::string_view`, `std::optional`, `if constexpr`, `[[nodiscard]]`,
-`std::span`) called out as marked upgrades where they change a
-recommendation. Treat them as the starting point to adapt: record what your
-project actually enforces, not aspirations nobody checks.
+This directory contains the guidelines for C++ development, organized into
+three phases — [Design](#design), [Implementation](#implementation), and
+[Verification](#verification) — covering fourteen topic guides, each phase
+routed by its own reading-path router. They are opinionated defaults
+targeting a C++14 baseline, with C++17/20 additions (`std::string_view`,
+`std::optional`, `if constexpr`, `[[nodiscard]]`, `std::span`) called out as
+marked upgrades where they change a recommendation. Treat them as the
+starting point to adapt: record what your project actually enforces, not
+aspirations nobody checks.
 
 ---
 
-## Guidelines Index
+## Design
+
+Design-phase guides decide what the code promises before any body is
+written: signatures, class shape, generic abstractions, failure contracts,
+ownership at API edges, and the header surface.
+
+Reading path: [Design Phase](./design.md)
 
 | Guide | Description |
 |-------|-------------|
-| [Memory and Ownership](./memory-and-ownership.md) | RAII invariant, ownership ladder, pass-by conventions, iterator invalidation and other lifetime pitfalls |
-| [Error Handling](./error-handling.md) | Exceptions versus `expected`/error-code policy, failure contracts across API boundaries |
-| [Quality Guidelines](./quality-guidelines.md) | Naming, header hygiene, ODR and ABI pitfalls |
-| [Testing Conventions](./testing-conventions.md) | Test framework and layout, test naming, what deserves a test |
-| [Functions and Interfaces](./functions-and-interfaces.md) | Function signature design, parameter and return-value conventions at API boundaries |
-| [Classes and Hierarchies](./classes-and-hierarchies.md) | Class design and inheritance: invariants, composition versus virtual dispatch |
-| [Templates and Generics](./templates-and-generics.md) | Templates, concepts, and generic library design |
-| [Concurrency](./concurrency.md) | Threads and shared state, synchronization discipline, data-race prevention |
-| [Expressions and Flow](./expressions-and-flow.md) | Expression-level correctness, initialization, conversions, control flow |
-| [Performance](./performance.md) | Optimization work guided by measurement: hot paths, allocation pressure |
-| [Core Guidelines Disposition](./core-guidelines-disposition.md) | Project stance toward the ISO C++ Core Guidelines: per-section disposition, residual ledger, deviation recording, adoption process, safety profiles |
+| [Functions and Interfaces](./design/functions-and-interfaces.md) | Function signature design, parameter and return-value conventions at API boundaries |
+| [Classes and Hierarchies](./design/classes-and-hierarchies.md) | Class design and inheritance: invariants, composition versus virtual dispatch |
+| [Templates and Generics](./design/templates-and-generics.md) | Templates, concepts, and generic library design |
+| [Error Contracts](./design/error-contracts.md) | Choosing between exceptions, status returns, and asserts; failure contracts at API boundaries |
+| [Ownership Design](./design/ownership-design.md) | Ownership ladder and smart-pointer conventions at API edges |
+| [Headers and Dependencies](./design/headers-and-dependencies.md) | Header hygiene, ODR and ABI pitfalls, third-party dependency vetting |
+
+---
+
+## Implementation
+
+Implementation-phase guides govern discipline inside function bodies: how
+objects are owned and passed, how failures travel, what names say, how
+expressions stay correct, how shared state is synchronized, and when
+optimization is allowed.
+
+Reading path: [Implementation Phase](./implementation.md)
+
+| Guide | Description |
+|-------|-------------|
+| [Memory Discipline](./implement/memory-discipline.md) | RAII practice, pass-by rules, lifetime and invalidation pitfalls |
+| [Error Propagation](./implement/error-propagation.md) | noexcept discipline, propagation across module boundaries, logging versus handling |
+| [Naming and Constants](./implement/naming-and-constants.md) | Naming conventions, enumerations, compile-time discipline |
+| [Expressions and Flow](./implement/expressions-and-flow.md) | Expression-level correctness, initialization, conversions, control flow |
+| [Concurrency](./implement/concurrency.md) | Threads and shared state, synchronization discipline, data-race prevention |
+| [Performance](./implement/performance.md) | Optimization work guided by measurement: hot paths, allocation pressure |
+
+---
+
+## Verification
+
+Verification-phase guides decide what counts as evidence: what deserves a
+test, and how the project's static-analysis check set is curated.
+
+Reading path: [Verification Phase](./verification.md)
+
+| Guide | Description |
+|-------|-------------|
+| [Testing Conventions](./verification/testing-conventions.md) | Test framework and layout, test naming, what deserves a test |
+| [Static Analysis](./verification/static-analysis.md) | Curating the project's static-analysis check set |
+
+---
+
+## Alignment & Governance
+
+| Document | Description |
+|----------|-------------|
+| [index.md](./index.md) | Layer entry point: phase index, pre-development checklist, quality check |
+| [core-guidelines-disposition.md](./core-guidelines-disposition.md) | Project stance toward the ISO C++ Core Guidelines: per-section disposition, residual ledger, deviation recording, adoption process, safety profiles |
+| [rules.json](./rules.json) | Machine-readable digest of every rule block (id, strength, statement, detector) — generated by `tools/extract_rules.py`, never hand-edited |
 
 ---
 
@@ -59,21 +107,41 @@ The [Core Guidelines Disposition](./core-guidelines-disposition.md) and every de
 
 ## Pre-Development Checklist
 
-Before writing code, route the task through the relevant guide:
+Before writing code, route the task through the relevant guide, phase by
+phase:
+
+**Design**
 
 | Task involves | Read first |
 |---------------|------------|
-| Raw pointers, resource handles, container lifetime questions | [Memory and Ownership](./memory-and-ownership.md) |
-| Reporting failures, designing error paths across APIs | [Error Handling](./error-handling.md) |
-| New headers or files, public API surface, naming decisions | [Quality Guidelines](./quality-guidelines.md) |
-| Adding or vetting a third-party dependency | [Quality Guidelines](./quality-guidelines.md) |
-| Writing, changing, or removing tests | [Testing Conventions](./testing-conventions.md) |
-| Function signatures or API design at module boundaries | [Functions and Interfaces](./functions-and-interfaces.md) |
-| Class design, inheritance, or object lifecycle decisions | [Classes and Hierarchies](./classes-and-hierarchies.md) |
-| Templates, concepts, or generic code | [Templates and Generics](./templates-and-generics.md) |
-| Threading, atomics, mutexes, or shared state | [Concurrency](./concurrency.md) |
-| Expression-level correctness or control flow changes | [Expressions and Flow](./expressions-and-flow.md) |
-| Optimization or hot-path work | [Performance](./performance.md) |
+| Function signatures or API design at module boundaries | [Functions and Interfaces](./design/functions-and-interfaces.md) |
+| Class design, inheritance, or object lifecycle decisions | [Classes and Hierarchies](./design/classes-and-hierarchies.md) |
+| Templates, concepts, or generic code | [Templates and Generics](./design/templates-and-generics.md) |
+| Reporting failures, designing error paths across APIs | [Error Contracts](./design/error-contracts.md); propagation mechanics in [Error Propagation](./implement/error-propagation.md) |
+| Raw pointers, resource handles, or ownership at an API edge | [Ownership Design](./design/ownership-design.md); body-side lifetime rules in [Memory Discipline](./implement/memory-discipline.md) |
+| New headers or files, public API surface, naming decisions | [Headers and Dependencies](./design/headers-and-dependencies.md) and [Naming and Constants](./implement/naming-and-constants.md) |
+| Adding or vetting a third-party dependency | [Headers and Dependencies](./design/headers-and-dependencies.md) |
+
+**Implementation**
+
+| Task involves | Read first |
+|---------------|------------|
+| Container lifetime questions, invalidation, or RAII in a body | [Memory Discipline](./implement/memory-discipline.md) |
+| Expression-level correctness or control flow changes | [Expressions and Flow](./implement/expressions-and-flow.md) |
+| Threading, atomics, mutexes, or shared state | [Concurrency](./implement/concurrency.md) |
+| Optimization or hot-path work | [Performance](./implement/performance.md) |
+
+**Verification**
+
+| Task involves | Read first |
+|---------------|------------|
+| Writing, changing, or removing tests | [Testing Conventions](./verification/testing-conventions.md) |
+| Changing the static-analysis check set | [Static Analysis](./verification/static-analysis.md) |
+
+**Governance**
+
+| Task involves | Read first |
+|---------------|------------|
 | Adopting a Core Guidelines rule, or deviating from an adopted one | [Core Guidelines Disposition](./core-guidelines-disposition.md) |
 
 A change touching several rows above should skim every listed guide before starting — the expensive C++ mistakes are cross-cutting.

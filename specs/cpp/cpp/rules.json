@@ -1354,7 +1354,7 @@
     "id": "ERR-1",
     "strength": "hard",
     "statement": "assert (active in debug; gone under NDEBUG); internal lookup table index out of range",
-    "doc": "error-handling.md",
+    "doc": "error-contracts.md",
     "detector": "review — no automated detector for mechanism choice",
     "upstream": []
   },
@@ -1362,7 +1362,7 @@
     "id": "ERR-2",
     "strength": "hard",
     "statement": "Status return or expected-style result; malformed user-supplied config value",
-    "doc": "error-handling.md",
+    "doc": "error-contracts.md",
     "detector": "review — no automated detector for mechanism choice",
     "upstream": []
   },
@@ -1370,7 +1370,7 @@
     "id": "ERR-3",
     "strength": "hard",
     "statement": "Status return or expected-style result; key not found in cache; end-of-input",
-    "doc": "error-handling.md",
+    "doc": "error-contracts.md",
     "detector": "review — no automated detector for mechanism choice",
     "upstream": []
   },
@@ -1378,7 +1378,7 @@
     "id": "ERR-4",
     "strength": "hard",
     "statement": "Exception; std::bad_alloc; a control-channel drop with no retry path",
-    "doc": "error-handling.md",
+    "doc": "error-contracts.md",
     "detector": "review — no automated detector for mechanism choice",
     "upstream": []
   },
@@ -1386,7 +1386,7 @@
     "id": "ERR-5",
     "strength": "hard",
     "statement": "Terminate (default: let it escape); heap corruption detected by allocator",
-    "doc": "error-handling.md",
+    "doc": "error-contracts.md",
     "detector": "review — no automated detector for mechanism choice",
     "upstream": []
   },
@@ -1394,7 +1394,7 @@
     "id": "ERR-6",
     "strength": "hard",
     "statement": "An error-handling strategy cannot be retrofitted onto finished interfaces (E.1): fix the assert-versus-status-versus-throw split while signatures are still fluid, before callers hard-code a mechanism.",
-    "doc": "error-handling.md",
+    "doc": "error-contracts.md",
     "detector": "review — no automated detector for mechanism choice",
     "upstream": [
       "E.1"
@@ -1404,7 +1404,7 @@
     "id": "ERR-7",
     "strength": "hard",
     "statement": "Exceptions carry failures, never ordinary control flow (E.3): loop termination and cache misses are normal outcomes, and implementations optimize on exactly that assumption.",
-    "doc": "error-handling.md",
+    "doc": "error-contracts.md",
     "detector": "review — no automated detector for mechanism choice",
     "upstream": [
       "E.3"
@@ -1414,7 +1414,7 @@
     "id": "ERR-8",
     "strength": "hard",
     "statement": "Never validate external input with assert: under NDEBUG the check vanishes and malformed input walks straight into memory-unsafe code.",
-    "doc": "error-handling.md",
+    "doc": "error-contracts.md",
     "detector": "review — no automated detector for mechanism choice",
     "upstream": []
   },
@@ -1422,7 +1422,7 @@
     "id": "ERR-9",
     "strength": "hard",
     "statement": "Assert expressions must be side-effect free for the same reason — the whole expression vanishes under NDEBUG, so assert(flush_cache()) silently stops flushing in release builds.",
-    "doc": "error-handling.md",
+    "doc": "error-contracts.md",
     "detector": "review — no automated detector for mechanism choice",
     "upstream": [
       "E.2"
@@ -1432,7 +1432,7 @@
     "id": "ERR-10",
     "strength": "hard",
     "statement": "Failing fast belongs to the last row only (E.26; upstream frames it for builds without exceptions — the principle transfers verbatim): corruption beyond repair terminates immediately — inside module-edge shims, abort rather than translate.",
-    "doc": "error-handling.md",
+    "doc": "error-contracts.md",
     "detector": "review — no automated detector for mechanism choice",
     "upstream": [
       "E.26"
@@ -1442,7 +1442,7 @@
     "id": "ERR-11",
     "strength": "hard",
     "statement": "The decision table classifies failures; contracts decide what counts as one (E.4).",
-    "doc": "error-handling.md",
+    "doc": "error-contracts.md",
     "detector": "review",
     "upstream": [
       "E.4"
@@ -1452,7 +1452,7 @@
     "id": "ERR-12",
     "strength": "hard",
     "statement": "A constructor either establishes the class invariant or throws (E.5); there are no half-built objects callers must remember to check.",
-    "doc": "error-handling.md",
+    "doc": "error-contracts.md",
     "detector": "review",
     "upstream": [
       "E.5"
@@ -1462,7 +1462,7 @@
     "id": "ERR-13",
     "strength": "hard",
     "statement": "State preconditions at the boundary so interface misuse is visible (E.7).",
-    "doc": "error-handling.md",
+    "doc": "error-contracts.md",
     "detector": "review",
     "upstream": [
       "E.7"
@@ -1472,7 +1472,7 @@
     "id": "ERR-14",
     "strength": "default",
     "statement": "State postconditions with equal care (E.8): callers need no defensive re-checks, the guarantee travels in the signature and documentation, and verifying it follows the same trust-boundary logic as preconditions.",
-    "doc": "error-handling.md",
+    "doc": "error-contracts.md",
     "detector": "review",
     "upstream": [
       "E.8"
@@ -1482,7 +1482,7 @@
     "id": "ERR-15",
     "strength": "hard",
     "statement": "Expected-style results are not a C++23 luxury — on the C++14 baseline, pick one of, in order of preference, centralized behind one alias so migration is mechanical:",
-    "doc": "error-handling.md",
+    "doc": "error-contracts.md",
     "detector": "review",
     "upstream": []
   },
@@ -1490,7 +1490,7 @@
     "id": "ERR-16",
     "strength": "hard",
     "statement": "Every error construction routes through make_error in result.h — the C++23 migration stays a one-file change.",
-    "doc": "error-handling.md",
+    "doc": "error-contracts.md",
     "detector": "review",
     "upstream": []
   },
@@ -1498,7 +1498,7 @@
     "id": "ERR-17",
     "strength": "default",
     "statement": "Do not hand-roll monadic .and_then() chains in expected-style wrappers; keep the wrapper surface minimal so the future swap stays trivial.",
-    "doc": "error-handling.md",
+    "doc": "error-contracts.md",
     "detector": "review",
     "upstream": [
       "E.27"
@@ -1508,7 +1508,7 @@
     "id": "ERR-18",
     "strength": "hard",
     "statement": "Throw temporaries, catch by const& (E.15).",
-    "doc": "error-handling.md",
+    "doc": "error-contracts.md",
     "detector": "review",
     "upstream": [
       "E.15"
@@ -1518,7 +1518,7 @@
     "id": "ERR-19",
     "strength": "hard",
     "statement": "Handler order is part of the contract (E.31): clauses match in source order, so catch most-derived first and put catch (...) last — the snippets above follow exactly that shape, since an earlier hidden handler is dead code that quietly changes behavior.",
-    "doc": "error-handling.md",
+    "doc": "error-contracts.md",
     "detector": "review",
     "upstream": [
       "E.31"
@@ -1528,7 +1528,7 @@
     "id": "ERR-20",
     "strength": "hard",
     "statement": "All thrown types derive from a single project base deriving from std::exception.",
-    "doc": "error-handling.md",
+    "doc": "error-contracts.md",
     "detector": "review",
     "upstream": []
   },
@@ -1536,7 +1536,7 @@
     "id": "ERR-21",
     "strength": "default",
     "statement": "Throw the most specific type; catch the most general type you can actually act on.",
-    "doc": "error-handling.md",
+    "doc": "error-contracts.md",
     "detector": "review",
     "upstream": []
   },
@@ -1544,7 +1544,7 @@
     "id": "ERR-22",
     "strength": "hard",
     "statement": "Never throw non-std::exception types (ints, pointers, strings) — they bypass every catch (const std::exception&) safety net.",
-    "doc": "error-handling.md",
+    "doc": "error-contracts.md",
     "detector": "review",
     "upstream": [
       "E.14"
@@ -1554,7 +1554,7 @@
     "id": "ERR-23",
     "strength": "hard",
     "statement": "Never throw while being the direct owner of a bare resource (E.13): the handle leaks unless unwinding can reach its manager.",
-    "doc": "error-handling.md",
+    "doc": "error-contracts.md",
     "detector": "ASan's LeakSanitizer — the handle leaks during unwinding",
     "upstream": [
       "E.13"
@@ -1563,8 +1563,8 @@
   {
     "id": "ERR-24",
     "strength": "default",
-    "statement": "Where no suitable resource handle exists, wrap the cleanup in a small scoped guard (E.19 — covered in Memory and Ownership): a last resort beneath real RAII types, never a replacement for them.",
-    "doc": "error-handling.md",
+    "statement": "Where no suitable resource handle exists, wrap the cleanup in a small scoped guard (E.19 — covered in Memory Discipline): a last resort beneath real RAII types, never a replacement for them.",
+    "doc": "error-contracts.md",
     "detector": "review",
     "upstream": [
       "E.19"
@@ -1574,7 +1574,7 @@
     "id": "ERR-25",
     "strength": "hard",
     "statement": "Throw (std::invalid_argument or domain type); Caller error is runtime reality; must be catchable",
-    "doc": "error-handling.md",
+    "doc": "error-contracts.md",
     "detector": "review",
     "upstream": []
   },
@@ -1582,7 +1582,7 @@
     "id": "ERR-26",
     "strength": "hard",
     "statement": "assert; It is a bug; unwinding cannot fix it, reporting should be loud and cheap",
-    "doc": "error-handling.md",
+    "doc": "error-contracts.md",
     "detector": "review",
     "upstream": []
   },
@@ -1590,7 +1590,7 @@
     "id": "ERR-27",
     "strength": "hard",
     "statement": "Let it propagate; Usually fatal; only unwind if a top level genuinely frees memory and retries",
-    "doc": "error-handling.md",
+    "doc": "error-contracts.md",
     "detector": "review",
     "upstream": []
   },
@@ -1598,7 +1598,7 @@
     "id": "ERR-28",
     "strength": "default",
     "statement": "Domain exception or status; Depends on whether callers routinely branch on it (see decision table)",
-    "doc": "error-handling.md",
+    "doc": "error-contracts.md",
     "detector": "review",
     "upstream": []
   },
@@ -1606,7 +1606,7 @@
     "id": "ERR-29",
     "strength": "hard",
     "statement": "Types stored in containers must have noexcept move operations.",
-    "doc": "error-handling.md",
+    "doc": "error-contracts.md",
     "detector": "clang-tidy `performance-noexcept-move` (moves and swap); review elsewhere",
     "upstream": []
   },
@@ -1614,7 +1614,7 @@
     "id": "ERR-30",
     "strength": "hard",
     "statement": "A moved-from object must be destructible and assignable; its other state is valid-but-unspecified.",
-    "doc": "error-handling.md",
+    "doc": "error-contracts.md",
     "detector": "clang-tidy `performance-noexcept-move` (moves and swap); review elsewhere",
     "upstream": []
   },
@@ -1622,7 +1622,7 @@
     "id": "ERR-31",
     "strength": "hard",
     "statement": "E.16 extends the same demand across the machinery: destructors, deallocation functions, swap, and the copy/move constructors of thrown types must never exit by an exception — standard-library basic guarantees assume it.",
-    "doc": "error-handling.md",
+    "doc": "error-contracts.md",
     "detector": "clang-tidy `performance-noexcept-move` (moves and swap); review elsewhere",
     "upstream": [
       "E.16"
@@ -1632,7 +1632,7 @@
     "id": "ERR-32",
     "strength": "hard",
     "statement": "Reserve noexcept for functions where exiting by a throw is impossible or unacceptable (E.12) — the specifier is a contract, and violating it calls std::terminate().",
-    "doc": "error-handling.md",
+    "doc": "error-propagation.md",
     "detector": "clang-tidy `performance-noexcept-move` (moves, swap); `bugprone-exception-escape` (noexcept bodies and destructors)",
     "upstream": [
       "E.12"
@@ -1642,7 +1642,7 @@
     "id": "ERR-33",
     "strength": "hard",
     "statement": "Yes (when no allocation); Container growth depends on it",
-    "doc": "error-handling.md",
+    "doc": "error-propagation.md",
     "detector": "clang-tidy `performance-noexcept-move` (moves, swap); `bugprone-exception-escape` (noexcept bodies and destructors)",
     "upstream": []
   },
@@ -1650,7 +1650,7 @@
     "id": "ERR-34",
     "strength": "hard",
     "statement": "Yes; Same; enables the move-assign idiom",
-    "doc": "error-handling.md",
+    "doc": "error-propagation.md",
     "detector": "clang-tidy `performance-noexcept-move` (moves, swap); `bugprone-exception-escape` (noexcept bodies and destructors)",
     "upstream": []
   },
@@ -1658,7 +1658,7 @@
     "id": "ERR-35",
     "strength": "hard",
     "statement": "Implicitly yes; Never allow an exception to leave a destructor",
-    "doc": "error-handling.md",
+    "doc": "error-propagation.md",
     "detector": "clang-tidy `performance-noexcept-move` (moves, swap); `bugprone-exception-escape` (noexcept bodies and destructors)",
     "upstream": []
   },
@@ -1666,7 +1666,7 @@
     "id": "ERR-36",
     "strength": "default",
     "statement": "Yes, optionally; Documents intent; enables optimizations",
-    "doc": "error-handling.md",
+    "doc": "error-propagation.md",
     "detector": "clang-tidy `performance-noexcept-move` (moves, swap); `bugprone-exception-escape` (noexcept bodies and destructors)",
     "upstream": []
   },
@@ -1674,7 +1674,7 @@
     "id": "ERR-37",
     "strength": "hard",
     "statement": "No; std::bad_alloc and friends would terminate",
-    "doc": "error-handling.md",
+    "doc": "error-propagation.md",
     "detector": "clang-tidy `performance-noexcept-move` (moves, swap); `bugprone-exception-escape` (noexcept bodies and destructors)",
     "upstream": []
   },
@@ -1682,7 +1682,7 @@
     "id": "ERR-38",
     "strength": "hard",
     "statement": "Before marking, walk the callee tree mentally: a noexcept function that calls one logging helper that allocates is a latent crash.",
-    "doc": "error-handling.md",
+    "doc": "error-propagation.md",
     "detector": "clang-tidy `performance-noexcept-move` (moves, swap); `bugprone-exception-escape` (noexcept bodies and destructors)",
     "upstream": []
   },
@@ -1690,7 +1690,7 @@
     "id": "ERR-39",
     "strength": "hard",
     "statement": "Express \"this cannot throw\" with noexcept (or conditional noexcept(expr)), never with a throw(...) list.",
-    "doc": "error-handling.md",
+    "doc": "error-propagation.md",
     "detector": "the compiler — dynamic exception specifications are ill-formed in C++17",
     "upstream": [
       "E.30"
@@ -1700,7 +1700,7 @@
     "id": "ERR-40",
     "strength": "hard",
     "statement": "C++ exceptions never cross ABI boundaries: not out of a shared library, not into it from a callback, not across an extern \"C\" edge.",
-    "doc": "error-handling.md",
+    "doc": "error-propagation.md",
     "detector": "review — no automated detector at module edges",
     "upstream": []
   },
@@ -1708,7 +1708,7 @@
     "id": "ERR-41",
     "strength": "hard",
     "statement": "Public entry points catch everything and translate to status codes or POD error structs.",
-    "doc": "error-handling.md",
+    "doc": "error-propagation.md",
     "detector": "review — no automated detector at module edges",
     "upstream": []
   },
@@ -1716,7 +1716,7 @@
     "id": "ERR-42",
     "strength": "hard",
     "statement": "Callbacks invoked *by* the foreign side wrap their body in a total catch before returning.",
-    "doc": "error-handling.md",
+    "doc": "error-propagation.md",
     "detector": "review — no automated detector at module edges",
     "upstream": []
   },
@@ -1724,7 +1724,7 @@
     "id": "ERR-43",
     "strength": "hard",
     "statement": "Do not pass live STL objects (strings, vectors, exceptions) across the edge; pass buffers and plain structs.",
-    "doc": "error-handling.md",
+    "doc": "error-propagation.md",
     "detector": "review — no automated detector at module edges",
     "upstream": []
   },
@@ -1732,7 +1732,7 @@
     "id": "ERR-44",
     "strength": "hard",
     "statement": "The same rule applies between modules built with the *same* compiler when flags differ (e.g., _GLIBCXX_USE_CXX11_ABI mismatches): treat any independently deployed binary as a foreign world.",
-    "doc": "error-handling.md",
+    "doc": "error-propagation.md",
     "detector": "review — no automated detector at module edges",
     "upstream": [
       "E.25"
@@ -1742,7 +1742,7 @@
     "id": "ERR-45",
     "strength": "hard",
     "statement": "Failures travel with the return value everywhere, never in errno-style global flags (E.28).",
-    "doc": "error-handling.md",
+    "doc": "error-propagation.md",
     "detector": "review — no automated detector at module edges",
     "upstream": [
       "E.28"
@@ -1752,7 +1752,7 @@
     "id": "ERR-46",
     "strength": "hard",
     "statement": "A catch block does exactly one of three things:",
-    "doc": "error-handling.md",
+    "doc": "error-propagation.md",
     "detector": "review",
     "upstream": []
   },
@@ -1760,7 +1760,7 @@
     "id": "ERR-47",
     "strength": "hard",
     "statement": "Logging *and then* swallowing is forbidden: it reports failure to whoever reads logs while telling the caller (via return value) that everything succeeded.",
-    "doc": "error-handling.md",
+    "doc": "error-propagation.md",
     "detector": "review",
     "upstream": []
   },
@@ -1768,7 +1768,7 @@
     "id": "ERR-48",
     "strength": "hard",
     "statement": "Catch only where meaningful recovery exists (E.17); everywhere else let the exception propagate while RAII unwinds cleanup.",
-    "doc": "error-handling.md",
+    "doc": "error-propagation.md",
     "detector": "review",
     "upstream": [
       "E.17"
@@ -1778,7 +1778,7 @@
     "id": "ERR-49",
     "strength": "default",
     "statement": "Minimize explicit try/catch (E.18): resource cleanup belongs in RAII objects, and the sanctioned dense-catch zone is the total catch at module edges.",
-    "doc": "error-handling.md",
+    "doc": "error-propagation.md",
     "detector": "review",
     "upstream": [
       "E.18"
@@ -1788,7 +1788,7 @@
     "id": "ERR-50",
     "strength": "default",
     "statement": "Log a given failure once, at the layer that finally handles it (or at the top-level sink).",
-    "doc": "error-handling.md",
+    "doc": "error-propagation.md",
     "detector": "review",
     "upstream": []
   },
@@ -1796,7 +1796,7 @@
     "id": "ERR-51",
     "strength": "hard",
     "statement": "Use bare throw; to rethrow; throw_with_nested (not manual nested-type conventions) to wrap.",
-    "doc": "error-handling.md",
+    "doc": "error-propagation.md",
     "detector": "review",
     "upstream": []
   },
@@ -1804,14 +1804,14 @@
     "id": "ERR-52",
     "strength": "default",
     "statement": "The annotation path only delivers its context if the top-level sink unwinds it: walk the chain with std::rethrow_if_nested and print each layer's what() — an annotation nobody unwinds is context written and never read.",
-    "doc": "error-handling.md",
+    "doc": "error-propagation.md",
     "detector": "review",
     "upstream": []
   },
   {
     "id": "EXPR-1",
     "strength": "default",
-    "statement": "Reach for suitable abstractions (ES.2) — library types and classes sit closer to the problem than bare language features and give shorter, clearer, better-tested code — and reach for the standard library before any third-party library or hand-written loop (ES.1); allocation-restricted contexts are the sole carve-out, escalating to the arena and pool patterns in Memory and Ownership.",
+    "statement": "Reach for suitable abstractions (ES.2) — library types and classes sit closer to the problem than bare language features and give shorter, clearer, better-tested code — and reach for the standard library before any third-party library or hand-written loop (ES.1); allocation-restricted contexts are the sole carve-out, escalating to the arena and pool patterns in Memory Discipline.",
     "doc": "expressions-and-flow.md",
     "detector": "review",
     "upstream": [
@@ -2868,7 +2868,7 @@
   {
     "id": "FN-54",
     "strength": "default",
-    "statement": "Functions whose bodies are naturally constant-evaluable take constexpr — without contorting logic to earn the keyword; constexpr permits compile-time evaluation, it does not force it (F.4; compile-time discipline lives in Quality Guidelines).",
+    "statement": "Functions whose bodies are naturally constant-evaluable take constexpr — without contorting logic to earn the keyword; constexpr permits compile-time evaluation, it does not force it (F.4; compile-time discipline lives in Naming and Constants).",
     "doc": "functions-and-interfaces.md",
     "detector": "review",
     "upstream": [
@@ -2963,7 +2963,7 @@
   {
     "id": "FN-63",
     "strength": "hard",
-    "statement": "One global's initializer never reads another — constexpr initialization where possible, accessor functions otherwise (Quality Guidelines, I.22).",
+    "statement": "One global's initializer never reads another — constexpr initialization where possible, accessor functions otherwise (Headers and Dependencies, I.22).",
     "doc": "functions-and-interfaces.md",
     "detector": "review",
     "upstream": [
@@ -3035,10 +3035,284 @@
     ]
   },
   {
+    "id": "QUAL-28",
+    "strength": "hard",
+    "statement": ".cpp for code files, .h for interface files, everywhere unless an existing project convention wins (SF.1) — identical in substance to NL.27 in the naming section; uniformity is the point, not the letters.",
+    "doc": "headers-and-dependencies.md",
+    "detector": "review",
+    "upstream": [
+      "SF.1",
+      "NL.27"
+    ]
+  },
+  {
+    "id": "QUAL-29",
+    "strength": "hard",
+    "statement": "Namespaces mirror logical structure (SF.20): components and layers, short and lowercase per the naming table — net, http.",
+    "doc": "headers-and-dependencies.md",
+    "detector": "review",
+    "upstream": [
+      "SF.20"
+    ]
+  },
+  {
+    "id": "QUAL-30",
+    "strength": "hard",
+    "statement": "Every header must be self-contained (SF.11): it includes everything its own code names — include what you name (SF.10), never depending on what a transitively included header happens to drag in; deliberate aggregation headers remain acceptable.",
+    "doc": "headers-and-dependencies.md",
+    "detector": "the compiler — building each `.cpp` with its own header first (QUAL-31) turns a missing include into a build error",
+    "upstream": [
+      "SF.11",
+      "SF.10"
+    ]
+  },
+  {
+    "id": "QUAL-31",
+    "strength": "hard",
+    "statement": "Enforce mechanically (SF.5): make each header the *first* include of its own .cpp.",
+    "doc": "headers-and-dependencies.md",
+    "detector": "the compiler — building each `.cpp` with its own header first (QUAL-31) turns a missing include into a build error",
+    "upstream": [
+      "SF.5"
+    ]
+  },
+  {
+    "id": "QUAL-32",
+    "strength": "hard",
+    "statement": "Includes go first in both .h and .cpp (SF.4); upstream's include-after-code insulation trick protects exactly one level, which is why it is not adopted here.",
+    "doc": "headers-and-dependencies.md",
+    "detector": "review",
+    "upstream": [
+      "SF.4"
+    ]
+  },
+  {
+    "id": "QUAL-33",
+    "strength": "hard",
+    "statement": "Quoted includes for locally relative files, angle brackets for everything else (SF.12): quoting a search-path header risks a future sibling file silently shadowing the intended one.",
+    "doc": "headers-and-dependencies.md",
+    "detector": "review",
+    "upstream": [
+      "SF.12"
+    ]
+  },
+  {
+    "id": "QUAL-34",
+    "strength": "hard",
+    "statement": "Spell header identifiers exactly as on disk (SF.13) — matching case, / separators, never backslashes — because the standard leaves lookup unspecified and platform-specific paths do not survive porting.",
+    "doc": "headers-and-dependencies.md",
+    "detector": "review",
+    "upstream": [
+      "SF.13"
+    ]
+  },
+  {
+    "id": "QUAL-35",
+    "strength": "hard",
+    "statement": "Forward-declare only what you can: parameters, references, pointers, and return-pointer types in declarations.",
+    "doc": "headers-and-dependencies.md",
+    "detector": "the compiler — using an incomplete type where the complete type is required fails the build",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-36",
+    "strength": "hard",
+    "statement": "Never forward-declare std:: types — it is UB.",
+    "doc": "headers-and-dependencies.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-37",
+    "strength": "default",
+    "statement": "Prefer including over forward-declaring for project headers unless compile-time pain is measured, not assumed.",
+    "doc": "headers-and-dependencies.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-38",
+    "strength": "hard",
+    "statement": "One header declares one primary type; do not chain forward declarations to break artificial cycles that better layering would remove.",
+    "doc": "headers-and-dependencies.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-39",
+    "strength": "hard",
+    "statement": "Eliminate cyclic includes with better layering; do not paper over them with guards (SF.9) — the same stance as refusing forward-declaration chains to break artificial cycles that better layering would remove.",
+    "doc": "headers-and-dependencies.md",
+    "detector": "review",
+    "upstream": [
+      "SF.9"
+    ]
+  },
+  {
+    "id": "QUAL-40",
+    "strength": "hard",
+    "statement": "Use #pragma once.",
+    "doc": "headers-and-dependencies.md",
+    "detector": "review",
+    "upstream": [
+      "SF.8"
+    ]
+  },
+  {
+    "id": "QUAL-41",
+    "strength": "hard",
+    "statement": "Headers carry declarations, templates, class definitions, and inline/constexpr definitions (SF.2) — never namespace-scope object definitions or non-inline function bodies, which duplicate per translation unit and die in linkage errors.",
+    "doc": "headers-and-dependencies.md",
+    "detector": "the linker — non-inline bodies die in duplicate-symbol errors; per-TU object copies only surface under review or ODR-sensitive tools",
+    "upstream": [
+      "SF.2"
+    ]
+  },
+  {
+    "id": "QUAL-42",
+    "strength": "hard",
+    "statement": "Anything declared in multiple source files gets one home in a header (SF.3): hand-written extern declarations drift silently until the linker complains late.",
+    "doc": "headers-and-dependencies.md",
+    "detector": "the linker — non-inline bodies die in duplicate-symbol errors; per-TU object copies only surface under review or ODR-sensitive tools",
+    "upstream": [
+      "SF.3"
+    ]
+  },
+  {
+    "id": "QUAL-43",
+    "strength": "hard",
+    "statement": "Deviation from SF.6: using namespace is tolerated sparingly inside .cpp files (a translation unit counts as local scope) and during transitions, but we stop short of blessing blanket using namespace std; — qualify when ambiguity threatens.",
+    "doc": "headers-and-dependencies.md",
+    "detector": "review",
+    "upstream": [
+      "SF.6"
+    ]
+  },
+  {
+    "id": "QUAL-44",
+    "strength": "hard",
+    "statement": "Never in headers (SF.7): at global scope it hijacks every includer's name lookup and makes include order semantically load-bearing.",
+    "doc": "headers-and-dependencies.md",
+    "detector": "review",
+    "upstream": [
+      "SF.7"
+    ]
+  },
+  {
+    "id": "QUAL-45",
+    "strength": "hard",
+    "statement": "File-local helpers in .cpp files go in an anonymous namespace (SF.22: all internal, non-exported entities live there — preferred over static for uniformity with type declarations, with exported entities staying outside).",
+    "doc": "headers-and-dependencies.md",
+    "detector": "review",
+    "upstream": [
+      "SF.22"
+    ]
+  },
+  {
+    "id": "QUAL-46",
+    "strength": "hard",
+    "statement": "Anonymous namespaces in headers are forbidden (SF.21): every including translation unit gets its own private copies, silently duplicating code and data and tripping ODR-sensitive tools.",
+    "doc": "headers-and-dependencies.md",
+    "detector": "review",
+    "upstream": [
+      "SF.21"
+    ]
+  },
+  {
+    "id": "QUAL-47",
+    "strength": "hard",
+    "statement": "A namespace-scope constant defined in a header must exist exactly once across all translation units.",
+    "doc": "headers-and-dependencies.md",
+    "detector": "review",
+    "upstream": [
+      "SF.2"
+    ]
+  },
+  {
+    "id": "QUAL-48",
+    "strength": "hard",
+    "statement": "Initialization order of namespace-scope objects across translation units is unspecified.",
+    "doc": "headers-and-dependencies.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-49",
+    "strength": "hard",
+    "statement": "Headers of libraries distributed as binaries must not expose private members: adding a member later changes sizeof and breaks ABI.",
+    "doc": "headers-and-dependencies.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-50",
+    "strength": "hard",
+    "statement": "dynamic_cast and typeid require identical RTTI representations on both sides of a module boundary.",
+    "doc": "headers-and-dependencies.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-51",
+    "strength": "hard",
+    "statement": "The RTTI caution above has a quieter sibling: the standard library itself must be binary-compatible on both sides of a module boundary.",
+    "doc": "headers-and-dependencies.md",
+    "detector": "the linker — unresolved `std::__cxx11::` symbols, `LNK2038`/`LNK4098` conflict errors; loud, but only at the final link of the combined binary",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-52",
+    "strength": "hard",
+    "statement": "The review gate is earlier: ABI-relevant compiler flags and prebuilt dependencies (see Third-Party Dependencies below) are decided for the whole module graph, never per target.",
+    "doc": "headers-and-dependencies.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-53",
+    "strength": "hard",
+    "statement": "The standard library is the default supplier (SL.2): it ships with the toolchain, is tested as a unit, and keeps every module on one ABI (see the pitfalls above).",
+    "doc": "headers-and-dependencies.md",
+    "detector": "review",
+    "upstream": [
+      "SL.2"
+    ]
+  },
+  {
+    "id": "QUAL-54",
+    "strength": "hard",
+    "statement": "A third-party dependency is a permanent design decision — vet it before adopting on four axes (SL.1): maintenance activity, portability across the supported compilers, license compatibility, and supply-chain provenance.",
+    "doc": "headers-and-dependencies.md",
+    "detector": "review",
+    "upstream": [
+      "SL.1"
+    ]
+  },
+  {
+    "id": "QUAL-55",
+    "strength": "hard",
+    "statement": "Adopted components are used within their contracts (SL.4): no relying on growth schedules, SSO capacities, or other implementation details.",
+    "doc": "headers-and-dependencies.md",
+    "detector": "review",
+    "upstream": [
+      "SL.4"
+    ]
+  },
+  {
+    "id": "QUAL-56",
+    "strength": "hard",
+    "statement": "Nothing user-defined enters namespace std (SL.3) — the sanctioned escapes are the few specializations the standard itself blesses; the ODR rules above explain why this one is absolute: a stray addition to std poisons every translation unit that includes you, and no tool tells you where.",
+    "doc": "headers-and-dependencies.md",
+    "detector": "review",
+    "upstream": [
+      "SL.3"
+    ]
+  },
+  {
     "id": "MEM-1",
     "strength": "hard",
     "statement": "Every resource — memory, file descriptors, sockets, mutexes, GPU handles — is owned by an object whose destructor releases it.",
-    "doc": "memory-and-ownership.md",
+    "doc": "memory-discipline.md",
     "detector": "ASan's LeakSanitizer (leaks), static analyzer leak checkers for handle types",
     "upstream": []
   },
@@ -3046,7 +3320,7 @@
     "id": "MEM-2",
     "strength": "hard",
     "statement": "A resource without an existing wrapper gets one immediately: a std::unique_ptr<T, Deleter> or a small scoped guard.",
-    "doc": "memory-and-ownership.md",
+    "doc": "memory-discipline.md",
     "detector": "ASan's LeakSanitizer (leaks), static analyzer leak checkers for handle types",
     "upstream": []
   },
@@ -3054,7 +3328,7 @@
     "id": "MEM-3",
     "strength": "hard",
     "statement": "Give the result of an acquisition to its manager immediately (R.12): registering the guard even one line after the open leaves a window where the next allocation throws and leaks the handle.",
-    "doc": "memory-and-ownership.md",
+    "doc": "memory-discipline.md",
     "detector": "ASan's LeakSanitizer (leaks), static analyzer leak checkers for handle types",
     "upstream": [
       "R.12"
@@ -3064,17 +3338,500 @@
     "id": "MEM-4",
     "strength": "default",
     "statement": "Prefer scoped objects (R.5): locals, members, and globals cost no separate cleanup and let destructors manage members; reach for the Default owner rung only when lifetime must exceed the scope or the object is too large for the stack.",
-    "doc": "memory-and-ownership.md",
+    "doc": "memory-discipline.md",
     "detector": "ASan's LeakSanitizer (leaks), static analyzer leak checkers for handle types",
     "upstream": [
       "R.5"
     ]
   },
   {
+    "id": "MEM-20",
+    "strength": "default",
+    "statement": "std::string_view (C++17; C++14: const std::string&)",
+    "doc": "memory-discipline.md",
+    "detector": "clang-tidy `performance-unnecessary-value-param` (missing moves in sinks); the `const std::string&`-that-should-be-a-view case has no reliable automatic check and is a review item",
+    "upstream": []
+  },
+  {
+    "id": "MEM-21",
+    "strength": "default",
+    "statement": "std::span<const T> (C++20; C++14: const T* + size)",
+    "doc": "memory-discipline.md",
+    "detector": "clang-tidy `performance-unnecessary-value-param` (missing moves in sinks); the `const std::string&`-that-should-be-a-view case has no reliable automatic check and is a review item",
+    "upstream": []
+  },
+  {
+    "id": "MEM-22",
+    "strength": "default",
+    "statement": "const T&",
+    "doc": "memory-discipline.md",
+    "detector": "clang-tidy `performance-unnecessary-value-param` (missing moves in sinks); the `const std::string&`-that-should-be-a-view case has no reliable automatic check and is a review item",
+    "upstream": []
+  },
+  {
+    "id": "MEM-23",
+    "strength": "default",
+    "statement": "const T*, documented as nullable",
+    "doc": "memory-discipline.md",
+    "detector": "clang-tidy `performance-unnecessary-value-param` (missing moves in sinks); the `const std::string&`-that-should-be-a-view case has no reliable automatic check and is a review item",
+    "upstream": []
+  },
+  {
+    "id": "MEM-24",
+    "strength": "default",
+    "statement": "By value, then std::move into storage — even when callers usually pass lvalues: the copy happens at the boundary where the compiler can prove the source is no longer needed",
+    "doc": "memory-discipline.md",
+    "detector": "clang-tidy `performance-unnecessary-value-param` (missing moves in sinks); the `const std::string&`-that-should-be-a-view case has no reliable automatic check and is a review item",
+    "upstream": []
+  },
+  {
+    "id": "MEM-25",
+    "strength": "hard",
+    "statement": "Return value; T& only when a second output genuinely exists",
+    "doc": "memory-discipline.md",
+    "detector": "clang-tidy `performance-unnecessary-value-param` (missing moves in sinks); the `const std::string&`-that-should-be-a-view case has no reliable automatic check and is a review item",
+    "upstream": []
+  },
+  {
+    "id": "MEM-26",
+    "strength": "hard",
+    "statement": "Return std::optional<T> (C++17; C++14: a named result struct), never a sentinel or nullptr",
+    "doc": "memory-discipline.md",
+    "detector": "clang-tidy `performance-unnecessary-value-param` (missing moves in sinks); the `const std::string&`-that-should-be-a-view case has no reliable automatic check and is a review item",
+    "upstream": []
+  },
+  {
+    "id": "MEM-27",
+    "strength": "hard",
+    "statement": "View parameters are borrow-only: if the value must outlive the call, copy it deliberately (see the pitfalls below before storing one).",
+    "doc": "memory-discipline.md",
+    "detector": "ASan for the use-after-free at first access; review for the store itself",
+    "upstream": []
+  },
+  {
+    "id": "MEM-28",
+    "strength": "default",
+    "statement": "Do not maintain both a const std::string& and a string_view overload for the same parameter; one spelling wins.",
+    "doc": "memory-discipline.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "MEM-29",
+    "strength": "hard",
+    "statement": "Array parameters decay: void f(int[]) *is* f(int*) after adjustment — the length is simply gone (R.14).",
+    "doc": "memory-discipline.md",
+    "detector": "review",
+    "upstream": [
+      "R.14"
+    ]
+  },
+  {
+    "id": "MEM-30",
+    "strength": "default",
+    "statement": "The optional-result row covers *value* results only.",
+    "doc": "memory-discipline.md",
+    "detector": "review",
+    "upstream": [
+      "F.42"
+    ]
+  },
+  {
+    "id": "MEM-38",
+    "strength": "hard",
+    "statement": "A borrowed-view return — T&, T*, const std::string& included (C++17: string_view; C++20: std::span) — is a promise: it points into input memory that outlives the expression; never return a view into a local or a temporary.",
+    "doc": "memory-discipline.md",
+    "detector": "GCC 13+ `-Wdangling-reference` flags simple cases but is prone to false positives — treat findings as leads, not verdicts; ASan flags the use-after-return at first access. Any view returned across a function boundary deserves a look under an ASan+UBSan build",
+    "upstream": []
+  },
+  {
+    "id": "MEM-39",
+    "strength": "hard",
+    "statement": "Never hold an iterator or reference across a container mutation that may invalidate it.",
+    "doc": "memory-discipline.md",
+    "detector": "ASan for the heap cases; libstdc++ debug mode (`_GLIBCXX_DEBUG`) or libc++ hardened/debug assertions catches container-internal violations deterministically — worth a dedicated debug-mode build if the budget allows",
+    "upstream": []
+  },
+  {
+    "id": "MEM-40",
+    "strength": "default",
+    "statement": "Containers own by default (std::vector<std::string>).",
+    "doc": "memory-discipline.md",
+    "detector": "ASan for the dangling use; review — no automated detector for the owner-naming declaration",
+    "upstream": []
+  },
+  {
+    "id": "MEM-41",
+    "strength": "hard",
+    "statement": "A container of views is allowed only when the owner provably outlives it in the same scope, and the declaration site says so in a comment naming the owner.",
+    "doc": "memory-discipline.md",
+    "detector": "ASan for the dangling use; review — no automated detector for the owner-naming declaration",
+    "upstream": []
+  },
+  {
+    "id": "MEM-42",
+    "strength": "hard",
+    "statement": "At storage boundaries (config load, deserialization, IPC), re-own: convert views to owning strings once, then pass views downward.",
+    "doc": "memory-discipline.md",
+    "detector": "ASan for the dangling use; review — no automated detector for the owner-naming declaration",
+    "upstream": []
+  },
+  {
+    "id": "MEM-43",
+    "strength": "hard",
+    "statement": "Parent owns children through shared_ptr; child stores a shared_ptr back to the parent; nothing is ever destroyed.",
+    "doc": "memory-discipline.md",
+    "detector": "LeakSanitizer reports the unreachable cycle cluster; the leak dump pointing at both ends of a mutual `shared_ptr` is the classic signature",
+    "upstream": [
+      "R.24"
+    ]
+  },
+  {
+    "id": "MEM-44",
+    "strength": "hard",
+    "statement": "The adjacent double-own trap is this itself.",
+    "doc": "memory-discipline.md",
+    "detector": "ASan catches the resulting double-free; a `shared_ptr` constructed directly from `this` is a review item",
+    "upstream": []
+  },
+  {
+    "id": "MEM-45",
+    "strength": "hard",
+    "statement": "The arena owns everything allocated from it; individual objects are never freed individually.",
+    "doc": "memory-discipline.md",
+    "detector": "ASan when annotations are wired; review for pointers escaping the arena scope",
+    "upstream": []
+  },
+  {
+    "id": "MEM-46",
+    "strength": "hard",
+    "statement": "Nothing escapes the arena scope.",
+    "doc": "memory-discipline.md",
+    "detector": "ASan when annotations are wired; review for pointers escaping the arena scope",
+    "upstream": []
+  },
+  {
+    "id": "MEM-47",
+    "strength": "hard",
+    "statement": "Preserve the sanitizer story: wire reset() to poison/unpoison the region (ASan container annotations or explicit poison calls) so use-after-reset stays detectable.",
+    "doc": "memory-discipline.md",
+    "detector": "ASan when annotations are wired; review for pointers escaping the arena scope",
+    "upstream": []
+  },
+  {
+    "id": "MEM-48",
+    "strength": "default",
+    "statement": "Measure first.",
+    "doc": "memory-discipline.md",
+    "detector": "ASan when annotations are wired; review for pointers escaping the arena scope",
+    "upstream": []
+  },
+  {
+    "id": "MEM-49",
+    "strength": "hard",
+    "statement": "Custom allocators ship matched pairs (R.15): any custom operator new comes with its matching operator delete, or that deallocation function is deliberately =delete-ed.",
+    "doc": "memory-discipline.md",
+    "detector": "ASan when annotations are wired; review for pointers escaping the arena scope",
+    "upstream": [
+      "R.15"
+    ]
+  },
+  {
+    "id": "QUAL-1",
+    "strength": "hard",
+    "statement": "PascalCase; HttpRequestParser",
+    "doc": "naming-and-constants.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-2",
+    "strength": "hard",
+    "statement": "PascalCase, single word or T; Sinkable, T",
+    "doc": "naming-and-constants.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-3",
+    "strength": "hard",
+    "statement": "snake_case; parse_header",
+    "doc": "naming-and-constants.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-4",
+    "strength": "hard",
+    "statement": "snake_case; retry_count",
+    "doc": "naming-and-constants.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-5",
+    "strength": "hard",
+    "statement": "snake_case + trailing _; size_, buffer_",
+    "doc": "naming-and-constants.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-6",
+    "strength": "hard",
+    "statement": "k prefix + PascalCase; kMaxRetries",
+    "doc": "naming-and-constants.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-7",
+    "strength": "hard",
+    "statement": "k prefix + PascalCase; Status::kOk",
+    "doc": "naming-and-constants.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-8",
+    "strength": "hard",
+    "statement": "short, lowercase; net, http",
+    "doc": "naming-and-constants.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-9",
+    "strength": "hard",
+    "statement": "PROJECT_PREFIX_ALL_CAPS; MYLIB_ASSERT",
+    "doc": "naming-and-constants.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-10",
+    "strength": "hard",
+    "statement": "Do not use m_ or plain names plus setter/getter gymnastics.",
+    "doc": "naming-and-constants.md",
+    "detector": "review",
+    "upstream": [
+      "NL.16"
+    ]
+  },
+  {
+    "id": "QUAL-11",
+    "strength": "hard",
+    "statement": "Comments that narrate what the code already says are rot-prone noise (NL.1): compilers never read them and they drift.",
+    "doc": "naming-and-constants.md",
+    "detector": "review",
+    "upstream": [
+      "NL.1"
+    ]
+  },
+  {
+    "id": "QUAL-12",
+    "strength": "hard",
+    "statement": "Comments earn their place by stating intent the code cannot express — why, constraints, expected behavior (NL.2).",
+    "doc": "naming-and-constants.md",
+    "detector": "review",
+    "upstream": [
+      "NL.2"
+    ]
+  },
+  {
+    "id": "QUAL-13",
+    "strength": "hard",
+    "statement": "Keep comments crisp, grammatical, and professional: verbosity spreads understanding thin, SMS spelling ages badly (NL.3).",
+    "doc": "naming-and-constants.md",
+    "detector": "review",
+    "upstream": [
+      "NL.3"
+    ]
+  },
+  {
+    "id": "QUAL-14",
+    "strength": "hard",
+    "statement": "No Hungarian-style type warts (NL.5): names describe functionality, and overloading matches types automatically.",
+    "doc": "naming-and-constants.md",
+    "detector": "review",
+    "upstream": [
+      "NL.5"
+    ]
+  },
+  {
+    "id": "QUAL-15",
+    "strength": "hard",
+    "statement": "Name length proportional to scope (NL.7): short conventional names (i, p) locally, descriptive names for anything visible across functions; a cryptic one-letter global is always wrong.",
+    "doc": "naming-and-constants.md",
+    "detector": "review",
+    "upstream": [
+      "NL.7"
+    ]
+  },
+  {
+    "id": "QUAL-16",
+    "strength": "hard",
+    "statement": "One house style for our code, imported libraries keep theirs (NL.8) — the table above is that house style.",
+    "doc": "naming-and-constants.md",
+    "detector": "review",
+    "upstream": [
+      "NL.8"
+    ]
+  },
+  {
+    "id": "QUAL-17",
+    "strength": "hard",
+    "statement": "Reserved identifiers (__-prefixed or leading _X) stay banned along with everything else the standard reserves.",
+    "doc": "naming-and-constants.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-18",
+    "strength": "hard",
+    "statement": "ALL_CAPS is reserved for macros (NL.9) so a shouting identifier always means text-substitution hazard; constants and scoped-enum values take k names per the table, never caps.",
+    "doc": "naming-and-constants.md",
+    "detector": "review",
+    "upstream": [
+      "NL.9",
+      "NL.10"
+    ]
+  },
+  {
+    "id": "QUAL-19",
+    "strength": "hard",
+    "statement": "Reject easily misread names (NL.19) — oO01lL, near-twin pairs like splunk/splonk: screens differ and humans skim.",
+    "doc": "naming-and-constants.md",
+    "detector": "review",
+    "upstream": [
+      "NL.19"
+    ]
+  },
+  {
+    "id": "QUAL-20",
+    "strength": "hard",
+    "statement": "One name per declaration (NL.21): int a, b; invites declarator-syntax confusion, and splitting costs nothing while reading better.",
+    "doc": "naming-and-constants.md",
+    "detector": "review",
+    "upstream": [
+      "NL.21"
+    ]
+  },
+  {
+    "id": "QUAL-21",
+    "strength": "hard",
+    "statement": "Write f(), not f(void) (NL.25): in C++ the empty parameter list already means no parameters, and the C-compat ceremony adds nothing.",
+    "doc": "naming-and-constants.md",
+    "detector": "review",
+    "upstream": [
+      "NL.25"
+    ]
+  },
+  {
+    "id": "QUAL-22",
+    "strength": "hard",
+    "statement": "West const (const int x, const T&) per conventional notation (NL.26): east const is logically defensible but unfamiliar to most readers; consistency wins and suffixed const is rejected in review.",
+    "doc": "naming-and-constants.md",
+    "detector": "review",
+    "upstream": [
+      "NL.26",
+      "NL.27",
+      "SF.1"
+    ]
+  },
+  {
+    "id": "QUAL-23",
+    "strength": "hard",
+    "statement": "Make literals readable (NL.11): digit separators (299'792'458) and typed suffixes (\"...\"s, 100ms) where the type matters.",
+    "doc": "naming-and-constants.md",
+    "detector": "review",
+    "upstream": [
+      "NL.11"
+    ]
+  },
+  {
+    "id": "QUAL-24",
+    "strength": "hard",
+    "statement": "Five Guidelines rules are layout-shaped, and hand-policing formatting wastes the exact attention reviews exist for.",
+    "doc": "naming-and-constants.md",
+    "detector": "clang-format — the committed configuration is the single encoding of each layout decision",
+    "upstream": [
+      "NL.4",
+      "NL.15",
+      "NL.17",
+      "NL.18",
+      "NL.20"
+    ]
+  },
+  {
+    "id": "QUAL-57",
+    "strength": "hard",
+    "statement": "Scoped enum class everywhere (Enum.3): plain enums convert to int too readily, and unrelated enumerations collide on shared enumerator names.",
+    "doc": "naming-and-constants.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-58",
+    "strength": "default",
+    "statement": "Define the operations enumeration users need (Enum.4) — a wrapping operator++ for iteration-like sets, for instance.",
+    "doc": "naming-and-constants.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-59",
+    "strength": "hard",
+    "statement": "Unnamed enumerations are unrelated integer constants in costume: declare each value as constexpr instead (Enum.6), which also gives it the right individual type — the constexpr-discipline section below applied.",
+    "doc": "naming-and-constants.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-60",
+    "strength": "default",
+    "statement": "Leave the underlying type at its default unless necessary (Enum.7); specifying it is required for forward-declarable enums and fixed bit width — precisely the ABI-sensitive-header situations flagged under ODR and ABI above.",
+    "doc": "naming-and-constants.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-61",
+    "strength": "default",
+    "statement": "Give enumerators explicit values only when meaning demands it (Enum.8): conventional numbering such as months starting at 1, or bit-flag sets.",
+    "doc": "naming-and-constants.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-62",
+    "strength": "hard",
+    "statement": "Enumerators whose integer values cross a module or storage boundary (published headers, serialized or logged forms) pin explicit values and grow only by appending.",
+    "doc": "naming-and-constants.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-63",
+    "strength": "default",
+    "statement": "Use compile-time evaluation where it is free: pure computations, lookup tables, literal formatting, trait-like dispatch.",
+    "doc": "naming-and-constants.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
+    "id": "QUAL-64",
+    "strength": "default",
+    "statement": "Do not obfuscate straightforward runtime logic as template metaprogramming without a measured benefit; unreadable zero-cost is usually negative-cost once maintenance is priced in.",
+    "doc": "naming-and-constants.md",
+    "detector": "review",
+    "upstream": []
+  },
+  {
     "id": "MEM-5",
     "strength": "hard",
     "statement": "std::unique_ptr<T>; Single owner, dynamic lifetime; Zero overhead; the factory return type of choice",
-    "doc": "memory-and-ownership.md",
+    "doc": "ownership-design.md",
     "detector": "ASan (use-after-free and double-free from broken ownership), LSan (leaked cycles that `weak_ptr` should have broken), TSan (data races from undeclared shared owners), review for shared-ptr sprawl",
     "upstream": []
   },
@@ -3082,7 +3839,7 @@
     "id": "MEM-6",
     "strength": "hard",
     "statement": "Raw T*, T&, std::span (C++20; C++14: T* + size), std::string_view (C++17; C++14: const std::string&); Access without ownership; Must not dangle; the caller guarantees outliving",
-    "doc": "memory-and-ownership.md",
+    "doc": "ownership-design.md",
     "detector": "ASan (use-after-free and double-free from broken ownership), LSan (leaked cycles that `weak_ptr` should have broken), TSan (data races from undeclared shared owners), review for shared-ptr sprawl",
     "upstream": []
   },
@@ -3090,7 +3847,7 @@
     "id": "MEM-7",
     "strength": "hard",
     "statement": "std::shared_ptr<T>; Lifetime genuinely shared, owner unknowable statically; Requires a written justification; cycles go through weak_ptr",
-    "doc": "memory-and-ownership.md",
+    "doc": "ownership-design.md",
     "detector": "ASan (use-after-free and double-free from broken ownership), LSan (leaked cycles that `weak_ptr` should have broken), TSan (data races from undeclared shared owners), review for shared-ptr sprawl",
     "upstream": []
   },
@@ -3098,7 +3855,7 @@
     "id": "MEM-8",
     "strength": "hard",
     "statement": "Owning raw new/delete, mixing malloc/free; Never; Blocked in review",
-    "doc": "memory-and-ownership.md",
+    "doc": "ownership-design.md",
     "detector": "ASan (use-after-free and double-free from broken ownership), LSan (leaked cycles that `weak_ptr` should have broken), TSan (data races from undeclared shared owners), review for shared-ptr sprawl",
     "upstream": []
   },
@@ -3106,7 +3863,7 @@
     "id": "MEM-9",
     "strength": "hard",
     "statement": "The rungs are exhaustive by construction (R.20): ownership is spelled in types, and assigning new's result to a raw pointer strands the object outside the ladder.",
-    "doc": "memory-and-ownership.md",
+    "doc": "ownership-design.md",
     "detector": "ASan (use-after-free and double-free from broken ownership), LSan (leaked cycles that `weak_ptr` should have broken), TSan (data races from undeclared shared owners), review for shared-ptr sprawl",
     "upstream": [
       "R.20",
@@ -3118,7 +3875,7 @@
     "id": "MEM-10",
     "strength": "hard",
     "statement": "Owning raw pointers occupy Forbidden outright, which is why this project needs no owner<T*> annotation: nothing legal remains for it to mark.",
-    "doc": "memory-and-ownership.md",
+    "doc": "ownership-design.md",
     "detector": "ASan (use-after-free and double-free from broken ownership), LSan (leaked cycles that `weak_ptr` should have broken), TSan (data races from undeclared shared owners), review for shared-ptr sprawl",
     "upstream": [
       "R.4"
@@ -3128,7 +3885,7 @@
     "id": "MEM-11",
     "strength": "hard",
     "statement": "malloc/free share the Forbidden rung (R.10) — they construct and destroy nothing (a malloc-ed record's std::string member is just a string-sized bag of bits) and mixing the verb pairs is undefined behavior; nothrow new stays as the fallback where exceptions truly cannot fly.",
-    "doc": "memory-and-ownership.md",
+    "doc": "ownership-design.md",
     "detector": "ASan (use-after-free and double-free from broken ownership), LSan (leaked cycles that `weak_ptr` should have broken), TSan (data races from undeclared shared owners), review for shared-ptr sprawl",
     "upstream": [
       "R.10"
@@ -3137,8 +3894,8 @@
   {
     "id": "MEM-12",
     "strength": "hard",
-    "statement": "A non-const global is an undeclared shared owner and data-race candidate (R.6): constants are constexpr, mutable state gets explicit ownership plus Concurrency's locking story, and init-order traps follow Quality Guidelines' accessor-function pattern.",
-    "doc": "memory-and-ownership.md",
+    "statement": "A non-const global is an undeclared shared owner and data-race candidate (R.6): constants are constexpr, mutable state gets explicit ownership plus Concurrency's locking story, and init-order traps follow Headers and Dependencies' accessor-function pattern.",
+    "doc": "ownership-design.md",
     "detector": "ASan (use-after-free and double-free from broken ownership), LSan (leaked cycles that `weak_ptr` should have broken), TSan (data races from undeclared shared owners), review for shared-ptr sprawl",
     "upstream": [
       "R.6"
@@ -3148,7 +3905,7 @@
     "id": "MEM-13",
     "strength": "hard",
     "statement": "Create with std::make_unique / std::make_shared, never unique_ptr<T>(new T(...)) (R.22, R.23) — one spelling instead of repeating the type name, exception safety, and one allocation instead of two for shared.",
-    "doc": "memory-and-ownership.md",
+    "doc": "ownership-design.md",
     "detector": "ASan (use-after-free and double-free from broken ownership), LSan (leaked cycles that `weak_ptr` should have broken), TSan (data races from undeclared shared owners), review for shared-ptr sprawl",
     "upstream": [
       "R.22",
@@ -3160,7 +3917,7 @@
     "id": "MEM-14",
     "strength": "hard",
     "statement": "\"Maybe null, not owning\" parameters take T*; \"present, not owning\" parameters take T&.",
-    "doc": "memory-and-ownership.md",
+    "doc": "ownership-design.md",
     "detector": "ASan (use-after-free and double-free from broken ownership), LSan (leaked cycles that `weak_ptr` should have broken), TSan (data races from undeclared shared owners), review for shared-ptr sprawl",
     "upstream": []
   },
@@ -3168,7 +3925,7 @@
     "id": "MEM-15",
     "strength": "hard",
     "statement": "A shared_ptr in a signature is a design decision, not convenience.",
-    "doc": "memory-and-ownership.md",
+    "doc": "ownership-design.md",
     "detector": "ASan (use-after-free and double-free from broken ownership), LSan (leaked cycles that `weak_ptr` should have broken), TSan (data races from undeclared shared owners), review for shared-ptr sprawl",
     "upstream": [
       "R.21"
@@ -3178,7 +3935,7 @@
     "id": "MEM-16",
     "strength": "hard",
     "statement": "Observing a shared object without extending its life takes std::weak_ptr and locks — mandatory for back-edges in parent/child graphs, caches, and observer lists.",
-    "doc": "memory-and-ownership.md",
+    "doc": "ownership-design.md",
     "detector": "ASan (use-after-free and double-free from broken ownership), LSan (leaked cycles that `weak_ptr` should have broken), TSan (data races from undeclared shared owners), review for shared-ptr sprawl",
     "upstream": []
   },
@@ -3186,7 +3943,7 @@
     "id": "MEM-17",
     "strength": "hard",
     "statement": "Non-std smart pointers join the ladder through the std pattern (R.31): copyable counts as shared-like, move-only as unique-like — every smart-pointer signature rule below applies to them unchanged.",
-    "doc": "memory-and-ownership.md",
+    "doc": "ownership-design.md",
     "detector": "ASan (use-after-free and double-free from broken ownership), LSan (leaked cycles that `weak_ptr` should have broken), TSan (data races from undeclared shared owners), review for shared-ptr sprawl",
     "upstream": [
       "R.31"
@@ -3196,7 +3953,7 @@
     "id": "MEM-18",
     "strength": "hard",
     "statement": "Custom-deleter owners: std::make_unique has no deleter-taking form (R.23 fixes only the default-deleter spelling), so an unwrapped resource with non-default cleanup writes its owner out in full at the acquisition site — std::unique_ptr<Handle, Deleter>{acquire(...), release} — and never parks the raw handle in between.",
-    "doc": "memory-and-ownership.md",
+    "doc": "ownership-design.md",
     "detector": "ASan (use-after-free and double-free from broken ownership), LSan (leaked cycles that `weak_ptr` should have broken), TSan (data races from undeclared shared owners), review for shared-ptr sprawl",
     "upstream": [
       "R.23"
@@ -3206,109 +3963,17 @@
     "id": "MEM-19",
     "strength": "hard",
     "statement": "make_shared carve-outs (R.22): the fused allocation keeps the object's bytes alive while any weak_ptr exists — a mandated weak_ptr back-edge or cache entry over a large object pays full memory after the object is logically dead — and make_shared cannot take a custom deleter.",
-    "doc": "memory-and-ownership.md",
+    "doc": "ownership-design.md",
     "detector": "ASan (use-after-free and double-free from broken ownership), LSan (leaked cycles that `weak_ptr` should have broken), TSan (data races from undeclared shared owners), review for shared-ptr sprawl",
     "upstream": [
       "R.22"
     ]
   },
   {
-    "id": "MEM-20",
-    "strength": "default",
-    "statement": "std::string_view (C++17; C++14: const std::string&)",
-    "doc": "memory-and-ownership.md",
-    "detector": "clang-tidy `performance-unnecessary-value-param` (missing moves in sinks); the `const std::string&`-that-should-be-a-view case has no reliable automatic check and is a review item",
-    "upstream": []
-  },
-  {
-    "id": "MEM-21",
-    "strength": "default",
-    "statement": "std::span<const T> (C++20; C++14: const T* + size)",
-    "doc": "memory-and-ownership.md",
-    "detector": "clang-tidy `performance-unnecessary-value-param` (missing moves in sinks); the `const std::string&`-that-should-be-a-view case has no reliable automatic check and is a review item",
-    "upstream": []
-  },
-  {
-    "id": "MEM-22",
-    "strength": "default",
-    "statement": "const T&",
-    "doc": "memory-and-ownership.md",
-    "detector": "clang-tidy `performance-unnecessary-value-param` (missing moves in sinks); the `const std::string&`-that-should-be-a-view case has no reliable automatic check and is a review item",
-    "upstream": []
-  },
-  {
-    "id": "MEM-23",
-    "strength": "default",
-    "statement": "const T*, documented as nullable",
-    "doc": "memory-and-ownership.md",
-    "detector": "clang-tidy `performance-unnecessary-value-param` (missing moves in sinks); the `const std::string&`-that-should-be-a-view case has no reliable automatic check and is a review item",
-    "upstream": []
-  },
-  {
-    "id": "MEM-24",
-    "strength": "default",
-    "statement": "By value, then std::move into storage — even when callers usually pass lvalues: the copy happens at the boundary where the compiler can prove the source is no longer needed",
-    "doc": "memory-and-ownership.md",
-    "detector": "clang-tidy `performance-unnecessary-value-param` (missing moves in sinks); the `const std::string&`-that-should-be-a-view case has no reliable automatic check and is a review item",
-    "upstream": []
-  },
-  {
-    "id": "MEM-25",
-    "strength": "hard",
-    "statement": "Return value; T& only when a second output genuinely exists",
-    "doc": "memory-and-ownership.md",
-    "detector": "clang-tidy `performance-unnecessary-value-param` (missing moves in sinks); the `const std::string&`-that-should-be-a-view case has no reliable automatic check and is a review item",
-    "upstream": []
-  },
-  {
-    "id": "MEM-26",
-    "strength": "hard",
-    "statement": "Return std::optional<T> (C++17; C++14: a named result struct), never a sentinel or nullptr",
-    "doc": "memory-and-ownership.md",
-    "detector": "clang-tidy `performance-unnecessary-value-param` (missing moves in sinks); the `const std::string&`-that-should-be-a-view case has no reliable automatic check and is a review item",
-    "upstream": []
-  },
-  {
-    "id": "MEM-27",
-    "strength": "hard",
-    "statement": "View parameters are borrow-only: if the value must outlive the call, copy it deliberately (see the pitfalls below before storing one).",
-    "doc": "memory-and-ownership.md",
-    "detector": "ASan for the use-after-free at first access; review for the store itself",
-    "upstream": []
-  },
-  {
-    "id": "MEM-28",
-    "strength": "default",
-    "statement": "Do not maintain both a const std::string& and a string_view overload for the same parameter; one spelling wins.",
-    "doc": "memory-and-ownership.md",
-    "detector": "review",
-    "upstream": []
-  },
-  {
-    "id": "MEM-29",
-    "strength": "hard",
-    "statement": "Array parameters decay: void f(int[]) *is* f(int*) after adjustment — the length is simply gone (R.14).",
-    "doc": "memory-and-ownership.md",
-    "detector": "review",
-    "upstream": [
-      "R.14"
-    ]
-  },
-  {
-    "id": "MEM-30",
-    "strength": "default",
-    "statement": "The optional-result row covers *value* results only.",
-    "doc": "memory-and-ownership.md",
-    "detector": "review",
-    "upstream": [
-      "F.42"
-    ]
-  },
-  {
     "id": "MEM-31",
     "strength": "hard",
     "statement": "Take smart pointers as parameters only to explicitly express lifetime semantics (R.30): readers take Borrowed views (widget*, widget&; C++20: std::span), sinks take by-value owners, and a by-value shared_ptr parameter nobody stores is an atomic no-op billed to every caller.",
-    "doc": "memory-and-ownership.md",
+    "doc": "ownership-design.md",
     "detector": "review — no checker reliably distinguishes takeover from borrow, so treat smart-pointer parameter types as reviewed API surface",
     "upstream": [
       "R.30"
@@ -3318,7 +3983,7 @@
     "id": "MEM-32",
     "strength": "hard",
     "statement": "Callee assumes ownership — stores or consumes the widget; Anything less takes widget* or widget& (R.32)",
-    "doc": "memory-and-ownership.md",
+    "doc": "ownership-design.md",
     "detector": "review — no checker reliably distinguishes takeover from borrow, so treat smart-pointer parameter types as reviewed API surface",
     "upstream": [
       "R.32"
@@ -3328,7 +3993,7 @@
     "id": "MEM-33",
     "strength": "hard",
     "statement": "Callee reseats the slot — assigns or calls reset() on some path; Never reassigned, it is a forbidden pointer out-parameter wearing a template (R.33)",
-    "doc": "memory-and-ownership.md",
+    "doc": "ownership-design.md",
     "detector": "review — no checker reliably distinguishes takeover from borrow, so treat smart-pointer parameter types as reviewed API surface",
     "upstream": [
       "R.33"
@@ -3338,7 +4003,7 @@
     "id": "MEM-34",
     "strength": "hard",
     "statement": "Callee joins the owner set — stores a copy, ideally moved; Otherwise every call pays atomic refcount traffic for nothing; the Shared-owner justification applies to signatures, not just members (R.34)",
-    "doc": "memory-and-ownership.md",
+    "doc": "ownership-design.md",
     "detector": "review — no checker reliably distinguishes takeover from borrow, so treat smart-pointer parameter types as reviewed API surface",
     "upstream": [
       "R.34"
@@ -3348,7 +4013,7 @@
     "id": "MEM-35",
     "strength": "hard",
     "statement": "Callee might reseat the pointer; Same contract as the unique case: no assignment or reset anywhere, no parameter (R.35)",
-    "doc": "memory-and-ownership.md",
+    "doc": "ownership-design.md",
     "detector": "review — no checker reliably distinguishes takeover from borrow, so treat smart-pointer parameter types as reviewed API surface",
     "upstream": [
       "R.35"
@@ -3358,7 +4023,7 @@
     "id": "MEM-36",
     "strength": "hard",
     "statement": "Reserved for conditionally retaining a count; See the deviation below",
-    "doc": "memory-and-ownership.md",
+    "doc": "ownership-design.md",
     "detector": "review — no checker reliably distinguishes takeover from borrow, so treat smart-pointer parameter types as reviewed API surface",
     "upstream": []
   },
@@ -3366,110 +4031,10 @@
     "id": "MEM-37",
     "strength": "hard",
     "statement": "Never pass a pointer or reference obtained from an aliased smart pointer down a call chain (R.37): resetting through another alias mid-call destroys the object under the borrowed reference.",
-    "doc": "memory-and-ownership.md",
+    "doc": "ownership-design.md",
     "detector": "review — no checker reliably distinguishes takeover from borrow, so treat smart-pointer parameter types as reviewed API surface",
     "upstream": [
       "R.37"
-    ]
-  },
-  {
-    "id": "MEM-38",
-    "strength": "hard",
-    "statement": "A borrowed-view return — T&, T*, const std::string& included (C++17: string_view; C++20: std::span) — is a promise: it points into input memory that outlives the expression; never return a view into a local or a temporary.",
-    "doc": "memory-and-ownership.md",
-    "detector": "GCC 13+ `-Wdangling-reference` flags simple cases but is prone to false positives — treat findings as leads, not verdicts; ASan flags the use-after-return at first access. Any view returned across a function boundary deserves a look under an ASan+UBSan build",
-    "upstream": []
-  },
-  {
-    "id": "MEM-39",
-    "strength": "hard",
-    "statement": "Never hold an iterator or reference across a container mutation that may invalidate it.",
-    "doc": "memory-and-ownership.md",
-    "detector": "ASan for the heap cases; libstdc++ debug mode (`_GLIBCXX_DEBUG`) or libc++ hardened/debug assertions catches container-internal violations deterministically — worth a dedicated debug-mode build if the budget allows",
-    "upstream": []
-  },
-  {
-    "id": "MEM-40",
-    "strength": "default",
-    "statement": "Containers own by default (std::vector<std::string>).",
-    "doc": "memory-and-ownership.md",
-    "detector": "ASan for the dangling use; review — no automated detector for the owner-naming declaration",
-    "upstream": []
-  },
-  {
-    "id": "MEM-41",
-    "strength": "hard",
-    "statement": "A container of views is allowed only when the owner provably outlives it in the same scope, and the declaration site says so in a comment naming the owner.",
-    "doc": "memory-and-ownership.md",
-    "detector": "ASan for the dangling use; review — no automated detector for the owner-naming declaration",
-    "upstream": []
-  },
-  {
-    "id": "MEM-42",
-    "strength": "hard",
-    "statement": "At storage boundaries (config load, deserialization, IPC), re-own: convert views to owning strings once, then pass views downward.",
-    "doc": "memory-and-ownership.md",
-    "detector": "ASan for the dangling use; review — no automated detector for the owner-naming declaration",
-    "upstream": []
-  },
-  {
-    "id": "MEM-43",
-    "strength": "hard",
-    "statement": "Parent owns children through shared_ptr; child stores a shared_ptr back to the parent; nothing is ever destroyed.",
-    "doc": "memory-and-ownership.md",
-    "detector": "LeakSanitizer reports the unreachable cycle cluster; the leak dump pointing at both ends of a mutual `shared_ptr` is the classic signature",
-    "upstream": [
-      "R.24"
-    ]
-  },
-  {
-    "id": "MEM-44",
-    "strength": "hard",
-    "statement": "The adjacent double-own trap is this itself.",
-    "doc": "memory-and-ownership.md",
-    "detector": "ASan catches the resulting double-free; a `shared_ptr` constructed directly from `this` is a review item",
-    "upstream": []
-  },
-  {
-    "id": "MEM-45",
-    "strength": "hard",
-    "statement": "The arena owns everything allocated from it; individual objects are never freed individually.",
-    "doc": "memory-and-ownership.md",
-    "detector": "ASan when annotations are wired; review for pointers escaping the arena scope",
-    "upstream": []
-  },
-  {
-    "id": "MEM-46",
-    "strength": "hard",
-    "statement": "Nothing escapes the arena scope.",
-    "doc": "memory-and-ownership.md",
-    "detector": "ASan when annotations are wired; review for pointers escaping the arena scope",
-    "upstream": []
-  },
-  {
-    "id": "MEM-47",
-    "strength": "hard",
-    "statement": "Preserve the sanitizer story: wire reset() to poison/unpoison the region (ASan container annotations or explicit poison calls) so use-after-reset stays detectable.",
-    "doc": "memory-and-ownership.md",
-    "detector": "ASan when annotations are wired; review for pointers escaping the arena scope",
-    "upstream": []
-  },
-  {
-    "id": "MEM-48",
-    "strength": "default",
-    "statement": "Measure first.",
-    "doc": "memory-and-ownership.md",
-    "detector": "ASan when annotations are wired; review for pointers escaping the arena scope",
-    "upstream": []
-  },
-  {
-    "id": "MEM-49",
-    "strength": "hard",
-    "statement": "Custom allocators ship matched pairs (R.15): any custom operator new comes with its matching operator delete, or that deallocation function is deliberately =delete-ed.",
-    "doc": "memory-and-ownership.md",
-    "detector": "ASan when annotations are wired; review for pointers escaping the arena scope",
-    "upstream": [
-      "R.15"
     ]
   },
   {
@@ -3574,7 +4139,7 @@
   {
     "id": "PERF-12",
     "strength": "default",
-    "statement": "Where a profile shows allocator pressure that reserve() cannot fix, arenas and object pools are the escalation path — under the ownership and ASan-annotation rules in Memory and Ownership.",
+    "statement": "Where a profile shows allocator pressure that reserve() cannot fix, arenas and object pools are the escalation path — under the ownership and ASan-annotation rules in Memory Discipline.",
     "doc": "performance.md",
     "detector": "heap profilers (allocation counts and byte totals); allocator statistics from sanitizer builds during correctness runs",
     "upstream": []
@@ -3754,237 +4319,10 @@
     ]
   },
   {
-    "id": "QUAL-1",
-    "strength": "hard",
-    "statement": "PascalCase; HttpRequestParser",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": []
-  },
-  {
-    "id": "QUAL-2",
-    "strength": "hard",
-    "statement": "PascalCase, single word or T; Sinkable, T",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": []
-  },
-  {
-    "id": "QUAL-3",
-    "strength": "hard",
-    "statement": "snake_case; parse_header",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": []
-  },
-  {
-    "id": "QUAL-4",
-    "strength": "hard",
-    "statement": "snake_case; retry_count",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": []
-  },
-  {
-    "id": "QUAL-5",
-    "strength": "hard",
-    "statement": "snake_case + trailing _; size_, buffer_",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": []
-  },
-  {
-    "id": "QUAL-6",
-    "strength": "hard",
-    "statement": "k prefix + PascalCase; kMaxRetries",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": []
-  },
-  {
-    "id": "QUAL-7",
-    "strength": "hard",
-    "statement": "k prefix + PascalCase; Status::kOk",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": []
-  },
-  {
-    "id": "QUAL-8",
-    "strength": "hard",
-    "statement": "short, lowercase; net, http",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": []
-  },
-  {
-    "id": "QUAL-9",
-    "strength": "hard",
-    "statement": "PROJECT_PREFIX_ALL_CAPS; MYLIB_ASSERT",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": []
-  },
-  {
-    "id": "QUAL-10",
-    "strength": "hard",
-    "statement": "Do not use m_ or plain names plus setter/getter gymnastics.",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": [
-      "NL.16"
-    ]
-  },
-  {
-    "id": "QUAL-11",
-    "strength": "hard",
-    "statement": "Comments that narrate what the code already says are rot-prone noise (NL.1): compilers never read them and they drift.",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": [
-      "NL.1"
-    ]
-  },
-  {
-    "id": "QUAL-12",
-    "strength": "hard",
-    "statement": "Comments earn their place by stating intent the code cannot express — why, constraints, expected behavior (NL.2).",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": [
-      "NL.2"
-    ]
-  },
-  {
-    "id": "QUAL-13",
-    "strength": "hard",
-    "statement": "Keep comments crisp, grammatical, and professional: verbosity spreads understanding thin, SMS spelling ages badly (NL.3).",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": [
-      "NL.3"
-    ]
-  },
-  {
-    "id": "QUAL-14",
-    "strength": "hard",
-    "statement": "No Hungarian-style type warts (NL.5): names describe functionality, and overloading matches types automatically.",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": [
-      "NL.5"
-    ]
-  },
-  {
-    "id": "QUAL-15",
-    "strength": "hard",
-    "statement": "Name length proportional to scope (NL.7): short conventional names (i, p) locally, descriptive names for anything visible across functions; a cryptic one-letter global is always wrong.",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": [
-      "NL.7"
-    ]
-  },
-  {
-    "id": "QUAL-16",
-    "strength": "hard",
-    "statement": "One house style for our code, imported libraries keep theirs (NL.8) — the table above is that house style.",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": [
-      "NL.8"
-    ]
-  },
-  {
-    "id": "QUAL-17",
-    "strength": "hard",
-    "statement": "Reserved identifiers (__-prefixed or leading _X) stay banned along with everything else the standard reserves.",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": []
-  },
-  {
-    "id": "QUAL-18",
-    "strength": "hard",
-    "statement": "ALL_CAPS is reserved for macros (NL.9) so a shouting identifier always means text-substitution hazard; constants and scoped-enum values take k names per the table, never caps.",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": [
-      "NL.9",
-      "NL.10"
-    ]
-  },
-  {
-    "id": "QUAL-19",
-    "strength": "hard",
-    "statement": "Reject easily misread names (NL.19) — oO01lL, near-twin pairs like splunk/splonk: screens differ and humans skim.",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": [
-      "NL.19"
-    ]
-  },
-  {
-    "id": "QUAL-20",
-    "strength": "hard",
-    "statement": "One name per declaration (NL.21): int a, b; invites declarator-syntax confusion, and splitting costs nothing while reading better.",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": [
-      "NL.21"
-    ]
-  },
-  {
-    "id": "QUAL-21",
-    "strength": "hard",
-    "statement": "Write f(), not f(void) (NL.25): in C++ the empty parameter list already means no parameters, and the C-compat ceremony adds nothing.",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": [
-      "NL.25"
-    ]
-  },
-  {
-    "id": "QUAL-22",
-    "strength": "hard",
-    "statement": "West const (const int x, const T&) per conventional notation (NL.26): east const is logically defensible but unfamiliar to most readers; consistency wins and suffixed const is rejected in review.",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": [
-      "NL.26",
-      "NL.27",
-      "SF.1"
-    ]
-  },
-  {
-    "id": "QUAL-23",
-    "strength": "hard",
-    "statement": "Make literals readable (NL.11): digit separators (299'792'458) and typed suffixes (\"...\"s, 100ms) where the type matters.",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": [
-      "NL.11"
-    ]
-  },
-  {
-    "id": "QUAL-24",
-    "strength": "hard",
-    "statement": "Five Guidelines rules are layout-shaped, and hand-policing formatting wastes the exact attention reviews exist for.",
-    "doc": "quality-guidelines.md",
-    "detector": "clang-format — the committed configuration is the single encoding of each layout decision",
-    "upstream": [
-      "NL.4",
-      "NL.15",
-      "NL.17",
-      "NL.18",
-      "NL.20"
-    ]
-  },
-  {
     "id": "QUAL-25",
     "strength": "default",
     "statement": "clang-tidy earns its keep on changed sources only when curated — wholesale category dumps bury signal under hundreds of hits.",
-    "doc": "quality-guidelines.md",
+    "doc": "static-analysis.md",
     "detector": "review",
     "upstream": []
   },
@@ -3992,7 +4330,7 @@
     "id": "QUAL-26",
     "strength": "default",
     "statement": "Individual cppcoreguidelines-* checks follow the same discipline — curated one by one, never enabled as a family.",
-    "doc": "quality-guidelines.md",
+    "doc": "static-analysis.md",
     "detector": "review",
     "upstream": []
   },
@@ -4000,345 +4338,7 @@
     "id": "QUAL-27",
     "strength": "default",
     "statement": "When a check lands in .clang-tidy, record it in the same change that adopts the corresponding rule; when a check is rejected, leave the reason here so the question is answered once.",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": []
-  },
-  {
-    "id": "QUAL-28",
-    "strength": "hard",
-    "statement": ".cpp for code files, .h for interface files, everywhere unless an existing project convention wins (SF.1) — identical in substance to NL.27 in the naming section; uniformity is the point, not the letters.",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": [
-      "SF.1",
-      "NL.27"
-    ]
-  },
-  {
-    "id": "QUAL-29",
-    "strength": "hard",
-    "statement": "Namespaces mirror logical structure (SF.20): components and layers, short and lowercase per the naming table — net, http.",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": [
-      "SF.20"
-    ]
-  },
-  {
-    "id": "QUAL-30",
-    "strength": "hard",
-    "statement": "Every header must be self-contained (SF.11): it includes everything its own code names — include what you name (SF.10), never depending on what a transitively included header happens to drag in; deliberate aggregation headers remain acceptable.",
-    "doc": "quality-guidelines.md",
-    "detector": "the compiler — building each `.cpp` with its own header first (QUAL-31) turns a missing include into a build error",
-    "upstream": [
-      "SF.11",
-      "SF.10"
-    ]
-  },
-  {
-    "id": "QUAL-31",
-    "strength": "hard",
-    "statement": "Enforce mechanically (SF.5): make each header the *first* include of its own .cpp.",
-    "doc": "quality-guidelines.md",
-    "detector": "the compiler — building each `.cpp` with its own header first (QUAL-31) turns a missing include into a build error",
-    "upstream": [
-      "SF.5"
-    ]
-  },
-  {
-    "id": "QUAL-32",
-    "strength": "hard",
-    "statement": "Includes go first in both .h and .cpp (SF.4); upstream's include-after-code insulation trick protects exactly one level, which is why it is not adopted here.",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": [
-      "SF.4"
-    ]
-  },
-  {
-    "id": "QUAL-33",
-    "strength": "hard",
-    "statement": "Quoted includes for locally relative files, angle brackets for everything else (SF.12): quoting a search-path header risks a future sibling file silently shadowing the intended one.",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": [
-      "SF.12"
-    ]
-  },
-  {
-    "id": "QUAL-34",
-    "strength": "hard",
-    "statement": "Spell header identifiers exactly as on disk (SF.13) — matching case, / separators, never backslashes — because the standard leaves lookup unspecified and platform-specific paths do not survive porting.",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": [
-      "SF.13"
-    ]
-  },
-  {
-    "id": "QUAL-35",
-    "strength": "hard",
-    "statement": "Forward-declare only what you can: parameters, references, pointers, and return-pointer types in declarations.",
-    "doc": "quality-guidelines.md",
-    "detector": "the compiler — using an incomplete type where the complete type is required fails the build",
-    "upstream": []
-  },
-  {
-    "id": "QUAL-36",
-    "strength": "hard",
-    "statement": "Never forward-declare std:: types — it is UB.",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": []
-  },
-  {
-    "id": "QUAL-37",
-    "strength": "default",
-    "statement": "Prefer including over forward-declaring for project headers unless compile-time pain is measured, not assumed.",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": []
-  },
-  {
-    "id": "QUAL-38",
-    "strength": "hard",
-    "statement": "One header declares one primary type; do not chain forward declarations to break artificial cycles that better layering would remove.",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": []
-  },
-  {
-    "id": "QUAL-39",
-    "strength": "hard",
-    "statement": "Eliminate cyclic includes with better layering; do not paper over them with guards (SF.9) — the same stance as refusing forward-declaration chains to break artificial cycles that better layering would remove.",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": [
-      "SF.9"
-    ]
-  },
-  {
-    "id": "QUAL-40",
-    "strength": "hard",
-    "statement": "Use #pragma once.",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": [
-      "SF.8"
-    ]
-  },
-  {
-    "id": "QUAL-41",
-    "strength": "hard",
-    "statement": "Headers carry declarations, templates, class definitions, and inline/constexpr definitions (SF.2) — never namespace-scope object definitions or non-inline function bodies, which duplicate per translation unit and die in linkage errors.",
-    "doc": "quality-guidelines.md",
-    "detector": "the linker — non-inline bodies die in duplicate-symbol errors; per-TU object copies only surface under review or ODR-sensitive tools",
-    "upstream": [
-      "SF.2"
-    ]
-  },
-  {
-    "id": "QUAL-42",
-    "strength": "hard",
-    "statement": "Anything declared in multiple source files gets one home in a header (SF.3): hand-written extern declarations drift silently until the linker complains late.",
-    "doc": "quality-guidelines.md",
-    "detector": "the linker — non-inline bodies die in duplicate-symbol errors; per-TU object copies only surface under review or ODR-sensitive tools",
-    "upstream": [
-      "SF.3"
-    ]
-  },
-  {
-    "id": "QUAL-43",
-    "strength": "hard",
-    "statement": "Deviation from SF.6: using namespace is tolerated sparingly inside .cpp files (a translation unit counts as local scope) and during transitions, but we stop short of blessing blanket using namespace std; — qualify when ambiguity threatens.",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": [
-      "SF.6"
-    ]
-  },
-  {
-    "id": "QUAL-44",
-    "strength": "hard",
-    "statement": "Never in headers (SF.7): at global scope it hijacks every includer's name lookup and makes include order semantically load-bearing.",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": [
-      "SF.7"
-    ]
-  },
-  {
-    "id": "QUAL-45",
-    "strength": "hard",
-    "statement": "File-local helpers in .cpp files go in an anonymous namespace (SF.22: all internal, non-exported entities live there — preferred over static for uniformity with type declarations, with exported entities staying outside).",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": [
-      "SF.22"
-    ]
-  },
-  {
-    "id": "QUAL-46",
-    "strength": "hard",
-    "statement": "Anonymous namespaces in headers are forbidden (SF.21): every including translation unit gets its own private copies, silently duplicating code and data and tripping ODR-sensitive tools.",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": [
-      "SF.21"
-    ]
-  },
-  {
-    "id": "QUAL-47",
-    "strength": "hard",
-    "statement": "A namespace-scope constant defined in a header must exist exactly once across all translation units.",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": [
-      "SF.2"
-    ]
-  },
-  {
-    "id": "QUAL-48",
-    "strength": "hard",
-    "statement": "Initialization order of namespace-scope objects across translation units is unspecified.",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": []
-  },
-  {
-    "id": "QUAL-49",
-    "strength": "hard",
-    "statement": "Headers of libraries distributed as binaries must not expose private members: adding a member later changes sizeof and breaks ABI.",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": []
-  },
-  {
-    "id": "QUAL-50",
-    "strength": "hard",
-    "statement": "dynamic_cast and typeid require identical RTTI representations on both sides of a module boundary.",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": []
-  },
-  {
-    "id": "QUAL-51",
-    "strength": "hard",
-    "statement": "The RTTI caution above has a quieter sibling: the standard library itself must be binary-compatible on both sides of a module boundary.",
-    "doc": "quality-guidelines.md",
-    "detector": "the linker — unresolved `std::__cxx11::` symbols, `LNK2038`/`LNK4098` conflict errors; loud, but only at the final link of the combined binary",
-    "upstream": []
-  },
-  {
-    "id": "QUAL-52",
-    "strength": "hard",
-    "statement": "The review gate is earlier: ABI-relevant compiler flags and prebuilt dependencies (see Third-Party Dependencies below) are decided for the whole module graph, never per target.",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": []
-  },
-  {
-    "id": "QUAL-53",
-    "strength": "hard",
-    "statement": "The standard library is the default supplier (SL.2): it ships with the toolchain, is tested as a unit, and keeps every module on one ABI (see the pitfalls above).",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": [
-      "SL.2"
-    ]
-  },
-  {
-    "id": "QUAL-54",
-    "strength": "hard",
-    "statement": "A third-party dependency is a permanent design decision — vet it before adopting on four axes (SL.1): maintenance activity, portability across the supported compilers, license compatibility, and supply-chain provenance.",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": [
-      "SL.1"
-    ]
-  },
-  {
-    "id": "QUAL-55",
-    "strength": "hard",
-    "statement": "Adopted components are used within their contracts (SL.4): no relying on growth schedules, SSO capacities, or other implementation details.",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": [
-      "SL.4"
-    ]
-  },
-  {
-    "id": "QUAL-56",
-    "strength": "hard",
-    "statement": "Nothing user-defined enters namespace std (SL.3) — the sanctioned escapes are the few specializations the standard itself blesses; the ODR rules above explain why this one is absolute: a stray addition to std poisons every translation unit that includes you, and no tool tells you where.",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": [
-      "SL.3"
-    ]
-  },
-  {
-    "id": "QUAL-57",
-    "strength": "hard",
-    "statement": "Scoped enum class everywhere (Enum.3): plain enums convert to int too readily, and unrelated enumerations collide on shared enumerator names.",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": []
-  },
-  {
-    "id": "QUAL-58",
-    "strength": "default",
-    "statement": "Define the operations enumeration users need (Enum.4) — a wrapping operator++ for iteration-like sets, for instance.",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": []
-  },
-  {
-    "id": "QUAL-59",
-    "strength": "hard",
-    "statement": "Unnamed enumerations are unrelated integer constants in costume: declare each value as constexpr instead (Enum.6), which also gives it the right individual type — the constexpr-discipline section below applied.",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": []
-  },
-  {
-    "id": "QUAL-60",
-    "strength": "default",
-    "statement": "Leave the underlying type at its default unless necessary (Enum.7); specifying it is required for forward-declarable enums and fixed bit width — precisely the ABI-sensitive-header situations flagged under ODR and ABI above.",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": []
-  },
-  {
-    "id": "QUAL-61",
-    "strength": "default",
-    "statement": "Give enumerators explicit values only when meaning demands it (Enum.8): conventional numbering such as months starting at 1, or bit-flag sets.",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": []
-  },
-  {
-    "id": "QUAL-62",
-    "strength": "hard",
-    "statement": "Enumerators whose integer values cross a module or storage boundary (published headers, serialized or logged forms) pin explicit values and grow only by appending.",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": []
-  },
-  {
-    "id": "QUAL-63",
-    "strength": "default",
-    "statement": "Use compile-time evaluation where it is free: pure computations, lookup tables, literal formatting, trait-like dispatch.",
-    "doc": "quality-guidelines.md",
-    "detector": "review",
-    "upstream": []
-  },
-  {
-    "id": "QUAL-64",
-    "strength": "default",
-    "statement": "Do not obfuscate straightforward runtime logic as template metaprogramming without a measured benefit; unreadable zero-cost is usually negative-cost once maintenance is priced in.",
-    "doc": "quality-guidelines.md",
+    "doc": "static-analysis.md",
     "detector": "review",
     "upstream": []
   },
@@ -4782,7 +4782,7 @@
   {
     "id": "TPL-45",
     "strength": "default",
-    "statement": "Values are computed at compile time by constexpr functions (T.123) — the conventional, cheaper spelling — and value-yielding TMP gets flagged for replacement; operational detail lives in Quality Guidelines' Compile-Time Discipline section.",
+    "statement": "Values are computed at compile time by constexpr functions (T.123) — the conventional, cheaper spelling — and value-yielding TMP gets flagged for replacement; operational detail lives in Naming and Constants' Compile-Time Discipline section.",
     "doc": "templates-and-generics.md",
     "detector": "review",
     "upstream": [

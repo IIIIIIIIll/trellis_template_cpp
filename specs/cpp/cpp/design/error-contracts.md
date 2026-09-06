@@ -1,27 +1,17 @@
-# Error Handling
+---
+description: Choosing between exceptions, status returns, and asserts; failure contracts at API boundaries
+paths: [**/*.cpp, **/*.cc, **/*.cxx, **/*.hpp, **/*.hh, **/*.h, **/*.inl, **/*.ipp]
+---
 
-> How errors are signaled, propagated, and handled in C++ code: choosing between exceptions, status returns, and asserts; `noexcept` discipline; and keeping failures contained at module boundaries.
+# Error Contracts
+
+> How failures are signaled at design time: choosing between exceptions, status returns, and asserts; stating invariants, preconditions, and postconditions; and keeping expected-style results centralized so the C++23 migration stays mechanical.
 
 ---
 
 ## Overview
 
-Every failure path uses exactly one of four mechanisms, picked by the *kind* of failure, not by author preference.
-
-Baseline: C++14 (`std::make_unique`, generic lambdas, relaxed `constexpr`).
-C++17 and C++20 additions appear as marked upgrades where they change the
-recommendation — `std::string_view`, `std::optional`, `if constexpr`,
-`[[nodiscard]]`, `std::span` — each with the C++14 spelling alongside, so a
-C++14 project can follow every rule as written.
-
-The core split:
-
-1. **Programmer errors** (violated *internal* invariants, impossible states) are bugs. Use `assert`; do not design error paths for them.
-2. **Expected, recoverable failures** (parse errors, missing config, full queue) are part of the function's contract. Return a status or an expected-like result.
-3. **Rare failures the caller must react to** (allocation failure mid-operation, socket reset) throw exceptions.
-4. **Unrecoverable corruption** terminates. Do not catch it into a "graceful" path.
-
-One refinement keeps the rows honest: misuse by an in-process *public-API caller* throws a domain exception (see the worth-throwing table under Exceptions Policy) — catchable, not an assert, not a status. Asserts answer for the module's internal invariants only.
+Mechanism choice is a design-time, one-way decision: an error-handling strategy cannot be retrofitted onto finished interfaces, so the assert-versus-status-versus-throw split is fixed while signatures are still fluid. The choice follows the *kind* of failure, never author preference — internal invariant violations are bugs that assert, anticipated failures are part of the contract and return a status or expected-style result, rare caller-reactable failures throw, and corruption beyond repair terminates. Contracts carry the same weight as mechanisms: a constructor either establishes the class invariant or throws, preconditions are stated at the boundary so misuse is visible, and postconditions are promised with equal care. Expected-style results are centralized behind one `Result` alias from day one, thrown types form a single hierarchy under `std::exception`, and every handler catches by `const&` — the failure contract at an API boundary is as much a part of the signature as its parameters. The implementation half — `noexcept` discipline, propagation across module boundaries, and logging versus handling — lives in [Error Propagation](../implement/error-propagation.md).
 
 ---
 
@@ -47,7 +37,7 @@ Two design-time corollaries keep this table honest.
 
 **ERR-7.** Exceptions carry failures, never ordinary control flow (`E.3`): loop termination and cache misses are normal outcomes, and implementations optimize on exactly that assumption.
 
-The cost shape justifies the split: a non-throwing path is effectively free under table-driven unwinding, while a thrown exception typically costs three to four orders of magnitude more than a status check. On a hot loop a throw on any foreseeable failure dominates the budget — [Performance](./performance.md)'s measurement discipline (`PERF-1`) decides where that cost is acceptable.
+The cost shape justifies the split: a non-throwing path is effectively free under table-driven unwinding, while a thrown exception typically costs three to four orders of magnitude more than a status check. On a hot loop a throw on any foreseeable failure dominates the budget — [Performance](../implement/performance.md)'s measurement discipline (`PERF-1`) decides where that cost is acceptable.
 
 ```cpp
 // C++17
@@ -245,7 +235,7 @@ Deviation from `E.14`: stricter than the rule — every thrown type derives from
 
 Caught by: ASan's LeakSanitizer — the handle leaks during unwinding.
 
-**ERR-24 (default).** Where no suitable resource handle exists, wrap the cleanup in a small scoped guard (`E.19` — covered in [Memory and Ownership](./memory-and-ownership.md)): a last resort beneath real RAII types, never a replacement for them.
+**ERR-24 (default).** Where no suitable resource handle exists, wrap the cleanup in a small scoped guard (`E.19` — covered in [Memory Discipline](../implement/memory-discipline.md)): a last resort beneath real RAII types, never a replacement for them.
 
 Caught by: review — no automated detector.
 
@@ -298,193 +288,13 @@ private:
 
 ---
 
-## `noexcept` Discipline
-
-Caught by: clang-tidy `performance-noexcept-move` (moves, swap); `bugprone-exception-escape` (noexcept bodies and destructors).
-
-Default strength: hard.
-
-**ERR-32.** Reserve `noexcept` for functions where exiting by a throw is impossible or unacceptable (`E.12`) — the specifier is a contract, and violating it calls `std::terminate()`.
-
-| Function | `noexcept`? | Why |
-|----------|-------------|-----|
-| **ERR-33** Move constructor / move assignment | Yes (when no allocation) | Container growth depends on it |
-| **ERR-34** `swap` | Yes | Same; enables the move-assign idiom |
-| **ERR-35** Destructors | Implicitly yes | Never allow an exception to leave a destructor |
-| **ERR-36 (default)** Leaf accessors provably free of throwing calls | Yes, optionally | Documents intent; enables optimizations |
-| **ERR-37** Anything that allocates, logs, locks, formats, or calls unknown code | No | `std::bad_alloc` and friends would terminate |
-
-**ERR-38.** Before marking, walk the callee tree mentally: a `noexcept` function that calls one logging helper that allocates is a latent crash. If unsure, leave it off — correctness first, then measure.
-
-```cpp
-// ERR-38: reserve noexcept for functions that cannot throw
-// compiles; UB at runtime
-// Wrong: terminate() at runtime — push_back can throw bad_alloc
-std::vector<int> snapshot() noexcept {          // NO
-    std::vector<int> v;
-    v.reserve(size());
-    // ...
-    return v;
-}
-
-// Right: reserve the specifier for what holds
-struct Stats {
-    bool empty() const noexcept { return count_ == 0; }
-    void clear() noexcept;
-
-private:
-    std::size_t count_ = 0;
-};
-```
-
-```cpp
-// Conditional specification when delegating
-template <typename T>
-void chain(T&& next) noexcept(noexcept(next.step())) {
-    next.step();
-}
-```
-
-**ERR-39.** Express "this cannot throw" with `noexcept` (or conditional `noexcept(expr)`), never with a `throw(...)` list.
-
-Historical footnote (`E.30`): dynamic exception specifications (`throw(X, Y)`) were removed from the language because library changes bubbled into crashes up long call chains.
-
-Caught by: the compiler — dynamic exception specifications are ill-formed in C++17.
-
----
-
-## Propagation Across Module Boundaries
-
-Caught by: review — no automated detector at module edges.
-
-Default strength: hard.
-
-**ERR-40.** C++ exceptions never cross ABI boundaries: not out of a shared library, not into it from a callback, not across an `extern "C"` edge. Different compilers, STL versions, or build flags produce incompatible exception representations; letting one fly across such an edge is undefined behavior, not a caught error.
-
-- **ERR-41.** Public entry points catch everything and translate to **status codes or POD error structs**.
-- **ERR-42.** Callbacks invoked *by* the foreign side wrap their body in a total catch before returning.
-- **ERR-43.** Do not pass live STL objects (strings, vectors, exceptions) across the edge; pass buffers and plain structs.
-
-```cpp
-// C++17
-// module_api.cpp — compiled inside the shared library
-extern "C" int mylib_parse(const char* bytes, size_t len, MylibDoc** out) {
-    try {
-        auto doc = parse_doc(std::string_view{bytes, len});
-        *out = release_to_c(doc);
-        return MYLIB_OK;
-    } catch (const std::bad_alloc&) {
-        return MYLIB_OUT_OF_MEMORY;
-    } catch (const ParseError& e) {
-        set_last_error(e.what());      // thread-local message buffer
-        return MYLIB_PARSE_ERROR;
-    } catch (const std::exception& e) {
-        set_last_error(e.what());
-        return MYLIB_ERROR;
-    } catch (...) {
-        return MYLIB_UNKNOWN;          // foreign exceptions stop HERE
-    }
-}
-
-// callback.cpp — host calls INTO us; exceptions must not leak upward
-extern "C" int trampoline(void* ctx, const Event* ev) {
-    try {
-        static_cast<Handler*>(ctx)->on_event(*ev);
-        return 0;
-    } catch (...) {
-        return 1;
-    }
-}
-```
-
-**ERR-44.** The same rule applies between modules built with the *same* compiler when flags differ (e.g., `_GLIBCXX_USE_CXX11_ABI` mismatches): treat any independently deployed binary as a foreign world.
-
-Deviation from `E.25`: the rule addresses builds where exceptions are unavailable, simulating RAII behind `valid()` checks. This codebase runs exceptions by default, so that simulation stays hypothetical; its live residue is precisely this policy — RAII-managed results are translated to status codes at the edge rather than carried across the ABI.
-
-**ERR-45.** Failures travel with the return value everywhere, never in `errno`-style global flags (`E.28`). The one deliberate difference: the shim's `set_last_error` thread-local message buffer above supplements the status code for diagnostics — it never replaces the code as the success/failure signal.
-
----
-
-## Logging vs Handling
-
-Caught by: review — no automated detector.
-
-**ERR-46 (hard).** A `catch` block does exactly **one** of three things:
-
-1. **Handles** — recovers and continues, having full context.
-2. **Annotates and rethrows** — adds information, preserves the cause.
-3. **Deliberately ignores** — with a comment stating why silence is safe.
-
-```cpp
-// Deliberate ignore, documented — the third sanctioned behavior
-try {
-    legacy_file.close();
-} catch (const std::exception&) {
-    // Best-effort cleanup during shutdown; nothing actionable remains.
-}
-```
-
-**ERR-47 (hard).** Logging *and then* swallowing is forbidden: it reports failure to whoever reads logs while telling the caller (via return value) that everything succeeded.
-
-```cpp
-// ERR-47: handle failures, never log and swallow
-// compiles; UB at runtime
-// Wrong: log-and-swallow — caller sees success, ops sees a scary line
-try {
-    save_document();
-} catch (const std::exception& e) {
-    LOG(ERROR) << "save failed: " << e.what();
-}
-
-// Right: handle where the retry loop lives
-try {
-    save_document();
-} catch (const TransientError&) {
-    schedule_retry(attempt_++);
-}
-```
-
-**ERR-48 (hard).** Catch only where meaningful recovery exists (`E.17`); everywhere else let the exception propagate while RAII unwinds cleanup.
-
-**ERR-49 (default).** Minimize explicit `try`/`catch` (`E.18`): resource cleanup belongs in RAII objects, and the sanctioned dense-catch zone is the total catch at module edges.
-
-**ERR-50 (default).** Log a given failure **once**, at the layer that finally handles it (or at the top-level sink). Annotation layers add context via nested exceptions, not duplicate log lines.
-
-**ERR-51 (hard).** Use bare `throw;` to rethrow; `throw_with_nested` (not manual nested-type conventions) to wrap.
-
-```cpp
-// ERR-51: bare throw rethrows, throw_with_nested wraps
-// compiles; UB at runtime
-// Wrong: rethrow by value — slices and loses the derived type
-try {
-    load();
-} catch (const std::exception& e) {
-    throw e;
-}
-
-// Right: annotate with context, preserve the original via nesting
-try {
-    load();
-} catch (const std::exception& e) {
-    std::throw_with_nested(std::runtime_error(
-        std::string{"loading config '"} + path_ + "': " + e.what()));
-}
-```
-
-**ERR-52 (default).** The annotation path only delivers its context if the top-level sink unwinds it: walk the chain with `std::rethrow_if_nested` and print each layer's `what()` — an annotation nobody unwinds is context written and never read.
-
 ## Quality Check
 
-Before merging error-handling code, confirm:
+Before merging error-contract decisions, confirm:
 
 - [ ] Each failure uses the mechanism matching its row in the decision table
 - [ ] `assert` never validates external input; throws never report internal bugs
 - [ ] All thrown types derive from the project base; all catches are `const&`
-- [ ] Move constructor, move assignment, and `swap` are `noexcept` where claimed
-- [ ] No `noexcept` on any function whose callees can allocate, log, or format
-- [ ] Every exported module function and callback trampoline has a total catch translating to status codes
-- [ ] Every `catch` handles, annotates-and-rethrows (`throw;`), or documents the ignore
-- [ ] Each failure is logged exactly once, at the layer that handles it
 
 ---
 

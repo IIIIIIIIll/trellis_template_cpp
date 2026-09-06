@@ -1,3 +1,8 @@
+---
+description: Function signature design, parameter and return-value conventions at API boundaries
+paths: [**/*.cpp, **/*.cc, **/*.cxx, **/*.hpp, **/*.hh, **/*.h, **/*.inl, **/*.ipp]
+---
+
 # Functions and Interfaces
 
 > Calling conventions for C++ functions: parameter roles, return-value economics, function design, and interface intent made visible in signatures.
@@ -8,7 +13,7 @@
 
 A signature is a contract compilers partially enforce and reviewers fully judge. This page fixes that contract: parameter roles (`in`/`out`/`inout`), value-versus-reference decisions, view inputs, return economics, function size and purity, and the surface details — explicit constructors, named constants, `[[nodiscard]]` — that make intent unambiguous. The principle underneath (`P.3`): code states intent through names, types, and roles so a reader can tell whether it does what it should — a signature-first page is that principle applied. And when the standard library or a well-maintained third-party library already provides a capability, reaching for it beats hand-rolling (`P.13`): correctness, performance, and portability come pre-tested.
 
-Ownership mechanics live in [Memory and Ownership](./memory-and-ownership.md), which makes leaks structural instead of hunting them one by one (`P.8`); failure signaling lives in [Error Handling](./error-handling.md), owning what compile time cannot catch and run time must (`P.6`).
+Ownership mechanics live in [Ownership Design](./ownership-design.md), which makes leaks structural instead of hunting them one by one (`P.8`); failure signaling lives in [Error Contracts](./error-contracts.md), owning what compile time cannot catch and run time must (`P.6`).
 
 Baseline: C++14 (`std::make_unique`, generic lambdas, relaxed `constexpr`).
 C++17 and C++20 additions appear as marked upgrades where they change the
@@ -63,7 +68,7 @@ Default strength: default.
 
 Caught by: clang-tidy `performance-unnecessary-value-param` catches sinks missing their move; needless `const T&` on scalars is a review item.
 
-**FN-12.** Copy cost decides, not habit (`F.16`). These tables are the project's spelling of the Guidelines' conventional-passing advice (`F.15`); anything cleverer than the rows below owes a measurement plus a comment. Indirection is not free either: a `const T&` bound to a `double` costs more than copying eight bytes. The full parameter-kind mapping — views, sinks, out-params, optionality — lives in the Pass-by Rules section of [Memory and Ownership](./memory-and-ownership.md).
+**FN-12.** Copy cost decides, not habit (`F.16`). These tables are the project's spelling of the Guidelines' conventional-passing advice (`F.15`); anything cleverer than the rows below owes a measurement plus a comment. Indirection is not free either: a `const T&` bound to a `double` costs more than copying eight bytes. The full parameter-kind mapping — views, sinks, out-params, optionality — lives in the Pass-by Rules section of [Memory Discipline](../implement/memory-discipline.md).
 
 | Argument situation | Pass | Why |
 |--------------------|------|-----|
@@ -97,9 +102,9 @@ void add_user(User u) {           // sink: one copy, moved into place
 double apply(double rate);
 ```
 
-Hot paths measuring differently may revert a sink to `const T&` plus an explicit copy, the measurement recorded in the comment — pricing such changes is measurement-first territory ([Performance](./performance.md), `Per.6`).
+Hot paths measuring differently may revert a sink to `const T&` plus an explicit copy, the measurement recorded in the comment — pricing such changes is measurement-first territory ([Performance](../implement/performance.md), `Per.6`).
 
-**FN-20.** Ownership and absence change the calculus. A smart-pointer parameter exists to transfer or share ownership — never to borrow; a copyable smart pointer that is only dereferenced restricts callers for no benefit (`F.7`; the ownership ladder lives in [Memory and Ownership](./memory-and-ownership.md)).
+**FN-20.** Ownership and absence change the calculus. A smart-pointer parameter exists to transfer or share ownership — never to borrow; a copyable smart pointer that is only dereferenced restricts callers for no benefit (`F.7`; the ownership ladder lives in [Ownership Design](./ownership-design.md)).
 
 **FN-21.** When "no object" is a valid input, say so with `T*`; when absence is impossible, `T&` is simpler and often faster (`F.60`).
 
@@ -135,7 +140,7 @@ void checksum(const uint8_t* data, size_t len);   // Wrong: pointer and length d
 void checksum(std::span<const uint8_t> data); // Right: length travels with the bytes
 ```
 
-**FN-24 (hard).** At untrusted-input boundaries (config load, IPC, deserialization), validate and re-own first. Lifetime traps for stored views are cataloged in [Memory and Ownership](./memory-and-ownership.md).
+**FN-24 (hard).** At untrusted-input boundaries (config load, IPC, deserialization), validate and re-own first. Lifetime traps for stored views are cataloged in [Memory Discipline](../implement/memory-discipline.md).
 
 ```cpp
 // C++17
@@ -264,7 +269,7 @@ void main();                       // Wrong: a compiler extension, not C++ (F.46
 int main();                        // Right: int; the return statement is optional (F.46)
 ```
 
-Ownership transfer and sharing through returned pointers route through [Memory and Ownership](./memory-and-ownership.md) (`F.26`, `F.27`): transferring means returning `std::unique_ptr<T>` — never a locally allocated raw pointer — while `shared_ptr` is reserved for genuinely shared lifetimes with a written justification, prefers `unique_ptr` when one owner at a time suffices, and breaks cycles through `weak_ptr`. A returned `T&` is the spelling for results where copying is undesirable and "no object" cannot happen (`F.44`) — accessors into members that outlive the call, like `ledger_total` above; a returned reference never transfers ownership.
+Ownership transfer and sharing through returned pointers route through [Ownership Design](./ownership-design.md) (`F.26`, `F.27`): transferring means returning `std::unique_ptr<T>` — never a locally allocated raw pointer — while `shared_ptr` is reserved for genuinely shared lifetimes with a written justification, prefers `unique_ptr` when one owner at a time suffices, and breaks cycles through `weak_ptr`. A returned `T&` is the spelling for results where copying is undesirable and "no object" cannot happen (`F.44`) — accessors into members that outlive the call, like `ledger_total` above; a returned reference never transfers ownership.
 
 ---
 
@@ -340,7 +345,7 @@ void handle_message(std::span<const uint8_t> bytes) {
 
 **FN-39.** Prefer pure functions — same input, same output, no hidden state (`F.8`); push I/O, locking, and globals to the edges.
 
-Guard clauses, early returns, and merged compound conditions are flow style owned by [Expressions and Flow](./expressions-and-flow.md) (`F.56`).
+Guard clauses, early returns, and merged compound conditions are flow style owned by [Expressions and Flow](../implement/expressions-and-flow.md) (`F.56`).
 
 ### Default Arguments Beat Overload Pyramids
 
@@ -392,7 +397,7 @@ private:
 };
 ```
 
-[Error Handling](./error-handling.md) owns the full discipline.
+[Error Propagation](../implement/error-propagation.md) owns the full discipline.
 
 ### `inline` Is a Measured Hint, Not Decoration
 
@@ -428,7 +433,7 @@ bool entry_less(const Entry& a, const Entry& b);
 
 **FN-48.** Lambdas used locally — including passed to parallel algorithms that join before returning — capture by reference (`F.52`): cheaper than copies and preserving intended side effects on the caller's objects.
 
-**FN-49 (hard).** A lambda that escapes its scope — queued to another thread, stored, returned — captures by value, with any needed non-local pointer owned (`unique_ptr`) and whole-object snapshots captured by copy — `[snapshot = *this]` on C++14; **C++17:** `[*this]` spells the same in one token. Deviation from `F.53`: upstream avoids escaping by-reference captures where lifetimes can be proven; we make by-value unconditional, because proving a referenced object outlives another thread is exactly the review burden the rule exists to remove — mirroring the borrowed-view rules above and in [Memory and Ownership](./memory-and-ownership.md).
+**FN-49 (hard).** A lambda that escapes its scope — queued to another thread, stored, returned — captures by value, with any needed non-local pointer owned (`unique_ptr`) and whole-object snapshots captured by copy — `[snapshot = *this]` on C++14; **C++17:** `[*this]` spells the same in one token. Deviation from `F.53`: upstream avoids escaping by-reference captures where lifetimes can be proven; we make by-value unconditional, because proving a referenced object outlives another thread is exactly the review burden the rule exists to remove — mirroring the borrowed-view rules above and in [Memory Discipline](../implement/memory-discipline.md).
 
 **FN-50 (hard).** `[this]` stays a borrow: it is safe only where the lambda cannot outlive the owner — synchronous call sites, or a queue proven to join before the owner dies.
 
@@ -513,7 +518,7 @@ constexpr auto kRetryBackoff = std::chrono::milliseconds{500};
 enum class Mode { Truncate, Append };                  // flag soup becomes names
 ```
 
-**FN-54.** Functions whose bodies are naturally constant-evaluable take `constexpr` — without contorting logic to earn the keyword; `constexpr` permits compile-time evaluation, it does not force it (`F.4`; compile-time discipline lives in [Quality Guidelines](./quality-guidelines.md)).
+**FN-54.** Functions whose bodies are naturally constant-evaluable take `constexpr` — without contorting logic to earn the keyword; `constexpr` permits compile-time evaluation, it does not force it (`F.4`; compile-time discipline lives in [Naming and Constants](../implement/naming-and-constants.md)).
 
 ### Const as Documentation
 
@@ -544,7 +549,7 @@ Caught by: review — no automated detector.
 
 ### Strongly Typed Inputs
 
-**FN-58 (default).** Interfaces are precisely and strongly typed (`I.4`) — largely enforced above through views over raw sequences (or their C++14 pointer-plus-size spellings), option structs over flag soup, named constants over magic numbers, and units carried by types such as durations. Push toward static type safety (`P.4`): on C++14 a raw union becomes a tagged struct and array decay becomes a pointer-plus-size pair; **C++17:** unions become `variant`; **C++20:** decay becomes `span`. Narrowing conversions plus casual casts stay banned — the conversion and initialization rules live in [Expressions and Flow](./expressions-and-flow.md).
+**FN-58 (default).** Interfaces are precisely and strongly typed (`I.4`) — largely enforced above through views over raw sequences (or their C++14 pointer-plus-size spellings), option structs over flag soup, named constants over magic numbers, and units carried by types such as durations. Push toward static type safety (`P.4`): on C++14 a raw union becomes a tagged struct and array decay becomes a pointer-plus-size pair; **C++17:** unions become `variant`; **C++20:** decay becomes `span`. Narrowing conversions plus casual casts stay banned — the conversion and initialization rules live in [Expressions and Flow](../implement/expressions-and-flow.md).
 
 **FN-59.** Adjacent same-type parameters invocable with the same arguments in either order are defect bait — `copy_n(p, q, n)` reads three ways (`I.24`); mark the source `const`, pass pointer-plus-size pairs (`std::span` on C++20), or bundle into named fields. Order-insensitive pairs like `max(a, b)` are exempt.
 
@@ -567,11 +572,11 @@ void copy_n(std::span<const char> src,
 
 **FN-62.** Avoid singletons (`I.3`): they are complicated globals in disguise. The acceptable form is a function-local static accessor for initialization on first use, kept simple enough that its destruction needs no synchronization.
 
-**FN-63.** One global's initializer never reads another — constexpr initialization where possible, accessor functions otherwise ([Quality Guidelines](./quality-guidelines.md), `I.22`).
+**FN-63.** One global's initializer never reads another — constexpr initialization where possible, accessor functions otherwise ([Headers and Dependencies](./headers-and-dependencies.md), `I.22`).
 
 ### Preconditions and Postconditions
 
-**FN-64 (default).** State every precondition the type system cannot express (`I.5`), preferably as a dedicated spelling rather than ad-hoc `if`s buried in the body (`I.6`). Deviation from `I.5`: GSL `Expects()` is not adopted — preconditions are spelled `assert` for programmer errors plus a comment naming the constraint (the failure taxonomy lives in [Error Handling](./error-handling.md)), and a class invariant is established once by the constructor, not restated per member. Deviation from `I.6`: likewise no dedicated precondition macro — `assert` with the naming comment plays that role, and `unsigned` types are not the fix for non-negativity.
+**FN-64 (default).** State every precondition the type system cannot express (`I.5`), preferably as a dedicated spelling rather than ad-hoc `if`s buried in the body (`I.6`). Deviation from `I.5`: GSL `Expects()` is not adopted — preconditions are spelled `assert` for programmer errors plus a comment naming the constraint (the failure taxonomy lives in [Error Contracts](./error-contracts.md)), and a class invariant is established once by the constructor, not restated per member. Deviation from `I.6`: likewise no dedicated precondition macro — `assert` with the naming comment plays that role, and `unsigned` types are not the fix for non-negativity.
 
 ```cpp
 Rect intersect(Rect a, Rect b) {
@@ -584,17 +589,17 @@ Rect intersect(Rect a, Rect b) {
 
 ### Failures Are Unignorable
 
-**FN-66.** A failure to perform a required task must be impossible to ignore. Deviation from `I.10`: upstream routes required-task failures through exceptions; our response splits — programmer errors assert, expected recoverable failures return checked statuses, rare failures throw ([Error Handling](./error-handling.md)) — and `errno`-style codes survive only at ABI edges.
+**FN-66.** A failure to perform a required task must be impossible to ignore. Deviation from `I.10`: upstream routes required-task failures through exceptions; our response splits — programmer errors assert, expected recoverable failures return checked statuses, rare failures throw ([Error Contracts](./error-contracts.md)) — and `errno`-style codes survive only at ABI edges.
 
 ### Abstraction Boundaries
 
 **FN-67.** Ugly but necessary techniques get wrapped once behind a clean interface, the suppression commented inside the abstraction (`I.30`); raw allocation, pointer arithmetic, and casting stay inside implementations — the standard library is the model, and low-level mess outside abstraction implementations is a review finding (`P.11`).
 
-**FN-68.** Rule violations must never leak through an API into user code (the deviation-comment policy lives in [the Core Guidelines disposition](./core-guidelines-disposition.md)).
+**FN-68.** Rule violations must never leak through an API into user code (the deviation-comment policy lives in [the Core Guidelines disposition](../core-guidelines-disposition.md)).
 
-**FN-69 (default).** Module edges are the one boundary where the interface surface shrinks. Deviation from `I.26`: cross-compiler ABI compatibility is not a project target, so full C++ interfaces are fine in-process; the C-style subset discipline applies only at genuine module edges — total catches translating to status codes in [Error Handling](./error-handling.md), ABI-stable headers in [Quality Guidelines](./quality-guidelines.md).
+**FN-69 (default).** Module edges are the one boundary where the interface surface shrinks. Deviation from `I.26`: cross-compiler ABI compatibility is not a project target, so full C++ interfaces are fine in-process; the C-style subset discipline applies only at genuine module edges — total catches translating to status codes in [Error Propagation](../implement/error-propagation.md), ABI-stable headers in [Headers and Dependencies](./headers-and-dependencies.md).
 
-Template parameters document themselves — a `static_assert` over standard traits (`std::is_integral<T>::value`) on C++14; **C++17:** the `_v` variable-template spelling; **C++20:** a named concept ([Templates and Generics](./templates-and-generics.md), `I.9`). Protocol interfaces stay pure — no data members, virtual destructor, deleted copies ([Classes and Hierarchies](./classes-and-hierarchies.md), `I.25`) — and headers distributed as binaries use Pimpl with an out-of-line destructor and move operations ([Quality Guidelines](./quality-guidelines.md), `I.27`).
+Template parameters document themselves — a `static_assert` over standard traits (`std::is_integral<T>::value`) on C++14; **C++17:** the `_v` variable-template spelling; **C++20:** a named concept ([Templates and Generics](./templates-and-generics.md), `I.9`). Protocol interfaces stay pure — no data members, virtual destructor, deleted copies ([Classes and Hierarchies](./classes-and-hierarchies.md), `I.25`) — and headers distributed as binaries use Pimpl with an out-of-line destructor and move operations ([Headers and Dependencies](./headers-and-dependencies.md), `I.27`).
 
 ---
 

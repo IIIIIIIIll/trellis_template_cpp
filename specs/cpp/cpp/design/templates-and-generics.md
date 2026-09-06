@@ -1,3 +1,8 @@
+---
+description: Templates, concepts, and generic library design
+paths: [**/*.cpp, **/*.cc, **/*.cxx, **/*.hpp, **/*.hh, **/*.h, **/*.inl, **/*.ipp]
+---
+
 # Templates and Generics
 
 > Generic code whose requirements live in the type system: concepts as documented interfaces (C++14: trait checks and `static_assert`), deliberately small template surface, and explicit tradeoffs for erasure, dispatch, and CRTP.
@@ -162,7 +167,7 @@ Notes:
 - **TPL-17 (default).** Name a template (or give it a stable home) only when reuse is real; an operation needed exactly once does not earn a header of its own (`T.140`, `T.141`).
 - **TPL-18 (hard).** Spell aliases with `using`, never `typedef` (`T.43`): the new name leads, the syntax parallels `auto`, and only `using` can form template aliases; expect enforcement to flag legacy `typedef`s widely.
 - **TPL-19 (default).** Make deduction authored, not lucky (`T.44`). On the C++14 baseline there is no CTAD: hand callers an explicit factory function, or require explicit template arguments at the call site — never leave the mapping to luck. **C++17:** CTAD fires when a constructor's parameters deduce the template arguments; write an explicit deduction guide — `template <typename Iter> Container(Iter b, Iter e) -> Container<typename std::iterator_traits<Iter>::value_type>;` — when no constructor exposes the intended mapping, or when the implicit one would deduce the wrong thing. Aggregate templates generate no constructor guides: deducing one from brace-init requires a hand-written guide, with aggregate CTAD itself arriving in C++20. And guides generated from constructors inherited via `using Base::Base;` deduce against the base template, not the derived class — making a derived class template deducible from them only landed in C++23.
-- Header-heavy instantiation volume has a relief valve in explicit instantiation declarations: `extern template class LruCache<K, V>;` in the header tells every other translation unit the definition is instantiated elsewhere, while the matching explicit instantiation (`template class LruCache<K, V>;`) is compiled once in a single source file. Judging when that trade pays lives in [Quality Guidelines](./quality-guidelines.md)' Compile-Time Discipline section.
+- Header-heavy instantiation volume has a relief valve in explicit instantiation declarations: `extern template class LruCache<K, V>;` in the header tells every other translation unit the definition is instantiated elsewhere, while the matching explicit instantiation (`template class LruCache<K, V>;`) is compiled once in a single source file. Judging when that trade pays lives in [Naming and Constants](../implement/naming-and-constants.md)' Compile-Time Discipline section.
 
 ---
 
@@ -374,7 +379,7 @@ Two adjacent rules keep templates and hierarchies out of each other's hair.
 
 **TPL-36 (hard).** Respect the hard compiler boundary: a member function template cannot be virtual (`T.83`) — vtables would need link-time generation — so route dynamic behavior through double dispatch, visitors, or computed dispatch instead.
 
-Covered elsewhere: mixing hierarchies and arrays (`T.81`) — a derived array decaying into a base pointer, where element stride differs (`C.152`) — and slicing are owned by [Classes and Hierarchies](./classes-and-hierarchies.md). ABI-stable published interfaces live in [Quality Guidelines](./quality-guidelines.md), whose PIMPL recipe pairs with this guide's non-template-core pattern (stable base plus typed wrapper, `T.84`), sanctioned where instantiation volume meets a frozen interface.
+Covered elsewhere: mixing hierarchies and arrays (`T.81`) — a derived array decaying into a base pointer, where element stride differs (`C.152`) — and slicing are owned by [Classes and Hierarchies](./classes-and-hierarchies.md). ABI-stable published interfaces live in [Headers and Dependencies](./headers-and-dependencies.md), whose PIMPL recipe pairs with this guide's non-template-core pattern (stable base plus typed wrapper, `T.84`), sanctioned where instantiation volume meets a frozen interface.
 
 ---
 
@@ -413,7 +418,7 @@ Caught by: review — no automated detector.
 
 **TPL-44 (default).** Computing types at compile time belongs to template aliases (`T.122`); classic trait-struct techniques survive mainly inside the standard library itself.
 
-**TPL-45 (default).** Values are computed at compile time by `constexpr` functions (`T.123`) — the conventional, cheaper spelling — and value-yielding TMP gets flagged for replacement; operational detail lives in [Quality Guidelines](./quality-guidelines.md)' Compile-Time Discipline section.
+**TPL-45 (default).** Values are computed at compile time by `constexpr` functions (`T.123`) — the conventional, cheaper spelling — and value-yielding TMP gets flagged for replacement; operational detail lives in [Naming and Constants](../implement/naming-and-constants.md)' Compile-Time Discipline section.
 
 **TPL-46 (default).** Reach for the standard library's TMP facilities first (`T.124`) — `std::conditional`, `std::enable_if`, `tuple` — because they are portable and universally known; custom machinery must beat them to appear.
 

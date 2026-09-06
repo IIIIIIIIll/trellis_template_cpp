@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """extract_rules.py — generate the machine-readable rules digest (rules.json).
 
-Parses the rule-block grammar (see rules_grammar.py / design.md) over the
-topic guides and emits one JSON object per rule with exactly these fields:
+Parses the rule-block grammar (see rules_grammar.py) over the topic guides
+and emits one JSON object per rule with exactly these fields:
 
   id         local rule ID, e.g. "MEM-7"
   strength   "hard" | "default" (marker, else the section's stated default)
   statement  first sentence of the rule block, markdown stripped
-  doc        guide file name, e.g. "memory-and-ownership.md"
+  doc        guide file basename, e.g. "memory-discipline.md"
   detector   verbatim `Caught by:` text (no trailing period); the explicit
              no-detector statement is normalized to "review"
   upstream   Core Guidelines IDs cited in the rule block, in first-appearance
@@ -38,7 +38,7 @@ DEFAULT_OUT = REPO / "specs" / "cpp" / "cpp" / "rules.json"
 def default_docs():
     return [
         p
-        for p in sorted(DEFAULT_DIR.glob("*.md"))
+        for p in sorted(DEFAULT_DIR.rglob("*.md"))
         if p.name not in rg.EXEMPT_DOCS
     ]
 
@@ -75,7 +75,7 @@ def build_entries(docs):
 def main(argv=None):
     ap = argparse.ArgumentParser(
         description="Generate rules.json from the guideline rule blocks.",
-        epilog="With no --path, reads the 10 topic guides under specs/cpp/cpp/. "
+        epilog="With no --path, reads the 14 topic guides under specs/cpp/cpp/. "
         "The output regenerates byte-identical; commit it, never hand-edit it.",
     )
     ap.add_argument(
@@ -97,7 +97,7 @@ def main(argv=None):
         docs = []
         for p in args.path:
             if p.is_dir():
-                docs.extend(sorted(p.glob("*.md")))
+                docs.extend(sorted(p.rglob("*.md")))
             else:
                 docs.append(p)
         docs = [d for d in docs if d.name not in rg.EXEMPT_DOCS]

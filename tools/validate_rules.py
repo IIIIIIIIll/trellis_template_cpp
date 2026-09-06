@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """validate_rules.py — repo gate over the cpp guideline rule-block grammar.
 
-Normative grammar: task 08-30-cpp-rules-machine-format, design.md ("Rule-block
-grammar", "Grammar details"); author-facing contract:
+Normative grammar and author-facing contract:
 .trellis/spec/registry/guideline-authoring.md.
 
 Checks per run:
@@ -19,10 +18,11 @@ Checks per run:
   * footer contract per shipped guide (--- + **Language** line + attribution)
   * relative markdown links resolve; anchor fragments must match a heading slug
 
-Scope: the 10 topic guides (specs/cpp/cpp/*.md minus index.md and
-core-guidelines-disposition.md). Pass --path to validate other files or
-directories (e.g. the grammar fixtures under tools/testdata/). Footer checks
-bind shipped guides only; rule checks bind non-exempt docs.
+Scope: the 14 topic guides under specs/cpp/cpp/ (design/, implement/,
+verification/), which rglob discovers; index.md, the three phase routers,
+and core-guidelines-disposition.md are exempt. Pass --path to validate other
+files or directories (e.g. the grammar fixtures under tools/testdata/).
+Footer checks bind shipped guides only; rule checks bind non-exempt docs.
 
 Exit status: 0 = no violations, 1 = violations reported, 2 = usage/IO error.
 """
@@ -44,7 +44,7 @@ DEFAULT_DIR = REPO / "specs" / "cpp" / "cpp"
 def default_docs():
     return [
         p
-        for p in sorted(DEFAULT_DIR.glob("*.md"))
+        for p in sorted(DEFAULT_DIR.rglob("*.md"))
         if p.name not in rg.EXEMPT_DOCS
     ]
 
@@ -53,7 +53,7 @@ def docs_from_paths(paths):
     docs = []
     for p in paths:
         if p.is_dir():
-            docs.extend(sorted(p.glob("*.md")))
+            docs.extend(sorted(p.rglob("*.md")))
         else:
             docs.append(p)
     if not docs:
@@ -215,9 +215,9 @@ def check_doc(path: Path):
 def main(argv=None):
     ap = argparse.ArgumentParser(
         description="Validate the cpp guideline rule-block grammar.",
-        epilog="With no --path, validates the 10 topic guides under "
-        "specs/cpp/cpp/ (index.md and core-guidelines-disposition.md are "
-        "exempt from rule checks).",
+        epilog="With no --path, validates the 14 topic guides under "
+        "specs/cpp/cpp/ (index.md, the three phase routers, and "
+        "core-guidelines-disposition.md are exempt from rule checks).",
     )
     ap.add_argument(
         "--path",

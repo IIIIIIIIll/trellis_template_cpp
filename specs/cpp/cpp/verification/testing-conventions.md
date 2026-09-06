@@ -1,3 +1,8 @@
+---
+description: Test framework and layout, test naming, what deserves a test
+paths: [**/*.cpp, **/*.cc, **/*.cxx, **/*.hpp, **/*.hh, **/*.h, **/*.inl, **/*.ipp, **/test*/**, **/tests/**, **/*_test.*, **/*Test.*]
+---
+
 # Testing Conventions
 
 > Testing conventions for C++ code: framework choice, file layout, naming, sanitizer pairing, and what deserves a test at all.
@@ -215,7 +220,7 @@ TEST(HeaderScanner, Test_Scan_TruncatedHeader_ReturnsTruncatedError) { /* ... */
 
 Caught by: the compiler for direct private-member access; review for `friend` and macro end-runs.
 
-**TEST-24 (default).** Internal-linkage helpers meet the same wall from the other side: a function in an anonymous namespace (`SF.22`) is invisible outside its translation unit, so it is untestable by construction — and the white-box ban above rules out peeling it open. The reachable path is promotion: logic worth direct testing moves to an internal header or a named-namespace translation unit with its own suite; what stays anonymous is what the public suite already exercises transitively. The linkage side of this trade is the quality guide's [internal-linkage rules](./quality-guidelines.md).
+**TEST-24 (default).** Internal-linkage helpers meet the same wall from the other side: a function in an anonymous namespace (`SF.22`) is invisible outside its translation unit, so it is untestable by construction — and the white-box ban above rules out peeling it open. The reachable path is promotion: logic worth direct testing moves to an internal header or a named-namespace translation unit with its own suite; what stays anonymous is what the public suite already exercises transitively. The linkage side of this trade is the quality guide's [internal-linkage rules](../design/headers-and-dependencies.md).
 
 Caught by: review — no automated detector.
 

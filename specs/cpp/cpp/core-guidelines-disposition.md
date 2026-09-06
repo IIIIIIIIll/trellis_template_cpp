@@ -1,3 +1,8 @@
+---
+description: Project stance toward the ISO C++ Core Guidelines: per-section disposition, residual ledger, deviation recording, adoption process, safety profiles
+paths: [**/*.cpp, **/*.cc, **/*.cxx, **/*.hpp, **/*.hh, **/*.h, **/*.inl, **/*.ipp]
+---
+
 # Core Guidelines Disposition
 
 > Where this project stands on the ISO C++ Core Guidelines — which sections
@@ -19,19 +24,19 @@ All fourteen major Guidelines sections, each routed to the guide that owns it:
 | Section | Stance | Lives in | Disposition |
 |---------|--------|----------|-------------|
 | `P` | Adopt selectively | Every guide | Express intent directly (`P.1`), compile-time over run-time checking (`P.5`, `P.7`), supporting tools over trust (`P.12`) |
-| `I` | Adapt | [Functions and Interfaces](./functions-and-interfaces.md) | No ownership transfer through raw pointers (`I.11`) via the memory guide's ownership ladder |
-| `F` | Adapt | [Functions and Interfaces](./functions-and-interfaces.md) | Cheap copies by value (`F.16`), returned out-values (`F.20`), named multi-result structs (`F.21`) |
-| `ES` | Adapt | [Expressions and Flow](./expressions-and-flow.md) | Initialize everything (`ES.20`); refuse silent narrowing conversions (`ES.46`) |
-| `C` | Adapt | [Classes and Hierarchies](./classes-and-hierarchies.md) | Rule-of-five discipline (`C.21`), in-class initializers (`C.48`, `C.49`), no copying polymorphic types (`C.67`) |
-| `Enum` | Adopt | [Quality Guidelines](./quality-guidelines.md) | Scoped `enum class` everywhere; constant-style enumerator naming, not `ALL_CAPS` (`Enum.5`) |
-| `R` | Adopt | [Memory and Ownership](./memory-and-ownership.md) | RAII invariant (`R.1`); no owning `new`/`delete` (`R.11`); smart-pointer ladder with justified sharing |
-| `E` | Adapt | [Error Handling](./error-handling.md) | Exceptions default, status returns at ABI edges; leak prevention (`E.6`) intact |
-| `T` | Adapt | [Templates and Generics](./templates-and-generics.md) | Raise abstraction through templates (`T.1`); metaprogramming needs a measured payoff |
-| `CP` | Adopt | [Concurrency](./concurrency.md) | RAII locks over bare lock/unlock pairs (`CP.20`); shared state minimized; data races are defects |
-| `SF` | Adopt | [Quality Guidelines](./quality-guidelines.md) | Self-contained headers, `#pragma once`, anonymous namespaces confined to `.cpp` files |
-| `NL` | Adapt | [Quality Guidelines](./quality-guidelines.md) | Naming owned here; layout delegated entirely to the committed clang-format configuration |
-| `Per` | Adapt | [Performance](./performance.md) | Measurement first, hot paths only, allocation pressure priced explicitly |
-| `Con` | Adopt | [Functions and Interfaces](./functions-and-interfaces.md) | Immutable by default (`Con.1`): `const`/`constexpr` unless mutability justifies itself at review |
+| `I` | Adapt | [Functions and Interfaces](./design/functions-and-interfaces.md) | No ownership transfer through raw pointers (`I.11`) via the memory guide's ownership ladder |
+| `F` | Adapt | [Functions and Interfaces](./design/functions-and-interfaces.md) | Cheap copies by value (`F.16`), returned out-values (`F.20`), named multi-result structs (`F.21`) |
+| `ES` | Adapt | [Expressions and Flow](./implement/expressions-and-flow.md) | Initialize everything (`ES.20`); refuse silent narrowing conversions (`ES.46`) |
+| `C` | Adapt | [Classes and Hierarchies](./design/classes-and-hierarchies.md) | Rule-of-five discipline (`C.21`), in-class initializers (`C.48`, `C.49`), no copying polymorphic types (`C.67`) |
+| `Enum` | Adopt | [Naming and Constants](./implement/naming-and-constants.md) | Scoped `enum class` everywhere; constant-style enumerator naming, not `ALL_CAPS` (`Enum.5`) |
+| `R` | Adopt | [Ownership Design](./design/ownership-design.md) | RAII invariant (`R.1`); no owning `new`/`delete` (`R.11`); smart-pointer ladder with justified sharing |
+| `E` | Adapt | [Error Contracts](./design/error-contracts.md) | Exceptions default, status returns at ABI edges; leak prevention (`E.6`) intact; propagation mechanics live in [Error Propagation](./implement/error-propagation.md) |
+| `T` | Adapt | [Templates and Generics](./design/templates-and-generics.md) | Raise abstraction through templates (`T.1`); metaprogramming needs a measured payoff |
+| `CP` | Adopt | [Concurrency](./implement/concurrency.md) | RAII locks over bare lock/unlock pairs (`CP.20`); shared state minimized; data races are defects |
+| `SF` | Adopt | [Headers and Dependencies](./design/headers-and-dependencies.md) | Self-contained headers, `#pragma once`, anonymous namespaces confined to `.cpp` files |
+| `NL` | Adapt | [Naming and Constants](./implement/naming-and-constants.md) | Naming owned here; layout delegated entirely to the committed clang-format configuration |
+| `Per` | Adapt | [Performance](./implement/performance.md) | Measurement first, hot paths only, allocation pressure priced explicitly |
+| `Con` | Adopt | [Functions and Interfaces](./design/functions-and-interfaces.md) | Immutable by default (`Con.1`): `const`/`constexpr` unless mutability justifies itself at review |
 
 ---
 
@@ -63,7 +68,7 @@ Nine Guidelines sections contain nothing a topic guide can operationalize as cod
 |------|--------|-------------|
 | `A.1` | Adopt | Isolate less-stable code behind stable seams so it can be tested, refactored, and deprecated alone |
 | `A.2` | Adopt | Reusable parts ship as maintained libraries — headers plus optional binaries — not copy-pasted fragments |
-| `A.4` | Adopt | Library dependency graphs stay acyclic; the file-level twin lives in Quality Guidelines under `SF.9` |
+| `A.4` | Adopt | Library dependency graphs stay acyclic; the file-level twin lives in [Headers and Dependencies](./design/headers-and-dependencies.md) under `SF.9` |
 | `CPL.1` | Adopt | Prefer C++ for its type checking; enforced simply by compiling everything with a C++ compiler |
 | `CPL.2` | Adapt | Surviving C stays in the common subset compiled as C++; genuine C-only translation units are recorded deviations |
 | `CPL.3` | Adopt | Call C through a C++ facade: `extern "C"` at the boundary, RAII and type safety for callers |
@@ -71,8 +76,8 @@ Nine Guidelines sections contain nothing a topic guide can operationalize as cod
 | `FAQ.9` | Adopt | The Guidelines propose no new language features; every cited practice here uses shippable standard features |
 | `FAQ.50`, `FAQ.51`, `FAQ.52`, `FAQ.54` | Adapt | GSL declined: `std` equivalents plus curated warnings replace it; nothing vendors or assumes GSL, which was never standardized |
 | `FAQ.55` | Adopt | View taxonomy adopted directly: `std::string_view` (C++17; C++14: `const std::string&`) for read-only views, `std::span` (C++20; C++14: pointer + size) for read-write |
-| `FAQ.59` | Adopt | `Expects` is contract-syntax placeholder, not `assert`; precondition discipline lives in Error Handling pending language contracts |
-| `FAQ.60` | Adapt | Same story for `Ensures`: Error Handling owns the failure-contract vocabulary, not a GSL macro |
+| `FAQ.59` | Adopt | `Expects` is contract-syntax placeholder, not `assert`; precondition discipline lives in [Error Contracts](./design/error-contracts.md) pending language contracts |
+| `FAQ.60` | Adapt | Same story for `Ensures`: [Error Contracts](./design/error-contracts.md) owns the failure-contract vocabulary, not a GSL macro |
 | `GSL` | Adapt | GSL declined: standard-library equivalents and curated warnings replace GSL constructs; the merged `FAQ.50`/`FAQ.51`/`FAQ.52`/`FAQ.54` row above records the reasoning |
 | `NR.1` | Adopt | Anti-rule acknowledged: declare at first use; declarations-on-top manufactures uninitialized variables |
 | `NR.2` | Adopt | Anti-rule acknowledged: early returns concentrate error handling; single-return gymnastics invent extra state |
@@ -82,8 +87,8 @@ Nine Guidelines sections contain nothing a topic guide can operationalize as cod
 | `NR.6` | Adopt | Anti-rule acknowledged: RAII makes goto-exit cleanup ladders obsolete |
 | `NR.7` | Adopt | Anti-rule acknowledged: protected data is hierarchy-scoped global data; keep data private |
 | `Pro` | Adapt | The safety profiles map onto the enforcement machinery the Quality Check in [the guidelines index](./index.md) prescribes — the Profiles table below records the mapping |
-| `SL.1` | Adopt | Use libraries wherever possible; reinvented wheels lack reviewers, tests, and fixes — [Third-Party Dependencies](./quality-guidelines.md) in Quality Guidelines owns the vetting |
-| `SL.2` | Adopt | Standard library before third-party: most scrutinized, most portable, least supply-chain risk — the ordering rule lives in [Third-Party Dependencies](./quality-guidelines.md) |
+| `SL.1` | Adopt | Use libraries wherever possible; reinvented wheels lack reviewers, tests, and fixes — [Third-Party Dependencies](./design/headers-and-dependencies.md) owns the vetting |
+| `SL.2` | Adopt | Standard library before third-party: most scrutinized, most portable, least supply-chain risk — the ordering rule lives in [Third-Party Dependencies](./design/headers-and-dependencies.md) |
 | `SL.3` | Adopt | Nothing user-defined enters namespace `std`; same reasoning as banning forward-declared `std::` types |
 | `SL.4` | Adopt | Umbrella rule: use standard components within their contracts; concrete catchers live in the profile mapping below |
 | `RF` | Adopt | Followed as written: a coding standard should be adapted per organization, and this registry is exactly such an adaptation — meta-commentary carrying no coding practice |
@@ -110,7 +115,7 @@ The Guidelines group their highest-value rules into safety profiles; we do not t
 | Guideline profile | Trigger (Quality Check) | Our equivalent enforcement |
 |-------------------|-------------------------|----------------------------|
 | Type safety | Tidy-clean: the curated clang-tidy checks, including narrowing-conversion checks, run on changed sources | `enum class` and explicit conversions per Expressions and Flow |
-| Bounds safety | Tests green: an ASan+UBSan build whenever the change touches allocation, containers, or object lifetime | Out-of-bounds access; the container-invalidation table in Memory and Ownership covers what ASan misses deterministically |
+| Bounds safety | Tests green: an ASan+UBSan build whenever the change touches allocation, containers, or object lifetime | Out-of-bounds access; the container-invalidation table in [Memory Discipline](./implement/memory-discipline.md) covers what ASan misses deterministically |
 | Lifetime safety | Tests green: the same ASan+UBSan condition on lifetime-touching changes | Ownership ladder plus dangling-view review rules; ASan catches the escapes that reach memory |
 | Concurrency safety | ThreadSanitizer: threading changes additionally pass a TSan build | Lock discipline in Concurrency |
 

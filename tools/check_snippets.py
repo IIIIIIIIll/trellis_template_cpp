@@ -111,7 +111,7 @@ TYPE_KEYWORD_RE = re.compile(
 
 
 def default_docs():
-    return sorted(DEFAULT_DIR.glob("*.md"))
+    return sorted(DEFAULT_DIR.rglob("*.md"))
 
 
 def stubs_for(path: Path, base_stubs: str) -> str:
@@ -445,7 +445,7 @@ def main(argv=None):
         docs = []
         for p in args.path:
             if p.is_dir():
-                docs.extend(sorted(p.glob("*.md")))
+                docs.extend(sorted(p.rglob("*.md")))
             else:
                 docs.append(p)
     else:

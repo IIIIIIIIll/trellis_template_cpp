@@ -1,3 +1,8 @@
+---
+description: Threads and shared state, synchronization discipline, data-race prevention
+paths: [**/*.cpp, **/*.cc, **/*.cxx, **/*.hpp, **/*.hh, **/*.h, **/*.inl, **/*.ipp]
+---
+
 # Concurrency
 
 > Threads, locks, atomics, and message passing for C++ in this project: shared mutable state is always deliberate, synchronization is RAII-based, and threading changes are gated through a ThreadSanitizer build.
@@ -83,7 +88,7 @@ Notes:
 - **CONC-7 (default).** Prefer making objects immutable over making them synchronized: `const`-first APIs keep the concurrency story out of most types entirely (constants-and-immutability defaults: immutable by default, `const` members by default, `const&` parameters by default — `Con.1`, `Con.2`, `Con.3`; recompute-at-compile-time where possible, `Con.5`).
 - **CONC-8 (default).** Refactoring to remove sharing beats refactoring to protect it. Before adding a second mutex to a class, ask which design produced two writers.
 - Returning shared *immutable* snapshots (`shared_ptr<const T>`) lets readers work without locks after the hand-off point.
-- **CONC-9 (hard).** Ownership crossing unrelated thread lifetimes goes through `shared_ptr` (`CP.32`) — the only safe deletion story; static objects, never-freed objects, and owner-outlives-sharer arrangements are exempt. Ladder-first: prefer the immutable snapshots above so readers need no locks, and justify sharing per [Memory and Ownership](./memory-and-ownership.md).
+- **CONC-9 (hard).** Ownership crossing unrelated thread lifetimes goes through `shared_ptr` (`CP.32`) — the only safe deletion story; static objects, never-freed objects, and owner-outlives-sharer arrangements are exempt. Ladder-first: prefer the immutable snapshots above so readers need no locks, and justify sharing per [Ownership Design](../design/ownership-design.md).
 
 ---
 

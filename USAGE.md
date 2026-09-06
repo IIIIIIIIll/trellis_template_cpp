@@ -96,6 +96,14 @@ hash/conflict flow against `.trellis/.template-hashes.json`:
 - An unreachable registry degrades to a yellow warning only; updates never
   fail hard because of the network, so consumers keep working offline.
 
+Restructures install additively: when a template release renames or moves
+guideline files — most recently the phase grouping into `design/`,
+`implement/`, and `verification/` subdirectories — the new paths are added
+and files under an old name or location are left orphaned on your side;
+nothing under `.trellis/spec/` is deleted for you. After an update that
+introduces many new guideline paths, diff your `cpp/` layer against the
+template and remove stale orphans by hand.
+
 ---
 
 ## Troubleshooting

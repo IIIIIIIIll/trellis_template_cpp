@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 """Shared parser for the cpp guideline rule-block grammar.
 
-Normative grammar: task 08-30-cpp-rules-machine-format, design.md, sections
-"Rule-block grammar" and "Grammar details"; the authoring contract documents
-the same rules for authors (.trellis/spec/registry/guideline-authoring.md).
+Normative grammar: the authoring contract documents the rule-block grammar
+for authors (.trellis/spec/registry/guideline-authoring.md).
 
 Imported by validate_rules.py, extract_rules.py, and check_snippets.py.
 Python 3 standard library only.
@@ -14,27 +13,40 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
-# --- ID allocation (design.md "ID allocation") ------------------------------
+# --- ID allocation (guideline-authoring.md "Rule IDs") ----------------------
 
 PREFIX_ALLOCATION = {
-    "memory-and-ownership": "MEM",
-    "error-handling": "ERR",
-    "quality-guidelines": "QUAL",
-    "testing-conventions": "TEST",
     "functions-and-interfaces": "FN",
     "classes-and-hierarchies": "CLS",
     "templates-and-generics": "TPL",
+    "error-contracts": "ERR",
+    "error-propagation": "ERR",
+    "ownership-design": "MEM",
+    "memory-discipline": "MEM",
+    "headers-and-dependencies": "QUAL",
+    "naming-and-constants": "QUAL",
+    "static-analysis": "QUAL",
     "concurrency": "CONC",
     "expressions-and-flow": "EXPR",
     "performance": "PERF",
+    "testing-conventions": "TEST",
 }
 PREFIXES = frozenset(PREFIX_ALLOCATION.values())
 DOC_PREFIX = {name + ".md": prefix for name, prefix in PREFIX_ALLOCATION.items()}
 
-# Validator scope (design.md "Grammar details"): the rule grammar binds the 10
-# topic guides. index.md and the disposition doc carry stances, not rules, and
-# are exempt from rule checks; the footer and link contracts still bind them.
-EXEMPT_DOCS = frozenset({"index.md", "core-guidelines-disposition.md"})
+# Validator scope (guideline-authoring.md "Rule IDs"): the rule grammar binds
+# the 14 topic guides. index.md, the three phase routers, and the disposition
+# doc carry stances, not rules, and are exempt from rule checks; the footer
+# and link contracts still bind them.
+EXEMPT_DOCS = frozenset(
+    {
+        "index.md",
+        "core-guidelines-disposition.md",
+        "design.md",
+        "implementation.md",
+        "verification.md",
+    }
+)
 
 STRENGTHS = ("hard", "default")
 

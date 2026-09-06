@@ -1,3 +1,8 @@
+---
+description: Class design and inheritance: invariants, composition versus virtual dispatch
+paths: [**/*.cpp, **/*.cc, **/*.cxx, **/*.hpp, **/*.hh, **/*.h, **/*.inl, **/*.ipp]
+---
+
 # Classes and Hierarchies
 
 > Type design for C++: concrete types by default, special-member discipline (Rule of Zero, Rule of Five), polymorphic-base obligations, and hierarchies that are earned rather than assumed.
@@ -8,7 +13,7 @@
 
 Most defects in type design come from two opposite failures: writing special members the compiler already generates correctly, and reaching for inheritance where a struct plus free functions would do. This document fixes the ladder — concrete value types first, five-member types only for manual resources, hierarchies only for open variation — plus the obligations a virtual base can never skip.
 
-Parameter conventions live in [Functions and Interfaces](./functions-and-interfaces.md); ownership of what members hold lives in [Memory and Ownership](./memory-and-ownership.md).
+Parameter conventions live in [Functions and Interfaces](./functions-and-interfaces.md); ownership of what members hold lives in [Ownership Design](./ownership-design.md).
 
 Baseline: C++14 (`std::make_unique`, generic lambdas, relaxed
 `constexpr`). C++17 and C++20 additions appear as marked upgrades where
@@ -190,7 +195,7 @@ private:
 
 `::dup` failing returns -1, and a copy operation that swallows it silently fabricates an empty object — the half-built state `C.42` bans — so a failed `dup` throws `std::system_error`; assignment dups before closing so a failure leaves the target untouched.
 
-First re-check [Memory and Ownership](./memory-and-ownership.md): a `unique_ptr<T, Deleter>` deletes this entire class. Rule of Five is the fallback for resources standard wrappers cannot express, not the default.
+First re-check [Memory Discipline](../implement/memory-discipline.md): a `unique_ptr<T, Deleter>` deletes this entire class. Rule of Five is the fallback for resources standard wrappers cannot express, not the default.
 
 **CLS-31.** Once resources arrive, the destructor releases everything acquired, error paths included (`C.31`). Non-owned pointers and references are exempt from deletion; failures from close/release paths are design errors to terminate on, since release operations rarely retry.
 
@@ -198,7 +203,7 @@ First re-check [Memory and Ownership](./memory-and-ownership.md): a `unique_ptr<
 
 **CLS-33 (default).** Destructors are implicitly `noexcept` only when every member's destructor is, so one throwing member poisons the whole chain — declare `noexcept` explicitly to freeze the contract against future members. Blanket decoration is clutter even upstream declines to mandate (`C.37`).
 
-Ownership questions route elsewhere by design: whether a raw member pointer or reference owns (`C.32`), handing `new` results straight to an owner (`C.149`), and constructing through `make_unique` (`C.150`) or `make_shared` (`C.151`) are decided outright by [Memory and Ownership](./memory-and-ownership.md), which bans owning raw pointers entirely — stricter than upstream's "consider whether it might own".
+Ownership questions route elsewhere by design: whether a raw member pointer or reference owns (`C.32`), handing `new` results straight to an owner (`C.149`), and constructing through `make_unique` (`C.150`) or `make_shared` (`C.151`) are decided outright by [Memory Discipline](../implement/memory-discipline.md), which bans owning raw pointers entirely — stricter than upstream's "consider whether it might own".
 
 ---
 
@@ -414,7 +419,7 @@ Edge rules:
 - **CLS-75.** Never point a base pointer into an array of derived objects; element stride differs (`C.152`).
 
   Caught by: review — no automated detector.
-- **CLS-76.** Prefer virtual dispatch; `dynamic_cast` only where navigation between siblings is genuinely unavoidable (`C.146`). Use `dynamic_cast<T&>` when absence of `T` is an error — a reference cast throws on failure, declaring the intent to end up with a valid object (`C.147`); use `dynamic_cast<T*>` when absence is a valid alternative — null enables branching, and the result is always tested before dereference. Across module boundaries, Quality Guidelines replaces RTTI with kind tags outright (`C.148`).
+- **CLS-76.** Prefer virtual dispatch; `dynamic_cast` only where navigation between siblings is genuinely unavoidable (`C.146`). Use `dynamic_cast<T&>` when absence of `T` is an error — a reference cast throws on failure, declaring the intent to end up with a valid object (`C.147`); use `dynamic_cast<T*>` when absence is a valid alternative — null enables branching, and the result is always tested before dereference. Across module boundaries, Headers and Dependencies replaces RTTI with kind tags outright (`C.148`).
 - **CLS-77.** Copying goes through a virtual `clone()` returning `std::unique_ptr<Codec>`, never through base-reference copy construction (`C.130`): covariant smart pointers are impossible, so return `unique_ptr<Base>` uniformly; copy/move demote to protected defaulted helpers serving clone implementations, while public copy construction and assignment stay suppressed.
 - **CLS-78 (default).** Deviation from `C.153`: prefer the virtual call, which lands on the most-derived override where a cast may stop at an intermediate class and rot as the hierarchy evolves. Closed variation replaces both sides with kind-tag dispatch (Concrete Types First), reserving `dynamic_cast` for genuinely open navigation per rule 3.
 

@@ -106,7 +106,7 @@
 // carry a `// C++17` fence marker. Inline namespace-scope variables stay
 // unguarded (warning-only at C++14; the gate has no -Werror).
 
-// quality-guidelines.md
+// headers-and-dependencies.md + static-analysis.md (QUAL split)
 enum class Mode { kFast, kSafe, kRaw };
 
 struct Logger {
@@ -195,7 +195,7 @@ inline Chunk compress_chunk(Chunk);
 inline void request_shutdown(std::stop_token) {}  // C++20 poll_device example
 #endif
 
-// error-handling.md
+// error-contracts.md + error-propagation.md
 struct Item {};
 struct Key {};
 struct Value {};
@@ -288,7 +288,7 @@ struct Rect {
     int height = 0;
 };
 
-// memory-and-ownership.md
+// memory-discipline.md
 inline bool parse(std::FILE*);                           // MEM-1 wrong example
 inline bool parse(std::ifstream&);                       // MEM-1 right example
 #if __cplusplus >= 201703L
