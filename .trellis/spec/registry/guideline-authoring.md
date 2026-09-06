@@ -75,6 +75,16 @@ Caught by: `cppcoreguidelines-pro-type-cstyle-cast`
   own line inherits the nearest preceding `Caught by:` line within the same
   section; a section-level line covers every rule below it that lacks its
   own.
+
+  > **Warning**: a specific rule-level `Caught by:` line becomes the
+  > inherited fallback for every later rule in the section until another
+  > line appears. A rule that follows one with its own detector and is
+  > caught by nothing must restate
+  > `Caught by: review — no automated detector.` — EXPR-26 in
+  > `expressions-and-flow.md` silently recorded EXPR-25's
+  > `modernize-use-nullptr` this way. After any Caught-by edit, check the
+  > `detector` column in the regenerated `rules.json`, not just the
+  > markdown.
 - **Wrong/Right encodings** — all four are valid; pairing is judged per rule
   block, exactly one Wrong and one Right per example group:
   1. one fence holding both, split by `// Wrong:` / `// Right:` comments;

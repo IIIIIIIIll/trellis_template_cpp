@@ -2055,9 +2055,9 @@
   {
     "id": "EXPR-26",
     "strength": "hard",
-    "statement": "Relational comparison or subtraction of pointers into different arrays is undefined (ES.62); ordering and differences mean something only within one array.",
+    "statement": "Ordering or subtracting pointers into different arrays means nothing (ES.62): a relational comparison across arrays is unspecified, and a difference is undefined — both stay inside one array.",
     "doc": "expressions-and-flow.md",
-    "detector": "clang-tidy `modernize-use-nullptr`",
+    "detector": "review",
     "upstream": [
       "ES.62",
       "ES.24",
@@ -2202,7 +2202,7 @@
   {
     "id": "EXPR-40",
     "strength": "hard",
-    "statement": "Every non-empty case ends with break or an obvious return; an intentional fallthrough carries [[fallthrough]] (ES.78) — the annotation that satisfies -Wimplicit-fallthrough — with the adjacent comment stating why falling through is correct.",
+    "statement": "Every non-empty case ends with break or an obvious return; an intentional fallthrough is stated, never implicit (ES.78) — a fall-through comment that says why falling through is correct and satisfies -Wimplicit-fallthrough on compilers that honor one.",
     "doc": "expressions-and-flow.md",
     "detector": "`-Wimplicit-fallthrough`",
     "upstream": [

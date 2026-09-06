@@ -45,7 +45,7 @@ Caught by: review — no automated detector.
 | Any object, at declaration | Initialize immediately (`ES.20`) |
 | **EXPR-4** Value known only mid-function | Declare at that point, initialized (`ES.22`) |
 | **EXPR-5** Object never reassigned afterward | Mark it `const`; compile-time-known values are `constexpr` (`ES.25`) |
-| Loop-local helper | Declare inside the loop body, smallest scope (`ES.74`) |
+| Loop-local helper | Declare inside the loop body, smallest scope (`ES.5`) |
 
 **Wrong**
 
@@ -54,7 +54,7 @@ Caught by: review — no automated detector.
 Status process(const Request& req) {
     Result out;                     // default-constructed into an unknown state
     if (!authorize(req)) {
-        return Status::Denied;
+        return out.status();        // UB: `out` was never given a value
     }
     out = evaluate(req);            // gap between birth and first value
     return out.status();
@@ -99,8 +99,7 @@ Caught by: `-Wshadow`.
 
 ```cpp
 // EXPR-10: inner scope renames instead of shadowing
-// compiles; UB at runtime
-// Wrong: the inner count hides the outer one -- which count reaches the log?
+// Bad: the inner count hides the outer one -- which count reaches the log?
 std::size_t count = pending();
 if (streaming) {
     const auto count = estimate_size();   // shadows; outer count is frozen mid-value
@@ -108,13 +107,13 @@ if (streaming) {
 }
 report(count);
 
-// Right: the inner scope names its own value; the outer count keeps its meaning
-std::size_t count = pending();
+// Good: the inner scope names its own value; the outer count keeps its meaning
+std::size_t pending_count = pending();
 if (streaming) {
     const std::size_t streamed = estimate_size();
     ship(streamed);
 }
-report(count);
+report(pending_count);
 ```
 
 **EXPR-11.** One variable serves one purpose (`ES.26`). Deviation from `ES.26`: a scoped scratch buffer reused across iterations to dodge reallocation ([Performance](./performance.md)) is the single sanctioned overlap — the buffer holds the same job every pass, never two meanings, and stale contents from the previous round stay a reviewed hazard.
@@ -209,12 +208,11 @@ Caught by: review — no automated detector.
 
 ```cpp
 // EXPR-16: spell the type when it is the contract
-// compiles; UB at runtime
-// Wrong: the reader must resolve the whole call chain to know what `r` is
+// Bad: the reader must resolve the whole call chain to know what `r` is
 auto r = service.rate(id);
 
-// Right: the contract is visible at the call site
-SampleRate r = service.rate(id);
+// Good: the contract is visible at the call site
+SampleRate rate = service.rate(id);
 ```
 
 **EXPR-17.** Public function signatures spell their return types; a signature is documentation, and `auto` deletes the relevant line.
@@ -274,7 +272,9 @@ Caught by: `-Wvla` for runtime bounds; review for built-in arrays with non-local
 
 Caught by: clang-tidy `modernize-use-nullptr`.
 
-**EXPR-26.** Relational comparison or subtraction of pointers into different arrays is undefined (`ES.62`); ordering and differences mean something only within one array.
+**EXPR-26.** Ordering or subtracting pointers into different arrays means nothing (`ES.62`): a relational comparison across arrays is unspecified, and a difference is undefined — both stay inside one array.
+
+Caught by: review — no automated detector.
 
 Everything else about pointers is owned by sibling guides. Owning pointers travel in smart pointers, `unique_ptr<T>` by default (`ES.24`), and neither naked `new` nor naked `delete` appears outside resource-management code (`ES.60`) — the ownership ladder in [Memory and Ownership](./memory-and-ownership.md) owns both end to end, and dissolves the `delete[]` mismatch question by removing owning raw pointers entirely (`ES.61`). Never dereferencing an invalid pointer — null, dangling, or invalidated — is that guide's lifetime-safety core, container-invalidation table included (`ES.65`). Pointer simplicity itself — no pointer arithmetic, sequences as spans — lives there too (`ES.42`), with spans at API boundaries per [Performance](./performance.md). Slicing is prevented structurally at the class level (`ES.63`) per [Classes and Hierarchies](./classes-and-hierarchies.md).
 
@@ -292,8 +292,11 @@ Caught by: the sign-comparison and sign-conversion warnings enabled by default i
 // EXPR-27: reverse iterators instead of unsigned countdown
 // compiles; UB at runtime
 // Wrong: unsigned wraps instead of going negative
+// `i >= 0` is a tautology, so the loop runs past `i == 0`; `--i` then wraps
+// to SIZE_MAX and `pending[SIZE_MAX]` indexes out of bounds -- immediately
+// when the vector is empty
 std::vector<Item> pending = remaining();
-for (std::size_t i = pending.size() - 1; i >= 0; --i) {   // broken for every input: i >= 0 is a tautology; after i == 0, --i wraps to SIZE_MAX and indexes out of bounds -- immediately when empty
+for (std::size_t i = pending.size() - 1; i >= 0; --i) {
     ship(pending[i]);
 }
 
@@ -329,7 +332,7 @@ Default strength: default.
 
 Caught by: review — no automated detector.
 
-**EXPR-34.** Expressions read in one pass (`ES.40`): no assignments or multi-object side effects buried in subexpressions, no reliance on subtle precedence or undefined behavior. The counter-duty holds too — splitting every operation into its own statement is its own obfuscation. Arithmetic, comparison, and logical precedence are assumed knowledge; anything mixing bitwise operators with other operators takes explicit parentheses — `(a & flag) != 0` — and assignments sit leftmost or nowhere (`ES.41`).
+**EXPR-34.** Expressions read in one pass (`ES.40`): no assignments or multi-object side effects buried in subexpressions, no reliance on subtle precedence or undefined behavior. The counter-duty holds too — splitting every operation into its own statement is its own obfuscation. Arithmetic, comparison, and logical precedence are assumed knowledge; anything mixing bitwise operators with other operators takes explicit parentheses (`ES.41`) — `(a & flag) != 0` — and assignments sit leftmost or nowhere.
 
 **EXPR-35 (hard).** A value written in an expression is not read elsewhere in the same expression (`ES.43`): the `v[i] = ++i` shape does not exist here. C++17 tightened some sequencing, but code gets pasted into pre-C++17 builds, so no cleverness.
 
@@ -347,9 +350,8 @@ Caught by: review — no automated detector.
 
 ```cpp
 // EXPR-37: guard clauses first, main path last
-// compiles; UB at runtime
-// Wrong: the happy path is buried; every branch doubles the state space
-bool submit(const Order& order) {
+// Bad: the happy path is buried; every branch doubles the state space
+bool submit_buried(const Order& order) {
     bool accepted = false;
     if (order.valid()) {
         if (!order.is_duplicate()) {
@@ -366,7 +368,7 @@ bool submit(const Order& order) {
     return accepted;
 }
 
-// Right: guards reject early; the main path stays at column zero
+// Good: guards reject early; the main path stays at column zero
 bool submit(const Order& order) {
     if (!order.valid()) return false;
     if (order.is_duplicate()) { metrics.count("duplicate"); return false; }
@@ -380,7 +382,7 @@ Loop and branch rules:
 
 - **EXPR-38 (hard).** No `goto` (`ES.76`).
 - **EXPR-39.** No `do/while` unless it removes worse duplication between the prologue and the tail (`ES.75`) — in practice, almost never.
-- **EXPR-40 (hard).** Every non-empty `case` ends with `break` or an obvious `return`; an intentional fallthrough carries `[[fallthrough]]` (`ES.78`) — the annotation that satisfies `-Wimplicit-fallthrough` — with the adjacent comment stating why falling through is correct.
+- **EXPR-40 (hard).** Every non-empty `case` ends with `break` or an obvious `return`; an intentional fallthrough is stated, never implicit (`ES.78`) — a fall-through comment that says why falling through is correct and satisfies `-Wimplicit-fallthrough` on compilers that honor one. **C++17:** the statement of record is the `[[fallthrough]]` attribute.
 
   Caught by: `-Wimplicit-fallthrough`.
 
@@ -388,7 +390,7 @@ Loop and branch rules:
 
   Caught by: review — no automated detector.
 
-- **EXPR-42.** Range-based `for` is the default loop (`ES.71`): it cannot mis-index and states intent. Index-based `for` survives only when the body truly needs the index — neighbor elements, strides, deliberate counter work — and binds its variable by reference, never by value copy.
+- **EXPR-42.** Range-based `for` is the default loop (`ES.71`): it cannot mis-index and states intent. Index-based `for` survives only when the body truly needs the index — neighbor elements, strides, deliberate counter work — and reads its elements through a reference, never a per-iteration copy.
 - **EXPR-43.** Prefer constructs that cannot go out of range (`ES.55`) — range-`for`, position-returning algorithms — over indexed access wrapped in checks; an explicit bounds check is usually the tell that the wrong abstraction was picked.
 - **EXPR-44 (hard).** Never mutate a container's structure while iterating it — reallocation invalidates the iterator.
 - **EXPR-45 (hard).** Range-for extends only the final range expression's temporary to the loop: a direct value-returning init such as `make_rows()` is safe, but in a chained init like `connection_pool().acquire().rows()` the intermediate temporaries die at the end of the full-expression, leaving the extended range viewing destroyed owners — own the outer object. (C++23 extends every temporary in the range-init and closes this trap; pre-C++23 dialects do not.) The invalidation table lives in [Memory and Ownership](./memory-and-ownership.md).
