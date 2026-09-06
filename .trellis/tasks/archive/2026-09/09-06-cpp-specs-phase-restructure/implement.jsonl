@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/registry/guideline-authoring.md", "reason": "Governs every edit: doc shape, rule-block grammar, Caught-by section scoping, stable IDs, sync obligations, prefix table — the whole change is contract-bound by this spec"}
+{"file": ".trellis/spec/registry/index.md", "reason": "Quality gates (validate_rules, digest determinism, check_snippets, link check, four-place file-set invariant) and the no-cpp-layer rationale; defines done"}
+{"file": ".trellis/spec/registry/registry-contract.md", "reason": "Owns index.json manifest and install/update claims; stage-3 README/USAGE layout changes must not contradict it"}
+{"file": ".trellis/tasks/09-06-cpp-specs-phase-restructure/design.md", "reason": "Target tree, injection/frontmatter contract, section line-ranges for splits, tools rebinding plan, staging and trade-offs"}

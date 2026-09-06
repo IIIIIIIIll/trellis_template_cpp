@@ -1,0 +1,2 @@
+{"file": ".trellis/spec/registry/guideline-authoring.md", "reason": "Check compliance: doc shape of every new/split part, rule-block grammar intact after moves, Caught-by scoping, prefix table accuracy"}
+{"file": ".trellis/spec/registry/index.md", "reason": "Verification checklist: run every quality gate and confirm the four-place file-set invariant and link integrity"}
