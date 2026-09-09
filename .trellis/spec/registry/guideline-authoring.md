@@ -6,8 +6,8 @@ paths: [specs/**]
 # Guideline Authoring
 
 > Conventions for writing and editing the guideline documents this registry
-> ships — the files under `specs/cpp/cpp/` and their overview
-> `specs/cpp/README.md`.
+> ships — the files under `specs/cpp/cpp/`, the thinking-guide layer
+> `specs/cpp/guides/`, and their overview `specs/cpp/README.md`.
 
 ---
 
@@ -45,6 +45,42 @@ one exists:
 
 Full examples: `specs/cpp/cpp/core-guidelines-disposition.md`
 ("Recording a Deviation").
+
+---
+
+## Thinking-Guide Layer
+
+`specs/cpp/guides/` is the template's second layer directory (installs to the
+consumer's `.trellis/spec/guides/`). Its documents are a different family
+from the topic guides:
+
+- **A method, not a rulebook and not a notebook.** Developer decision
+  2026-09-09: the thinking guide is fixed, project-independent material whose
+  job is to guide the reader/LLM along the engineering path. It ships curated
+  and stays curated: improvements flow through template releases, never
+  consumer-side incident-append, and the file carries no growth instructions.
+  Consumers may edit locally (the update flow prompts instead of
+  overwriting) — that is mechanics, not lifecycle intent.
+- **Shape**: frontmatter (`description:` + the shared C++ `paths:` glob),
+  `# Title` + one-paragraph blockquote, `## Overview` stating the
+  routing-vs-method division of labor, one procedure table per phase
+  (`# | Step | Fires when you see | Canonical failure | Read first`; row
+  order IS the procedure), a cross-cutting spans table, and a
+  **Language**-only footer (no Core Guidelines attribution — it cites no CG
+  text).
+- **Zero rule blocks, zero ```cpp fences.** One home per rule stays in the
+  phase guides; triggers are cues/questions, never `**ID-n**` blocks. No
+  fences because `guides/` sits outside `check_snippets.py`'s DEFAULT_DIR —
+  an uncompiled example would violate the pair-pitfall-with-detector
+  contract.
+- **Size budget**: single file ≤ 9 KB so path-scoped injection (default
+  `max_spec_chars: 9400`) keeps the full body.
+- **Links**: repo-relative `../cpp/<phase>/<doc>.md`, resolving both in-repo
+  (`specs/cpp/guides/` → `specs/cpp/cpp/…`) and post-install
+  (`.trellis/spec/guides/` → `.trellis/spec/cpp/…`).
+- **Validators stay blind on purpose**: `guides/` is outside DEFAULT_DIR and
+  takes no `DOC_PREFIX` entry; the relative-link check and hand review are
+  its only gates. Thinking-guide changes require no `rules.json` regen.
 
 ---
 

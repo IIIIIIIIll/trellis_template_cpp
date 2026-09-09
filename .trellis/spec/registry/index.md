@@ -20,6 +20,7 @@ work products are:
 |------|------|
 | `index.json` | Registry manifest; makes this a marketplace-mode registry |
 | `specs/cpp/cpp/**` | The product: phase-organized C++ guideline documents installed into consumer projects — 14 topic guides under `design/`, `implement/`, `verification/`, three phase routers, `index.md`, and the Core Guidelines disposition |
+| `specs/cpp/guides/**` | The thinking-guide layer installed as `.trellis/spec/guides/`: C++ method (cue-triggered per-phase procedures routing into `cpp/`); no normative rules — shape contract in [Guideline Authoring](./guideline-authoring.md) |
 | `specs/cpp/README.md` | Template overview shipped alongside the layer |
 | `README.md`, `USAGE.md`, `HOSTING.md` | Registry-level docs: publish, consume, host |
 
@@ -38,7 +39,9 @@ removed: they assumed an application codebase this repository does not have.
 The generic thinking-guide layer (`.trellis/spec/guides/`) is kept as a
 deliberate tombstone: its triggers assume application layers this repository
 does not have, so the transferable habits live in these two guides and that
-index explains why nothing else belongs there.
+index explains why nothing else belongs there. (The template ships its own
+C++ thinking-guide layer from `specs/cpp/guides/`; the tombstone is this
+repo's local layer only.)
 
 ---
 
