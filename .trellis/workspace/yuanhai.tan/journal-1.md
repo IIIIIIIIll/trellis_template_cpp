@@ -139,3 +139,25 @@ Restructured specs/cpp/cpp from 12 flat docs to 19 phase-organized files: 14 top
 ### Status
 
 [OK] **Completed**
+
+
+## Session 7: Thinking-guide layer: check pass, philosophy resolution, spec capture, commit
+
+**Date**: 2026-09-09
+**Task**: Thinking-guide layer: check pass, philosophy resolution, spec capture, commit
+**Branch**: `main`
+
+### Summary
+
+Resumed 09-08-thinking-guide-layer at 2.2: dispatched trellis-check full-scope pass (PASS: design Rev-2 verbatim table match, 5/6/3/4 rows, <=9KB, zero rule blocks/fences, 14 resolving links; all five gates green; rules.json untouched; validator-blindness cleared). Developer resolved the deferred growth-philosophy decision from discussion.md: the thinking guide is a fixed, project-independent curated method, not a notebook — no template change; resolution recorded in discussion.md. 3.3 spec updates: Thinking-Guide Layer contract section in .trellis/spec/registry/guideline-authoring.md; product table row + tombstone clarification in registry/index.md. 3.4 commits cb768d2 (template layer + sync edits) and 80a746b (spec contract + decision), executed after one-shot plan confirmation.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `cb768d2` | (see git log) |
+| `80a746b` | (see git log) |
+
+### Status
+
+[OK] **Completed**
