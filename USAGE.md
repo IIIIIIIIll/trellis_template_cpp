@@ -103,6 +103,9 @@ and files under an old name or location are left orphaned on your side;
 nothing under `.trellis/spec/` is deleted for you. After an update that
 introduces many new guideline paths, diff your `cpp/` layer against the
 template and remove stale orphans by hand.
+Pure additions — a new layer directory (such as `guides/` alongside `cpp/`)
+or new files beside existing ones — need no cleanup at all: they simply
+install, and only renames or moves create orphans.
 
 ---
 

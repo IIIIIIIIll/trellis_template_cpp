@@ -13,6 +13,8 @@ Everything under this directory copies into the consumer's `.trellis/spec/`:
 ```
 specs/cpp/            →  .trellis/spec/
 ├── README.md         →  .trellis/spec/README.md        (ignored by layer discovery)
+├── guides/           →  .trellis/spec/guides/          (auto-discovered layer)
+│   └── index.md                        C++ thinking-guide triggers routing into cpp/
 └── cpp/              →  .trellis/spec/cpp/             (auto-discovered layer)
     ├── index.md                       layer entry point
     ├── rules.json                     machine-readable rule digest
@@ -39,10 +41,11 @@ specs/cpp/            →  .trellis/spec/
         └── static-analysis.md
 ```
 
-- The `cpp/` directory at the template root becomes a spec layer at
-  `.trellis/spec/cpp/`; Trellis discovers layers automatically on startup.
-- The stray `README.md` beside the layer directory is documentation only and
-  is ignored by layer discovery.
+- Two layer directories install: `cpp/` becomes the guideline layer at
+  `.trellis/spec/cpp/`, and `guides/` becomes the thinking-guide layer at
+  `.trellis/spec/guides/`; Trellis discovers layers automatically on startup.
+- The stray `README.md` beside the layer directories is documentation only
+  and is ignored by layer discovery.
 
 ---
 
@@ -87,6 +90,12 @@ specs/cpp/            →  .trellis/spec/
 |------|---------|
 | [testing-conventions.md](./cpp/verification/testing-conventions.md) | Test framework and layout, test naming, what deserves a test |
 | [static-analysis.md](./cpp/verification/static-analysis.md) | Curating the project's static-analysis check set |
+
+**Thinking Guides**
+
+| File | Summary |
+|------|---------|
+| [index.md](./guides/index.md) | The C++ thinking method — ordered per-phase steps fired by diff cues, each naming the failure you buy by skipping it |
 
 Baseline is C++14; C++17/20 additions (`std::string_view`, `std::optional`,
 `if constexpr`, `[[nodiscard]]`, `std::span`) are called out as marked

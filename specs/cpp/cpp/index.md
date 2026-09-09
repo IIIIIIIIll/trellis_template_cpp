@@ -144,6 +144,12 @@ phase:
 |---------------|------------|
 | Adopting a Core Guidelines rule, or deviating from an adopted one | [Core Guidelines Disposition](./core-guidelines-disposition.md) |
 
+**Any phase**
+
+| Task involves | Read first |
+|---------------|------------|
+| Unsure which guide owns the risk, or the task spans several | [Thinking Guides](../guides/index.md) |
+
 A change touching several rows above should skim every listed guide before starting — the expensive C++ mistakes are cross-cutting.
 
 ---
