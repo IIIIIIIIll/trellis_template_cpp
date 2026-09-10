@@ -1,0 +1,7 @@
+{"file": ".trellis/spec/registry/guideline-authoring.md", "reason": "Shape contract being rewritten; source of current Thinking-Guide Layer text"}
+{"file": ".trellis/spec/registry/registry-contract.md", "reason": "Manifest/sync truth: index.json pins root; update lifecycle"}
+{"file": ".trellis/spec/registry/index.md", "reason": "Gate commands and four-places invariant"}
+{"file": ".trellis/tasks/09-09-thinking-guide-improvement/prd.md", "reason": "Parent decision set binding on this child"}
+{"file": ".trellis/tasks/09-09-thinking-guide-improvement/research/sync-set-inventory.md", "reason": "Verified sync set and orphan-safety constraint"}
+{"file": ".trellis/tasks/09-09-thinking-guide-improvement/research/symptom-cue-drafts.md", "reason": "Symptom trigger candidates for router Quick Reference"}
+{"file": "specs/cpp/guides/index.md", "reason": "File being reshaped; row source"}
