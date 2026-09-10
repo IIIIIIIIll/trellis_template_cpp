@@ -7,7 +7,8 @@ paths: [specs/**]
 
 > Conventions for writing and editing the guideline documents this registry
 > ships — the files under `specs/cpp/cpp/`, the thinking-guide layer
-> `specs/cpp/guides/`, and their overview `specs/cpp/README.md`.
+> (`specs/cpp/guides/` plus its `big-question/` growth home), and their
+> overview `specs/cpp/README.md`.
 
 ---
 
@@ -50,37 +51,82 @@ Full examples: `specs/cpp/cpp/core-guidelines-disposition.md`
 
 ## Thinking-Guide Layer
 
-`specs/cpp/guides/` is the template's second layer directory (installs to the
-consumer's `.trellis/spec/guides/`). Its documents are a different family
-from the topic guides:
+`specs/cpp/guides/` and `specs/cpp/big-question/` form the template's
+thinking-guide layer (installing to the consumer's `.trellis/spec/guides/`
+and `.trellis/spec/big-question/`): `guides/` carries the curated C++ method,
+`big-question/` the consumer-grown incident scars. Their documents are a
+different family from the topic guides:
 
-- **A method, not a rulebook and not a notebook.** Developer decision
-  2026-09-09: the thinking guide is fixed, project-independent material whose
-  job is to guide the reader/LLM along the engineering path. It ships curated
-  and stays curated: improvements flow through template releases, never
-  consumer-side incident-append, and the file carries no growth instructions.
+- **Inventory — seven files, three roles.** The router `index.md` carries
+  the layer's framing and routing: philosophy, why-thinking-guides, the
+  available-guides table, symptom-phrased trigger checklists, the
+  pre-modification search rule, the C++ layer diagram, the cross-cutting
+  spans table, and the core principles; its overview states the division of
+  labor with `cpp/index.md` — task-type routing lives there, the risk-shaped
+  method and symptom entry live here. Three phase guides —
+  `design-thinking-guide.md`, `implementation-thinking-guide.md`,
+  `verification-thinking-guide.md` — hold one ordered procedure table each
+  (`# | Step | Fires when you see | Canonical failure | Read first`; row
+  order IS the procedure) plus a **Before Leaving This Phase** checklist.
+  Three family-standard guides hold the non-phase methods:
+  `pre-implementation-checklist.md` (the search-and-sketch pass run before
+  writing code), `code-reuse-thinking-guide.md` (reuse thinking: search
+  before new, templates vs copy-paste, loops vs algorithms, constants across
+  translation units), and `bug-root-cause-thinking-guide.md` (the
+  post-incident method — the growth loop's entry point).
+- **A method, not a rulebook and not a notebook.** The `guides/` files are
+  fixed, project-independent material whose job is to guide the reader/LLM
+  along the engineering path. They ship curated and stay curated:
+  improvements flow through template releases, no file under `guides/`
+  carries append instructions, and project state never accumulates there.
   Consumers may edit locally (the update flow prompts instead of
   overwriting) — that is mechanics, not lifecycle intent.
-- **Shape**: frontmatter (`description:` + the shared C++ `paths:` glob),
-  `# Title` + one-paragraph blockquote, `## Overview` stating the
-  routing-vs-method division of labor, one procedure table per phase
-  (`# | Step | Fires when you see | Canonical failure | Read first`; row
-  order IS the procedure), a cross-cutting spans table, and a
-  **Language**-only footer (no Core Guidelines attribution — it cites no CG
-  text).
-- **Zero rule blocks, zero ```cpp fences.** One home per rule stays in the
-  phase guides; triggers are cues/questions, never `**ID-n**` blocks. No
-  fences because `guides/` sits outside `check_snippets.py`'s DEFAULT_DIR —
-  an uncompiled example would violate the pair-pitfall-with-detector
-  contract.
-- **Size budget**: single file ≤ 9 KB so path-scoped injection (default
+- **Shape.** `# Title` + a one-paragraph blockquote, prose sections and
+  tables, checkbox lists for the before/after gates, and a **Language**-only
+  footer (no Core Guidelines attribution — the layer cites no CG text).
+  Triggers are cues and questions, never `**ID-n**` blocks: every rule keeps
+  its single home in the topic layer (`specs/cpp/cpp/**`), which the layer
+  links to instead of restating it.
+- **Injection contract.** Every injected file — the router included, and the
+  `big-question/` index — carries frontmatter: `description:` (one line, it
+  becomes the injected index line when the FULL-block budget degrades) plus
+  the shared C++ `paths:` glob (`**/*.cpp, **/*.cc, **/*.cxx, **/*.hpp,
+  **/*.hh, **/*.h, **/*.inl, **/*.ipp`). No frontmatter, no injection.
+  Budget: ≤ 9 KB per file so path-scoped injection (default
   `max_spec_chars: 9400`) keeps the full body.
-- **Links**: repo-relative `../cpp/<phase>/<doc>.md`, resolving both in-repo
-  (`specs/cpp/guides/` → `specs/cpp/cpp/…`) and post-install
-  (`.trellis/spec/guides/` → `.trellis/spec/cpp/…`).
-- **Validators stay blind on purpose**: `guides/` is outside DEFAULT_DIR and
-  takes no `DOC_PREFIX` entry; the relative-link check and hand review are
-  its only gates. Thinking-guide changes require no `rules.json` regen.
+- **Zero fenced C++ blocks; validators stay blind on purpose.** No fenced
+  C++ under `guides/` or `big-question/`: an uncompiled example would violate
+  the pair-pitfall-with-detector contract. Bash fences are legal — command
+  recipes (corpus searches, rule greps) are not compiled and not examples.
+  Neither directory joins `check_snippets.py`'s DEFAULT_DIR walk and neither
+  takes a `DOC_PREFIX`/`PREFIX_ALLOCATION` entry; the relative-link check
+  and hand review are the only gates, and layer changes need no `rules.json`
+  regen.
+- **Growth lives in `big-question/`, not in the method.** `big-question/` is
+  the consumer scar home: a severity index (`index.md`, frontmatter + the
+  shared C++ globs, so it is injected) plus a documented contributing format
+  for incident write-ups. Incident files carry **no frontmatter** — they are
+  not injected and the index is their only entry point — and they are prose:
+  the fence policy above applies to them too. `guides/` stays curated; the
+  growth instructions ship with the scar home.
+- **Links.** Repo-relative `../cpp/<phase>/<doc>.md` binds for every phase
+  row, resolving both in-repo (`specs/cpp/guides/` → `specs/cpp/cpp/…`) and
+  post-install (`.trellis/spec/guides/` → `.trellis/spec/cpp/…`); all 14
+  topic guides are reached from at least one layer file. The layer's two
+  `../big-question/index.md` pointers — the router's pointer line and the
+  bug-root-cause guide's "Record the Incident" link — will land with the
+  scar home and follow the same repo-relative pattern.
+
+> **Supersession.** This contract supersedes the no-growth resolution of
+> 2026-09-09 recorded in
+> `.trellis/tasks/archive/2026-09/09-08-thinking-guide-layer/discussion.md`.
+> The circumstance that produced that decision changed: every Trellis
+> project in the ecosystem ships a consumer growth path — the scaffolded
+> guides tell teams to append their incidents — while this template shipped
+> none, leaving consumers no in-product place to accumulate scars. What
+> survives is its core: `guides/` stays template-curated and
+> project-independent, improving through releases. Growth moves to a
+> separate directory (`big-question/`) rather than into the curated method.
 
 ---
 
@@ -259,6 +305,11 @@ the same change:
    consumer projects; old paths are never deleted for them, so
    `USAGE.md`'s update section documents the orphan cleanup that any
    file-set change obligates. Keep that wording true.
+7. The thinking-guide layer's file set — adding or removing a file under
+   `specs/cpp/guides/` or `specs/cpp/big-question/` updates the Thinking
+   Guides table and the install-layout tree in `specs/cpp/README.md` in the
+   same change. Neither directory takes tool bindings (no rule blocks, no
+   `rules.json` regen; `big-question/` incident files carry no frontmatter).
 
 Anti-patterns seen in template-driven repos, all rejected here: empty
 headings kept "for later", aspirational rules the tooling cannot check,
