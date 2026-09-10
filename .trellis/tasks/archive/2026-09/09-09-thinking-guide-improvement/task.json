@@ -1,0 +1,29 @@
+{
+  "id": "thinking-guide-improvement",
+  "name": "thinking-guide-improvement",
+  "title": "Improve cpp thinking guide vs stock trellis guides",
+  "description": "",
+  "status": "completed",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P2",
+  "creator": "yuanhai.tan",
+  "assignee": "yuanhai.tan",
+  "createdAt": "2026-09-09",
+  "completedAt": "2026-09-10",
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [
+    "09-09-thinking-guide-layer-reshape",
+    "09-09-big-question-scaffold"
+  ],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {}
+}
