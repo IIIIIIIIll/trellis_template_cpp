@@ -63,10 +63,11 @@ sequence. Depth:
 ## Record the Incident
 
 The step that changes the future: write the incident down in the
-`big-question/` directory — what happened, the root-cause class, the fix, the
-takeaway that lets the next reader recognize the shape. Its index is the
-entry point; a fresh bug matching an existing entry is a signal to re-read it
-before fixing, and a class no rule owns yet is how a patch becomes a rule.
+[big-question/](../big-question/index.md) directory — what happened, the
+root-cause class, the fix, the takeaway that lets the next reader recognize
+the shape. Its index is the entry point; a fresh bug matching an existing
+entry is a signal to re-read it before fixing, and a class no rule owns yet
+is how a patch becomes a rule.
 
 ## Before Calling the Bug Fixed
 

@@ -21,6 +21,11 @@ specs/cpp/            →  .trellis/spec/
 │   ├── pre-implementation-checklist.md   search-and-sketch pass before writing code
 │   ├── code-reuse-thinking-guide.md      reuse thinking: search, templates, loops, constants
 │   └── bug-root-cause-thinking-guide.md  post-incident method: classify, detect, record
+├── big-question/     →  .trellis/spec/big-question/    (auto-discovered layer)
+│   ├── index.md                          scar home entry: severity levels, issue index, contribution format
+│   ├── static-initialization-order.md    exemplar incident: cross-TU read before dynamic initialization
+│   ├── dangling-string-view.md           exemplar incident: stored view outliving owner mutation
+│   └── optimization-ub.md                exemplar incident: UB clean at -O0, broken under optimization
 └── cpp/              →  .trellis/spec/cpp/             (auto-discovered layer)
     ├── index.md                       layer entry point
     ├── rules.json                     machine-readable rule digest
@@ -47,9 +52,11 @@ specs/cpp/            →  .trellis/spec/
         └── static-analysis.md
 ```
 
-- Two layer directories install: `cpp/` becomes the guideline layer at
-  `.trellis/spec/cpp/`, and `guides/` becomes the thinking-guide layer at
-  `.trellis/spec/guides/`; Trellis discovers layers automatically on startup.
+- Three layer directories install: `cpp/` becomes the guideline layer at
+  `.trellis/spec/cpp/`, `guides/` the curated C++ thinking-guide method at
+  `.trellis/spec/guides/`, and `big-question/` the consumer scar home at
+  `.trellis/spec/big-question/`; Trellis discovers layers automatically on
+  startup.
 - The stray `README.md` beside the layer directories is documentation only
   and is ignored by layer discovery.
 
@@ -108,6 +115,15 @@ specs/cpp/            →  .trellis/spec/
 | [pre-implementation-checklist.md](./guides/pre-implementation-checklist.md) | Before writing code: search existing types and utilities, sketch the ownership arrow, price the header, choose the failure representation |
 | [code-reuse-thinking-guide.md](./guides/code-reuse-thinking-guide.md) | Reuse thinking: search before new utilities, templates vs copy-paste, algorithms vs hand-rolled loops, constants across translation units |
 | [bug-root-cause-thinking-guide.md](./guides/bug-root-cause-thinking-guide.md) | Post-incident method: reproduce, minimize, classify the root cause, name the missing detector, record the incident |
+
+**Big Question**
+
+| File | Summary |
+|------|---------|
+| [index.md](./big-question/index.md) | Scar home entry point: severity levels, the seeded issue index, and the contribution format for new incident write-ups |
+| [static-initialization-order.md](./big-question/static-initialization-order.md) | Exemplar incident: a cross-translation-unit global read that runs before the object's dynamic initialization — correctness that depends on link order |
+| [dangling-string-view.md](./big-question/dangling-string-view.md) | Exemplar incident: a stored `string_view` or reference outliving a mutation of the container that owns the characters |
+| [optimization-ub.md](./big-question/optimization-ub.md) | Exemplar incident: undefined behavior that runs clean at `-O0` and breaks under optimization |
 
 Baseline is C++14; C++17/20 additions (`std::string_view`, `std::optional`,
 `if constexpr`, `[[nodiscard]]`, `std::span`) are called out as marked

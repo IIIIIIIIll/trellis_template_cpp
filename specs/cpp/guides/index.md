@@ -183,7 +183,15 @@ Each span crosses phases; no single guide owns the risk.
 4. **Detector per Bug Class** — every mistake class a change invites has a
    check, warning, sanitizer, or test behind it.
 5. **Learn From Bugs** — an incident ends with a detector and a recorded
-   lesson; the incident records live in `big-question/` beside this layer.
+   lesson; the incident records live in
+   [big-question/](../big-question/index.md) beside this layer.
+
+---
+
+## Growing This Layer
+
+[big-question/](../big-question/index.md) holds the layer's severity-indexed
+incident deep-dives and the format for contributing them.
 
 ---
 
