@@ -14,7 +14,13 @@ Everything under this directory copies into the consumer's `.trellis/spec/`:
 specs/cpp/            →  .trellis/spec/
 ├── README.md         →  .trellis/spec/README.md        (ignored by layer discovery)
 ├── guides/           →  .trellis/spec/guides/          (auto-discovered layer)
-│   └── index.md                        C++ thinking-guide triggers routing into cpp/
+│   ├── index.md                          family router: philosophy, triggers, search rule
+│   ├── design-thinking-guide.md          design-phase procedure: six cue-fired steps
+│   ├── implementation-thinking-guide.md  implementation-phase procedure: six steps
+│   ├── verification-thinking-guide.md    verification-phase procedure: three steps
+│   ├── pre-implementation-checklist.md   search-and-sketch pass before writing code
+│   ├── code-reuse-thinking-guide.md      reuse thinking: search, templates, loops, constants
+│   └── bug-root-cause-thinking-guide.md  post-incident method: classify, detect, record
 └── cpp/              →  .trellis/spec/cpp/             (auto-discovered layer)
     ├── index.md                       layer entry point
     ├── rules.json                     machine-readable rule digest
@@ -95,7 +101,13 @@ specs/cpp/            →  .trellis/spec/
 
 | File | Summary |
 |------|---------|
-| [index.md](./guides/index.md) | The C++ thinking method — ordered per-phase steps fired by diff cues, each naming the failure you buy by skipping it |
+| [index.md](./guides/index.md) | Layer router: core philosophy, symptom-phrased trigger checklists, pre-modification search rule, C++ layer diagram, cross-cutting interactions |
+| [design-thinking-guide.md](./guides/design-thinking-guide.md) | Design-phase procedure: six cue-fired steps, each naming the canonical failure and the guide to read first |
+| [implementation-thinking-guide.md](./guides/implementation-thinking-guide.md) | Implementation-phase procedure: six cue-fired steps for ownership, lifetimes, and boundary discipline |
+| [verification-thinking-guide.md](./guides/verification-thinking-guide.md) | Verification-phase procedure: three cue-fired steps that pin the detector for each bug class |
+| [pre-implementation-checklist.md](./guides/pre-implementation-checklist.md) | Before writing code: search existing types and utilities, sketch the ownership arrow, price the header, choose the failure representation |
+| [code-reuse-thinking-guide.md](./guides/code-reuse-thinking-guide.md) | Reuse thinking: search before new utilities, templates vs copy-paste, algorithms vs hand-rolled loops, constants across translation units |
+| [bug-root-cause-thinking-guide.md](./guides/bug-root-cause-thinking-guide.md) | Post-incident method: reproduce, minimize, classify the root cause, name the missing detector, record the incident |
 
 Baseline is C++14; C++17/20 additions (`std::string_view`, `std::optional`,
 `if constexpr`, `[[nodiscard]]`, `std::span`) are called out as marked
