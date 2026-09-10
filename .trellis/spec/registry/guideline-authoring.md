@@ -98,6 +98,9 @@ different family from the topic guides:
   C++ under `guides/` or `big-question/`: an uncompiled example would violate
   the pair-pitfall-with-detector contract. Bash fences are legal — command
   recipes (corpus searches, rule greps) are not compiled and not examples.
+  Recipes pass the shared extension list explicitly —
+  `rg -g '*.{cpp,cc,cxx,hpp,hh,h,inl,ipp}'` — rather than `rg --type cpp`,
+  which omits `*.ipp` and silently misses template-implementation files.
   Neither directory joins `check_snippets.py`'s DEFAULT_DIR walk and neither
   takes a `DOC_PREFIX`/`PREFIX_ALLOCATION` entry; the relative-link check
   and hand review are the only gates, and layer changes need no `rules.json`
@@ -112,10 +115,11 @@ different family from the topic guides:
 - **Links.** Repo-relative `../cpp/<phase>/<doc>.md` binds for every phase
   row, resolving both in-repo (`specs/cpp/guides/` → `specs/cpp/cpp/…`) and
   post-install (`.trellis/spec/guides/` → `.trellis/spec/cpp/…`); all 14
-  topic guides are reached from at least one layer file. The layer's two
-  `../big-question/index.md` pointers — the router's pointer line and the
-  bug-root-cause guide's "Record the Incident" link — will land with the
-  scar home and follow the same repo-relative pattern.
+  topic guides are reached from at least one layer file. The layer's three
+  `../big-question/index.md` pointers — the router's Core-Principles line
+  and its one-line Growing-This-Layer pointer, plus the bug-root-cause
+  guide's "Record the Incident" link — follow the same repo-relative
+  pattern.
 
 > **Supersession.** This contract supersedes the no-growth resolution of
 > 2026-09-09 recorded in

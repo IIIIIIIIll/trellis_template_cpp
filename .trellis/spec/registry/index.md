@@ -21,6 +21,7 @@ work products are:
 | `index.json` | Registry manifest; makes this a marketplace-mode registry |
 | `specs/cpp/cpp/**` | The product: phase-organized C++ guideline documents installed into consumer projects — 14 topic guides under `design/`, `implement/`, `verification/`, three phase routers, `index.md`, and the Core Guidelines disposition |
 | `specs/cpp/guides/**` | The thinking-guide layer installed as `.trellis/spec/guides/`: C++ method (cue-triggered per-phase procedures routing into `cpp/`); no normative rules — shape contract in [Guideline Authoring](./guideline-authoring.md) |
+| `specs/cpp/big-question/**` | Consumer incident scars installed as `.trellis/spec/big-question/`: severity index, contribution format, and three seeded exemplar narratives — grown by consumers, not shipped rules; shape contract in [Guideline Authoring](./guideline-authoring.md) |
 | `specs/cpp/README.md` | Template overview shipped alongside the layer |
 | `README.md`, `USAGE.md`, `HOSTING.md` | Registry-level docs: publish, consume, host |
 
@@ -40,8 +41,9 @@ The generic thinking-guide layer (`.trellis/spec/guides/`) is kept as a
 deliberate tombstone: its triggers assume application layers this repository
 does not have, so the transferable habits live in these two guides and that
 index explains why nothing else belongs there. (The template ships its own
-C++ thinking-guide layer from `specs/cpp/guides/`; the tombstone is this
-repo's local layer only.)
+C++ thinking-guide layer from `specs/cpp/guides/`, plus the consumer scar
+home at `specs/cpp/big-question/`; the tombstone is this repo's local layer
+only.)
 
 ---
 
@@ -102,6 +104,16 @@ python3 tools/extract_rules.py && cp specs/cpp/cpp/rules.json /tmp/rules-a.json 
 # the compiles-UB inventory for manual sanitizer spot-checks
 python3 tools/check_snippets.py
 ```
+
+One scope note: the thinking-guide layer (`specs/cpp/guides/**` and
+`specs/cpp/big-question/**`) sits outside both rule and snippet walks — each
+tool defaults to `DEFAULT_DIR = specs/cpp/cpp` — so its gates are the
+relative-link check above (it walks all of `specs/`) plus hand review.
+Pointing `validate_rules.py --path specs/cpp/guides` at the layer naively
+would spuriously fail `guides/index.md`: `EXEMPT_DOCS` in
+`tools/rules_grammar.py` matches by basename, so the router inherits the
+topic layer's attribution-footer requirement, which the layer deliberately
+omits.
 
 Also confirm by hand: any file added, removed, or renamed under `specs/cpp/`
 is reflected in `specs/cpp/README.md`'s file table, `specs/cpp/cpp/index.md`'s
