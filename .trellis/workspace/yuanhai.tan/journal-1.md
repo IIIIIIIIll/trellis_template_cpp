@@ -161,3 +161,43 @@ Resumed 09-08-thinking-guide-layer at 2.2: dispatched trellis-check full-scope p
 ### Status
 
 [OK] **Completed**
+
+
+## Session 8: Reshape cpp thinking-guide layer + big-question scar home
+
+**Date**: 2026-09-10
+**Task**: Reshape cpp thinking-guide layer + big-question scar home
+**Branch**: `main`
+
+### Summary
+
+Family-shape reshape of specs/cpp/guides/ (router + 3 phase guides + 3 family-standard guides), new specs/cpp/big-question/ scar home (severity index + contribution format + 3 exemplar incidents), contract rewrite with scoped-growth supersession, README/registry syncs; all five gates green on the union; three independent validation passes per child.
+
+### Main Changes
+
+- specs/cpp/guides/: 7-file family layer, 19 method items survive (15 rows + 4 spans), zero cpp fences, all <= 9 KB
+- specs/cpp/big-question/: index + 3 incident exemplars (no frontmatter, no fences) + the two deferred router/guide pointers
+- .trellis/spec/registry/: contract rewrite (supersession + big-question contract + recipe convention) and index.md drift sync
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `78e8faf` | (see git log) |
+| `584d3e4` | (see git log) |
+| `31937fd` | (see git log) |
+| `fa105f2` | (see git log) |
+
+### Testing
+
+- [OK] manifest / relative-link / validate_rules (14/0) / extract_rules determinism (539) / check_snippets (122 blocks, 0 violations) — all green on the union
+- [OK] trellis-check + reviewer + security-reviewer passes per child (all PASS; informational accuracy fixes applied and re-confirmed)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- Consumer-side smoke test of an actual trellis init/update install (post-install link resolution is verified by pattern, not by an install run)
+- Optional: consider per-consumer injection budget tuning if the layer crowds max_spec_chars

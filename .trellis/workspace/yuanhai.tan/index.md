@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 7
-- **Last Active**: 2026-09-09
+- **Total Sessions**: 8
+- **Last Active**: 2026-09-10
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~163 | Active |
+| `journal-1.md` | ~203 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 8 | 2026-09-10 | Reshape cpp thinking-guide layer + big-question scar home | `78e8faf`, `584d3e4`, `31937fd`, `fa105f2` | `main` |
 | 7 | 2026-09-09 | Thinking-guide layer: check pass, philosophy resolution, spec capture, commit | `cb768d2`, `80a746b` | `main` |
 | 6 | 2026-09-06 | Phase-oriented restructuring of cpp guidelines | `a5514b2`, `cb624ae` | `main` |
 | 5 | 2026-09-06 | Fix expressions-and-flow review findings | `16469ca` | `main` |
